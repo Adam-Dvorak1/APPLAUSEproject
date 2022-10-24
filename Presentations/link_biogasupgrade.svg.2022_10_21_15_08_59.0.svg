@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="300mm"
+   height="297mm"
+   viewBox="0 0 300 297"
+   version="1.1"
+   id="svg52897"
+   inkscape:version="1.1.2 (b8e25be8, 2022-02-05)"
+   sodipodi:docname="link_biogasupgrade.svg"
+   inkscape:export-filename="/Users/adamdvorak/documents/GitHub/APPLAUSEproject/presentations/link_methanogen.png"
+   inkscape:export-xdpi="500"
+   inkscape:export-ydpi="500"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview52899"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.4992267"
+     inkscape:cx="523.81012"
+     inkscape:cy="565.87518"
+     inkscape:window-width="1312"
+     inkscape:window-height="969"
+     inkscape:window-x="79"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs52894">
+    <marker
+       style="overflow:visible"
+       id="TriangleOutM"
+       refX="0"
+       refY="0"
+       orient="auto">
+      <path
+         transform="scale(0.4)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path24767" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="TriangleOutM-4"
+       refX="0"
+       refY="0"
+       orient="auto">
+      <path
+         transform="scale(0.4)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path24767-1" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="TriangleOutM-5"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="TriangleOutM"
+       inkscape:isstock="true">
+      <path
+         transform="scale(0.4)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path24767-0" />
+    </marker>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       d="M 113.59527,57.115877 V 191.14096"
+       id="path24620"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.448022;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       id="path25298"
+       d="m 113.57184,171.0204 -2.01555,-3.54192 4.07517,0.0254 z" />
+    <path
+       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.448022;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       id="path25298-2"
+       d="m 113.40536,90.509316 -2.01555,-3.541917 4.07517,0.0254 z" />
+    <path
+       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.448022;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       id="path25298-0"
+       d="m 95.516227,169.93852 0.549526,-4.03803 3.222299,2.49488 z" />
+    <text
+       xml:space="preserve"
+       style="font-weight:bold;font-size:12.8876px;line-height:1.25;font-family:'AU Passata';-inkscape-font-specification:'AU Passata Bold';word-spacing:0px;stroke-width:0.386627"
+       x="89.83667"
+       y="51.918255"
+       id="text9749-6"><tspan
+         id="tspan9747-6"
+         style="font-size:12.8876px;stroke-width:0.386627"
+         x="89.83667"
+         y="51.918255"><tspan
+           id="tspan153470"
+           style="font-size:15.4651px;stroke-width:0.386627">Biogas</tspan></tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:15.3526px;line-height:1.25;font-family:'AU Passata';-inkscape-font-specification:'AU Passata Bold';word-spacing:0px;stroke-width:0.383816"
+       x="119.75955"
+       y="174.77138"
+       id="text59300"><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:15.3526px;font-family:'AU Passata';-inkscape-font-specification:'AU Passata Bold';stroke-width:0.383816"
+         x="119.75955"
+         y="174.77138"
+         id="tspan59302">0.9 * 0.4 * 0.98</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.6273px;line-height:1.25;font-family:'AU Passata';-inkscape-font-specification:'AU Passata Bold';word-spacing:0px;stroke-width:0.315683"
+       x="67.501457"
+       y="170.40755"
+       id="text59300-2"><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.6273px;font-family:'AU Passata';-inkscape-font-specification:'AU Passata Bold';fill:#ff0000;stroke-width:0.315683"
+         x="67.501457"
+         y="170.40755"
+         id="tspan59302-3">0.01</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 113.8023,124.1689 c 0,0 -0.46074,44.23086 -44.461224,67.49813"
+       id="path65091" />
+    <text
+       xml:space="preserve"
+       style="font-weight:bold;font-size:15.9934px;line-height:1.25;font-family:'AU Passata';-inkscape-font-specification:'AU Passata Bold';word-spacing:0px;stroke-width:0.399836"
+       x="42.605625"
+       y="203.89543"
+       id="text9749-1-9-8"><tspan
+         id="tspan9747-3-38-9"
+         style="font-size:15.9934px;stroke-width:0.399836"
+         x="42.605625"
+         y="203.89543">CO<tspan
+   style="font-size:15.9934px;baseline-shift:sub;stroke-width:0.399836"
+   id="tspan51868-0-1">2</tspan></tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-weight:bold;font-size:11.7344px;line-height:1.25;font-family:'AU Passata';-inkscape-font-specification:'AU Passata Bold';word-spacing:0px;stroke-width:0.352031"
+       x="102.67229"
+       y="206.99306"
+       id="text9749-1-9-4"><tspan
+         id="tspan9747-3-38-6"
+         style="font-size:11.7344px;stroke-width:0.352031"
+         x="102.67229"
+         y="206.99306"><tspan
+           style="font-size:14.0812px;stroke-width:0.352031"
+           id="tspan148764">CO</tspan><tspan
+           style="font-size:7.62735px;baseline-shift:sub;stroke-width:0.352031"
+           id="tspan51868-0-4">2, compressed</tspan></tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:8.81944px;line-height:1.25;font-family:'AU Passata';-inkscape-font-specification:'AU Passata';word-spacing:0px;stroke-width:0.264583"
+       x="90.541725"
+       y="239.88098"
+       id="text114018"><tspan
+         sodipodi:role="line"
+         id="tspan114016"
+         style="stroke-width:0.264583"
+         x="90.541725"
+         y="239.88098">Sabatier eff</tspan><tspan
+         sodipodi:role="line"
+         style="fill:#008000;stroke-width:0.264583"
+         x="90.541725"
+         y="250.90529"
+         id="tspan117832">MW Electricity/MW CH4</tspan><tspan
+         sodipodi:role="line"
+         style="fill:#0000ff;stroke-width:0.264583"
+         x="90.541725"
+         y="261.9296"
+         id="tspan195622">MW CO2/MW CH4</tspan><tspan
+         sodipodi:role="line"
+         style="fill:#ff0000;stroke-width:0.264583"
+         x="90.541725"
+         y="272.95389"
+         id="tspan118680">CO2 emissions/MW CH4</tspan><tspan
+         sodipodi:role="line"
+         style="fill:#008000;stroke-width:0.264583"
+         x="90.541725"
+         y="283.97818"
+         id="tspan176018" /><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.264583"
+         x="90.541725"
+         y="295.00247"
+         id="tspan114020" /></text>
+    <path
+       sodipodi:type="star"
+       style="fill:#d1c8d2;fill-opacity:1;stroke:#4d4d4d;stroke-width:3.77953"
+       id="path15201"
+       inkscape:flatsided="false"
+       sodipodi:sides="5"
+       sodipodi:cx="317.74646"
+       sodipodi:cy="353.29095"
+       sodipodi:r1="65.10038"
+       sodipodi:r2="32.55019"
+       sodipodi:arg1="1.3089969"
+       sodipodi:arg2="1.9373154"
+       inkscape:rounded="0"
+       inkscape:randomized="0"
+       transform="matrix(0.39724619,-0.15602815,0.15602815,0.39724619,-67.726418,33.876556)"
+       inkscape:transform-center-x="4.3312612"
+       inkscape:transform-center-y="2.4654212"
+       d="m 334.59568,416.17309 -28.51416,-32.49391 -42.93283,5.06798 22.09219,-37.15975 -18.08692,-39.26545 42.16789,9.52793 31.7545,-29.33538 3.969,43.04834 37.71227,21.13519 -39.71491,17.07741 z" />
+    <text
+       xml:space="preserve"
+       style="font-size:6.77837px;line-height:1;font-family:'AU Passata';-inkscape-font-specification:'AU Passata Bold';word-spacing:0px;stroke-width:0.203351;font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal"
+       x="101.26746"
+       y="120.13099"
+       id="text17739"><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.203351;-inkscape-font-specification:'AU Passata Bold';font-family:'AU Passata';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal"
+         x="101.26746"
+         y="120.13099"
+         id="tspan18765">biogas</tspan><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.203351;-inkscape-font-specification:'AU Passata Bold';font-family:'AU Passata';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal"
+         x="101.26746"
+         y="126.90936"
+         id="tspan19417">upgrade</tspan></text>
+  </g>
+</svg>
