@@ -29,11 +29,11 @@ overrides = override_component_attrs("override_component_attrs")
 
 #%%
 network = pypsa.Network(override_component_attrs=overrides)
-
+#%%
 gasdf = pd.read_csv('data/AppleGas.csv', index_col = 0)
 gasdf.index = pd.to_datetime(gasdf.index)
 
-
+#%%
 tech_data = pd.read_csv("data/costs_2025.csv")
 
 
@@ -79,7 +79,10 @@ network.add("Bus", "biogas", carrier = "biogas") #For both processes, we have ac
 
 network.add("Bus", "CO2 compressed", carrier = "co2 compressed")
 
+#%%
+network.add("Bus", "grid", carrier = "grid")
 
+#%%
 
 
 
@@ -94,10 +97,10 @@ network.add("Bus", "CO2 compressed", carrier = "co2 compressed")
 
 
 ##-------------------Solar---------------------------------------
-
+#%%
 hours_in_2019 = pd.date_range('2019-01-01T00:00:00','2019-12-31T23:00:00', freq='H') #I changed the date rate from Z
 network.set_snapshots(hours_in_2019)
-
+#%%
 df_cal_solar = pd.read_csv('data/RealCalFlatsSolarCFs.csv', index_col=0)
 df_cal_solar.index = pd.to_datetime(df_cal_solar.index)
 df_cal_biogas = df_cal_solar['biogas'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]]
@@ -119,6 +122,26 @@ network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True,
     marginal_cost = 0, p_max_pu = df_cal_biogas) #Note, I need a biogas 
 
 
+#%%
+##-------------------Electricity Grid---------------------------------------------- 
+'''This is using 2019 (UTC) data from CAISO, LCG consulting.Prices are in c/kWh''' 
+gridprice = pd.read_csv("data/2019UTCCAISOprice.csv", index_col = 0)
+gridprice.index = pd.to_datetime(gridprice.index)
+
+gridprice = gridprice['price'][[hour.strftime("%Y-%m-%d %H:%M:%S") for hour in network.snapshots]]
+gridprice = gridprice/100
+
+
+gridgen = pd.DataFrame(index = range (8760))
+gridgen = gridgen.set_index(hours_in_2019)
+gridgen['grid'] = 10000000
+
+
+
+network.add("Generator", "Grid", bus = 'grid', p_nom_extendable = True, 
+carrier = "grid", capital_cost = 0, marginal_cost = gridprice, p_max_pu = gridgen['grid'])#The datafile gives US cents/kWh. I wanted dollars (or euros) per kWh
+
+#%%
 
 ###-------------------<<<Add loads>>>--------------------------------------------------------------
 '''We are following a process similar to what we did for simple model of last year. For now, we are assuming
@@ -129,11 +152,17 @@ Maybe I can make a constant '''
 
 
 network.add("Load", #Why are there two loads here? Which is the name?
-            "load", 
+            "Gas Load", 
             bus="gas", 
             p_set=gasdf["All_in_one_demand"])
 
+# #%%
+network.add("Load", 
+            "Grid Load", 
+            bus="grid", 
+            p_set=gasdf["Constant_MW_methane"] * 10000)
 
+#%%
 ###-------------------<<<Add stores and links to stores>>>-------------------------------------------
 '''We have 
         1) a battery storage connecting to the electricity bus
@@ -248,7 +277,7 @@ network.add("Link",
 
 
 ###--------------------<<<Add links between buses>>>------------------------------------------------------
-'''Note, there is hydrogen storage! This might require a compressor'''
+
 
 
 ## ---------------Electricity bus to H2 compressed bus--------------------------
@@ -268,18 +297,29 @@ network.add("Link",
         )
 
 
+## ---------------Electricity bus toGrid bus--------------------------
+'''This combination of links serves as the transformer to and from the local electricity
+grid and the global electricity grid'''
+
+network.add("Link",
+        "High to low voltage", #in reality, this is both compression and electrolysis
+        bus0 = "grid",
+        bus1 = "electricity",
+        #as in, electricity is producing hydrogen
+        p_nom_extendable = True,
+        carrier = "electricity",
+        capital_cost = 0,
+        marginal_cost = 0, 
+        efficiency = 1,
+        p_min_pu = -1
+        
+        )
 
 
-# ##--------------------H2 bus to H2 compressed bus-----------------------------------
-# network.add("Link",
-#         "H2 Compression",
-#         bus1 = "H2 compressed",
-#         bus0 = "H2", #as in, electricity is producing hydrogen
-#         p_nom_extendable = True,
-#         carrier = "H2 Compression",
-#         capital_cost = annual_cost("electrolysis"), #This is not true right now. What is the cost for compression?
-#         efficiency = 0.993 #This 
-#         )
+
+
+
+
 
 
 
@@ -316,7 +356,7 @@ It is a bit difficult for me to really understand what these efficiencies mean''
 sabatier_efficiency = 0.8   # efficiency how much CH4 per H2 input
 gas_co2_intensity = 0.2     # CO2 intensity in CH4
 
-methanogens = False
+methanogens = True
 
 if methanogens == True:
         network.add("Link",
@@ -339,17 +379,17 @@ else:
                 bus0="H2 compressed",
                 bus1="gas",
                 bus2= "CO2 out",
-                bus3 = "electricity",
-                bus4 = "CO2 compressed",
+                bus3 = "CO2 compressed",
+                bus4 = "electricity",
                 carrier="methanation",
                 marginal_cost=0,
                 capital_cost=annual_cost("methanation"),   # annualised capital costs
                 p_nom_extendable=True,
                 efficiency=sabatier_efficiency,    # how much CH4 is produced per H2 input. So 0.8 MW Ch4 produced per MW of H2
                 efficiency2= 0.01, #I have no idea how many MW CO2 is emitted per MW produced by sabatier. hopefully not much. We are saying 0.01 MW of CO2 per  
-                efficiency3 = - sabatier_efficiency * 0.1, #How much electricity is used per 0.8 CH4 produced. Negative. 
+                efficiency3 = - sabatier_efficiency * gas_co2_intensity, #Let's assume that 0.2 MW of compressed CO2 is used per 1 MW of CH4. Negative.
+                efficiency4 = - sabatier_efficiency * 0.1, #How much electricity is used per 0.8 CH4 produced. Negative. 
                 #Let's say that we know that 0.1 MW electricity is used to produce 1 MW CH4. Then, the efficiency is - sabatier efficiency * 0.1
-                efficiency4 = - sabatier_efficiency * gas_co2_intensity, #Let's assume that 0.2 MW of compressed CO2 is used per 1 MW of CH4. Negative.
                 lifetime=30)
 
 
