@@ -43,6 +43,8 @@ tech_data = pd.read_csv("data/costs_2025.csv")
 but is a good attribute for analyzing later'''
 
 network.add("Bus","electricity", carrier = "electricity")
+
+network.add("Bus","local elec", carrier = "local elec")
 #The electricity bus will connect to the hydrogen bus using electrolysis
 
 
@@ -55,8 +57,7 @@ Total cost = cost of electrolyzer + cost of compressor
 The H2 compressed bus will then have a link connecting to the electricity bus,
 and then it will be a part of the methanation process as well
 '''
-# network.add("Bus", "H2", carrier  = "H2")
-# #The hydrogen bus will connect to the CH4 bus as an input to methanation 
+
 
 
 network.add("Bus", "H2 compressed", carrier  = "H2 compressed")
@@ -104,13 +105,13 @@ network.set_snapshots(hours_in_2019)
 df_cal_solar = pd.read_csv('data/RealCalFlatsSolarCFs.csv', index_col=0)
 df_cal_solar.index = pd.to_datetime(df_cal_solar.index)
 df_cal_biogas = df_cal_solar['biogas'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]]
-df_cal_solar = df_cal_solar['solar'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]]
+df_cal_solar = df_cal_solar['solar'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series
 
 
 
-network.add("Generator", "Solar PV", bus="electricity", p_nom_extendable = True, 
+network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
     carrier = 'solar', capital_cost = annual_cost('solar-utility'), #Eur/kW/yr
-    marginal_cost = 0, p_max_pu = df_cal_solar) #Should we have p_nom_extendable = True? Should we set p_max_pu to a number? Solar has
+    marginal_cost = 0, p_nom_max = 130000, p_max_pu = df_cal_solar) #
     #no marginal cost, right?
 
 
@@ -119,7 +120,7 @@ network.add("Generator", "Solar PV", bus="electricity", p_nom_extendable = True,
 
 network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True, 
     carrier = 'biogas', capital_cost = 0,
-    marginal_cost = 0, p_max_pu = df_cal_biogas) #Note, I need a biogas 
+    marginal_cost = 0, p_max_pu = df_cal_biogas) 
 
 
 #%%
@@ -134,11 +135,11 @@ gridprice = gridprice/100
 
 gridgen = pd.DataFrame(index = range (8760))
 gridgen = gridgen.set_index(hours_in_2019)
-gridgen['grid'] = 10000000
+gridgen['grid'] = 1 #in kW, so 100GW
 
 
 
-network.add("Generator", "Grid", bus = 'grid', p_nom_extendable = True, 
+network.add("Generator", "Grid", bus = 'grid', p_nom = 100000000,#100 GW. The capacity is for free. However, we still pay marginal cost
 carrier = "grid", capital_cost = 0, marginal_cost = gridprice, p_max_pu = gridgen['grid'])#The datafile gives US cents/kWh. I wanted dollars (or euros) per kWh
 
 #%%
@@ -160,7 +161,7 @@ network.add("Load", #Why are there two loads here? Which is the name?
 network.add("Load", 
             "Grid Load", 
             bus="grid", 
-            p_set=gasdf["Constant_MW_methane"] * 10000)
+            p_set=gasdf["Constant_MW_methane"] * 1000000)
 
 #%%
 ###-------------------<<<Add stores and links to stores>>>-------------------------------------------
@@ -205,10 +206,11 @@ network.add("Store",
         bus = "battery",
         e_cyclic = True, #NO FREE LUNCH must return back to original position by end of the year
         e_nom_extendable = True,
+        e_nom_max = 240000,
         capital_cost = annual_cost("battery storage")) #Eur/kWh/yr
 network.add("Link",
         "battery charger",
-        bus0 = "electricity",
+        bus0 = "local elec",
         bus1 = "battery",
         carrier = "battery charger",
         efficiency =tech_data.query("technology == 'battery inverter' & parameter == 'efficiency'")['value'].values[0] ** 0.5,
@@ -217,7 +219,7 @@ network.add("Link",
 network.add("Link",
         "battery discharger",
         bus0 = "battery",
-        bus1 = "electricity",
+        bus1 = "local elec",
         carrier = "battery discharger",
         efficiency = tech_data.query("technology == 'battery inverter' & parameter == 'efficiency'")['value'].values[0] ** 0.5,
         p_nom_extendable = True,
@@ -280,6 +282,8 @@ network.add("Link",
 
 
 
+
+
 ## ---------------Electricity bus to H2 compressed bus--------------------------
 '''This link takes the compression and electrolysis to the H2 compressed bus all in one'''
 # -------Electrolysis------------------
@@ -297,7 +301,7 @@ network.add("Link",
         )
 
 
-## ---------------Electricity bus toGrid bus--------------------------
+## ---------------Electricity bus to Grid bus--------------------------
 '''This combination of links serves as the transformer to and from the local electricity
 grid and the global electricity grid'''
 
@@ -316,8 +320,17 @@ network.add("Link",
         )
 
 
+## ---------------local elec bus to electricity bus--------------------------
 
-
+network.add("Link",
+        "Solar system to electricity", #in reality, this is both compression and electrolysis
+        bus0 = "local elec",
+        bus1 = "electricity",
+        #as in, electricity is producing hydrogen
+        p_nom_extendable = True,
+        carrier = "electricity",
+        capital_cost = 0,
+        efficiency = 1)
 
 
 
@@ -399,41 +412,8 @@ network.lopf(network.snapshots, pyomo=False, solver_name="gurobi")
 curDT = datetime.now()
 
 version = curDT.strftime("_%d_%m_%Y")
+
 if methanogens == True: 
         network.export_to_netcdf("results/NetCDF/methanogen" + version + ".nc")
 else:
         network.export_to_netcdf("results/NetCDF/sabatier" + version + ".nc")
-#%%
-
-
-# how much H2 is used for Fischer-Tropsch
-
-# plt.plot(network.links_t.p0[0:96])
-# plt.yscale("log")
-# plt.show()
-# how much CO2 is used for Fischer-Tropsch
-
-# network.links_t.p1.plot(title="CH4 produced via sabatier")
-# # same like multpliying it with the efficiency
-# (network.links_t.p0*network.links.efficiency).plot(title="CH4 produced via sabatier")
-# # how much synthetic fuel is produced via Fischer-Tropsch
-# network.links_t.p2.plot(title="CO2 used for sabatier")
-# # same like multpliying it with the efficiency2
-# (network.links_t.p0*network.links.efficiency2).plot(title="CO2 used for sabatier")
-# # how much CO2 is in the CO2 storage
-# network.stores_t.e.plot()
-
-# #Here we add a link from 
-
-
-# network.links_t
-
-
-# We need to add 
-
-#network.generators.p_nom_opt
-
-#%%
-# x = 5
-# print (x)
-# %%

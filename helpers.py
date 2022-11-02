@@ -12,6 +12,7 @@ import os
 
 #%%
 #For my links, I always set the following relationship. methanogens does not have electricity
+
 methanation_link_dict = {"p0": "Hydrogen in", "p1": "Gas out", "p2": "CO2 out", "p3" : "CO2 in", "p4" : "electricity"}
 
 biogas_dict = {"p0": "Biogas in", "p1": "CO2 compressed out", "p2": "gas out" }
@@ -73,6 +74,53 @@ def annual_cost(tech):
         fom = fomset['value'].values[0]
     annu_val = annuity(lifetime,discount_rate)*cap_cost*(1+fom) #in eur/kW
     return annu_val
+
+#---------<<generatorplots>>------------------
+def generators_dcurve(path, yscale):
+    n = pypsa.Network()
+    n.import_from_netcdf(path)
+    o = path.split("/")
+    oo = [item.split("_") for item in o]
+    oo = [item for sublist in oo for item in sublist]
+
+    if "methanogen" in oo:
+        methanogen = True
+    else:
+        methanogen = False
+
+
+    netlinks = n.generators_t.p
+
+    fig, ax = plt.subplots()
+
+
+    netlinks.index = range(8760)
+    for column in netlinks.columns:
+        netlinks = netlinks.sort_values(by = column)
+        netlinks.index = range(8760)
+        ax.plot(netlinks[column], label = column)
+
+    log = ""
+    if yscale == "log":
+        ax.set_yscale("log")
+        log = "log"
+
+    ax.set_ylabel("")
+    ax.legend()
+    curDT = datetime.now()
+    date = curDT.strftime("_%d_%m_%Y")
+    fileday = oo[-3]
+    filemonth = oo[-2]
+    version = log + "_run_" + fileday + "_" + filemonth +  "_created_" + date
+    if methanogen == True:
+        ax.set_title("Generators with methanogenesis")
+        plt.savefig("results/Images/methanogenesis_generator_dcurve" + version + ".pdf")
+    else:
+        ax.set_title("Generators with sabatier")
+        plt.savefig("results/Images/sabatier_generators_dcurve" + version + ".pdf")
+    plt.show()
+
+
 
 
 #---------<<battery plots>>------------------
@@ -537,42 +585,47 @@ def methane_link_dcurve(path):
         plt.savefig("results/Images/sabatier_dcurve" + version + ".pdf")
     plt.show()
 
+methanogen = "results/NetCDF/methanogen_02_11_2022.nc"
+sabatier = "results/NetCDF/sabatier_01_11_2022.nc"
 
-methanogen = "results/NetCDF/methanogen_31_10_2022.nc"
-sabatier = "results/NetCDF/sabatier_31_10_2022.nc"
+#%%
+
+
+if __name__ == "__main__":
+    generators_dcurve(methanogen, "log")
 
 
 
 # %%    
 if __name__ == "__main__":
     storage_dcurve(methanogen, "lin")
-    storage_dcurve(sabatier, "lin")
+    # storage_dcurve(sabatier, "lin")
 # %%    
 if __name__ == "__main__":
     electrolysis_dcurve(methanogen)
-    electrolysis_dcurve(sabatier)
+    # electrolysis_dcurve(sabatier)
 
 # %%    
 if __name__ == "__main__":
     biogas_dcurve(methanogen)
-    biogas_dcurve(sabatier)
+    # biogas_dcurve(sabatier)
 
 
 # %%    
 if __name__ == "__main__":
     battery_dcurve(methanogen)
-    battery_dcurve(sabatier)
+    # battery_dcurve(sabatier)
 
 # %%    
 if __name__ == "__main__":
     methane_link_dcurve(methanogen)
-    methane_link_dcurve(sabatier)
+    # methane_link_dcurve(sabatier)
 
 # %%    
-if __name__ == "__main__":
-    make_plot(methanogen)
+# if __name__ == "__main__":
+#     make_plot(methanogen)
 
-    make_plot(sabatier)
+#     make_plot(sabatier)
 
 # %%
 if __name__ == "__main__":
