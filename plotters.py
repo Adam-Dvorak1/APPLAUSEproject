@@ -18,6 +18,7 @@ biogas_dict = {"p0": "Biogas in", "p1": "CO2 compressed out", "p2": "gas out" }
 electrolysis_dict = {"p0": "electricity in", "p1": "H2 out"}
 #%%
 
+
 #---------<<generatorplots>>------------------
 def generators_dcurve(path, yscale):
     n = pypsa.Network()
@@ -563,29 +564,3 @@ if __name__ == "__main__":
 if __name__ == "__main__":
     methane_link_dcurve(methanogen)
     # methane_link_dcurve(sabatier)
-
-# %%    
-# if __name__ == "__main__":
-#     make_plot(methanogen)
-
-#     make_plot(sabatier)
-
-# %%
-if __name__ == "__main__":
-    methane_link_plot(methanogen)
-    methane_link_plot(sabatier)
-
-# %%
-if __name__ == "__main__":
-    biogas_link_plot(methanogen)
-    biogas_link_plot(sabatier)
-
-# %%
-if __name__ == "__main__":
-    electrolysis_link_plot(methanogen)
-    electrolysis_link_plot(sabatier)
-
-# %%
-if __name__ == "__main__":
-    storage_plots(methanogen)
-    storage_plots(sabatier)
