@@ -12,9 +12,12 @@ from datetime import datetime
 import numpy as np
 import os
 import pathlib
+import itertools
+import time
+from multiprocessing import Pool
 from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_links, add_methanogen, add_sabatier
-from helpers import override_component_attrs
-from modifynetwork import change_gasload
+from helpers import override_component_attrs, annual_cost
+from modifynetwork import change_gasload, to_netcdf
 
 #  Lisa: We are going to need multi-links for modelling the CO2 management.
 #  Since default setting for links in PyPSA is having only one entry (bus0)
@@ -25,6 +28,8 @@ def get_relpath(path, home):
         return rel_path
 
 def new_folder(name):
+    '''This makes a directory for where netcdf files will be saved. It takes
+    the desired name as input'''
 
     dir = pathlib.Path().resolve() #This is the current path
     mypath = str(dir) + "/results/NetCDF" #Going into the NetCDF folder
@@ -42,11 +47,18 @@ def new_folder(name):
     
 
 if __name__ == "__main__":
+        __spec__ = "ModuleSpec(name='builtins', loader=<class '_frozen_importlib.BuiltinImporter'>)"
+        startime = time.time()
 
         ##---<<Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "log_cost_sweep" #name of the run, added to date
+        name = "gasdem_megencost_sweep" #name of the run, added to date
+
         # costrange = np.logspace(0, 4, 10)        
+        gas_dems = [x for x in np.logspace(0, 4, 10)] #number of kWh 
+        methanogen_costs = [x for x in np.logspace(-1, 1, 10)]#multiplier to sabatier price
+        # methane_cost = annual_cost('methanation')
+        # methanogen_costs = [methane_cost * x for x in methanogen_costs]
 
         overrides = override_component_attrs("override_component_attrs")
 
@@ -67,18 +79,22 @@ if __name__ == "__main__":
                 methanation = "sabatier"
 
 
+        ns = list([n])
+
+
  
         allpath = new_folder(name)
         homepath = pathlib.Path().resolve()
         rel_path = get_relpath(allpath, homepath)
 
-        for value in costrange:
 
-                n = change_gasload(n, value)
-                n.lopf(n.snapshots, pyomo=False, solver_name="gurobi")
+        name = list([rel_path])
 
-                value = round(value, 1)
-                mod_path= rel_path + "/" + methanation + str(value) + ".nc"
-                
-                n.export_to_netcdf(mod_path)
-        
+        f = list(itertools.product(ns, gas_dems, methanogen_costs, name))
+
+
+        with Pool(processes=4) as pool:
+                pool.starmap(to_netcdf, f)
+
+        endtime = time.time()
+        print(endtime-startime)

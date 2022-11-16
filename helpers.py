@@ -2,8 +2,10 @@ import os
 from pypsa.components import components, component_attrs
 from pypsa.descriptors import Dict
 import pandas as pd
+import glob
 import pathlib
 from datetime import datetime
+import pypsa
 
 def override_component_attrs(directory):
     """Lisa: Tell PyPSA that links can have multiple outputs by
@@ -63,4 +65,61 @@ def annual_cost(tech):
 
 
 
+def extract_data(folder):
+    '''This is a function that makes a pd Data Frame, and adds a row with relevant data for each
+    Time series are ts. Single variables are repeated. This makes it easy to stack
+    The resulting df will be 8760 hours * number of files long'''
+    path = folder + "/*"
 
+
+    df = pd.DataFrame()
+
+    megen_cost = annual_cost("methanation")
+
+    for file in glob.glob(path):
+        n = pypsa.Network()
+        n.import_from_netcdf(file)
+        tempdf = pd.DataFrame(index = n.snapshots)
+
+
+        tempdf['load'] = n.loads_t.p["Gas Load"].max()/8760 #This is an independent variable
+        tempdf['megen cost'] = n.links.loc['methanogens', 'capital_cost'] #This is an independent varaible
+        tempdf['megen size'] = n.links.loc['methanogens', 'p_nom_opt'] 
+        tempdf['objective'] = n.objective 
+        tempdf['grid to electricity link ts'] = n.links_t.p0.loc[:, "High to low voltage"]
+        tempdf['methanogen link ts'] = n.links_t.p0.loc[:, "methanogens"]
+        tempdf['gas store ts'] = n.stores_t.e.loc[:, "gas store"]
+        tempdf['biogas generator ts'] = n.generators_t.p.loc[:, 'Biogas']
+
+
+        df = pd.concat([df, tempdf])
+
+    name = folder.split("/")
+    name = name[-1]
+    
+    df.to_csv('results/csvs/' + name + ".csv")
+
+def extract_summary(csvpath):
+    '''This only deals with the time independent variables of each run'''
+    df = pd.read_csv(csvpath)
+    df2 = df[[column for column in df.columns if "ts" not in column]]
+    df2 = df2[[column for column in df2.columns if "snapshot" not in column]]
+    df3 = df2.drop_duplicates(["load", "megen cost"])#This yields every unique combination of load and megen cost
+    
+    name = csvpath.split("/")
+    name = name[-1]
+
+    df3.to_csv('results/csvs/summary_' + name )#no csv needed at the end because the name is from the other csv
+
+
+        
+
+
+
+if __name__ == "__main__":
+    path = "results/NetCDF/15_11_2022_gasdem_megencost_sweep"
+    extract_data(path)
+
+    csvpath = "results/csvs/15_11_2022_gasdem_megencost_sweep.csv"
+
+    # extract_summary(csvpath) 

@@ -6,8 +6,14 @@ import pandas as pd
 from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from matplotlib.colors import LogNorm
 import re
+import math
 import glob
+import itertools
+
+from helpers import annual_cost
+
 
 
 #%%
@@ -18,6 +24,12 @@ methanation_link_dict = {"p0": "Hydrogen in", "p1": "Gas out", "p2": "CO2 out", 
 biogas_dict = {"p0": "Biogas in", "p1": "CO2 compressed out", "p2": "gas out" }
 
 electrolysis_dict = {"p0": "electricity in", "p1": "H2 out"}
+
+annualcosts = [str(round(x)) for x in np.logspace(-1, 1, 10) * annual_cost("methanation")] #This is the list of all of the costs
+
+linkcost_mults = [round(x, 1) for x in np.logspace(-1, 1, 10)]
+
+costmult_dict = dict(zip(annualcosts, linkcost_mults))
 
 #---------<<generatorplots>>------------------
 def generators_dcurve(path, yscale):
@@ -514,6 +526,7 @@ def methane_link_dcurve(path):
 def dcurve_gridlink():
     path = "results/NetCDF/03_11_2022_log_cost_sweep"
     fig, ax = plt.subplots()
+
     for file in glob.glob(path):
         n = pypsa.Network()
         n.import_from_netcdf(file)
@@ -530,4 +543,123 @@ def dcurve_gridlink():
         gridlink.index = range(8760)
         ax.plot(gridlink)
         
+
+
+#%%
+def extract_pathinfo(path):
+    o = path.split("/")
+    o = o[-1]
+    oo = re.findall(r"\d+", o)
+    #oo[0] = avg kW, oo[1] = annualcost
+    return oo
+
+
+def plot_linksize():
+
+    #This needs:
+
+        #To change the label back to
+    sumdata = pd.read_csv("results/csvs/summary_15_11_2022_gasdem_megencost_sweep.csv")
+    fig, ax = plt.subplots()
+    cmap = plt.get_cmap('summer_r')
+    
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("Annualized cost of methanogenesis (Eur/kW)")
+    ax.set_ylabel("Size of methanation link (kW)")
+    ax.set_title("Size of methanogenesis")
+
+    norm = LogNorm()# The log norm is necessary to show the logarithmic spacing of the "third axis"
+    myax = ax.scatter(sumdata['megen cost'], sumdata['megen size'], c = sumdata['load']/sumdata['load'].max(), cmap = cmap, norm = norm)
+    ax.axvline(annual_cost('methanation'), color='black',ls='--') #This is the benchmark cost
+    ax.text(annual_cost('methanation')* 0.9, 4, "Base cost of sabatier methanation", horizontalalignment = "center", rotation = "vertical")
+
+    cbar = fig.colorbar(myax, label = "Average gas load (kWh)")
+    #     spacing='proportional',  format='%1i')
+    tls = cbar.ax.get_yticks()
+    tls = [tl * 10000 for tl in tls ]
+    cbar.set_ticklabels(tls)
+
+    plt.savefig("Presentations/November18pres/opt_methanogenesis_size.pdf")
+    plt.savefig("Presentations/November18pres/opt_methanogenesis_size.png", dpi = 500)
+    plt.show()
+
         
+
+def plot_objective():
+    sumdata = pd.read_csv("results/csvs/summary_15_11_2022_gasdem_megencost_sweep.csv")
+    fig, ax = plt.subplots()
+    cmap = plt.get_cmap('summer_r')
+    
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("Annualized cost of methanogenesis (Eur/kW)")
+    ax.set_ylabel("Extra cost to system")
+    ax.set_title("Objective of the system minus smallest case")
+
+    norm = LogNorm()# The log norm is necessary to show the logarithmic spacing of the "third axis"
+    myax = ax.scatter(sumdata['megen cost'], sumdata['obj diff to min'], c = sumdata['load']/sumdata['load'].max(), cmap = cmap, norm = norm)
+    ax.axvline(annual_cost('methanation'), color='black',ls='--') #This is the benchmark cost
+    ax.text(annual_cost('methanation')* 0.9, 100, "Base cost of sabatier methanation", horizontalalignment = "center", rotation = "vertical")
+
+    cbar = fig.colorbar(myax, label = "Average gas load (kWh)")
+    #     spacing='proportional',  format='%1i')
+    tls = cbar.ax.get_yticks()
+    tls = [tl * 10000 for tl in tls ]
+    cbar.set_ticklabels(tls)
+
+    plt.savefig("Presentations/November18pres/objective.pdf")
+    plt.savefig("Presentations/November18pres/objective.png", dpi = 500)
+    plt.show()  
+        
+        
+
+def plot_costpergas():
+    sumdata = pd.read_csv("results/csvs/summary_15_11_2022_gasdem_megencost_sweep.csv")
+    sumdata = sumdata[sumdata['load'] != 1]
+
+    fig, ax = plt.subplots()
+    cmap = plt.get_cmap('summer_r')
+    
+    ax.set_xscale("log")
+    # ax.set_yscale("log")
+
+    ax.set_xlabel("Annualized cost of methanogenesis (Eur/kW)")
+    ax.set_ylabel("Price per kWh gas")
+    ax.set_title("Price per kWh gas, over the first kWh")
+
+    norm = LogNorm()# The log norm is necessary to show the logarithmic spacing of the "third axis"
+    myax = ax.scatter(sumdata['megen cost'], sumdata['obj per kWh gas'], c = sumdata['load']/sumdata['load'].max(), cmap = cmap, norm = norm)
+    ax.axvline(annual_cost('methanation'), color='black',ls='--') #This is the benchmark cost
+    ax.text(annual_cost('methanation')* 0.9, 100, "Base cost of sabatier methanation", horizontalalignment = "center", rotation = "vertical")
+
+    cbar = fig.colorbar(myax, label = "Average gas load (kWh)")
+    #     spacing='proportional',  format='%1i')
+    tls = cbar.ax.get_yticks()
+    tls = [tl * 10000 for tl in tls ]
+    cbar.set_ticklabels(tls)
+
+    # plt.savefig("Presentations/November18pres/objectiveper2log.pdf")
+    # plt.savefig("Presentations/November18pres/objectiveper2log.png", dpi = 500)
+    plt.show()     
+
+
+
+
+def plot_gridtoelec_dcurv():
+    
+    df = pd.read_csv("results/csvs/15_11_2022_gasdem_megencost_sweep.csv")
+    loads = df['load'].unique()
+    megen_costs = df['megen cost'].unique()
+
+    pairs =  list(itertools.product(loads, megen_costs))
+    fig, ax = plt.subplots()
+
+    for pair in pairs:
+        a_load = pair[0]
+        a_cost = pair[1]
+        tempdf = df[(df["load"] == a_load) & (df["megen cost"] == a_cost)]
+        tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
+        tempdf.index = range(8760)
+        ax.plot(tempdf['grid to electricity link ts'])
+    #Here, select one individual time series
