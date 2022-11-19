@@ -652,14 +652,201 @@ def plot_gridtoelec_dcurv():
     loads = df['load'].unique()
     megen_costs = df['megen cost'].unique()
 
+    maxload = df['load'].max()
+
     pairs =  list(itertools.product(loads, megen_costs))
+    minimum =  min(df['megen cost'])
+    maximum = max (df['megen cost'])
+    pairs = [x for x in pairs if x[1] == minimum or x[1] == maximum]
+
     fig, ax = plt.subplots()
+    ax.set_yscale("symlog", linthresh = 1)
+    cmap = plt.get_cmap('summer_r')
+    norm = LogNorm(vmin = 1/10000, vmax = 1) #This is the range of fractions for log
 
     for pair in pairs:
         a_load = pair[0]
+        fracload = a_load / 10000
+
         a_cost = pair[1]
         tempdf = df[(df["load"] == a_load) & (df["megen cost"] == a_cost)]
         tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
         tempdf.index = range(8760)
-        ax.plot(tempdf['grid to electricity link ts'])
-    #Here, select one individual time series
+
+
+        fax = ax.plot(tempdf['grid to electricity link ts'], color = cmap(norm(fracload)))
+
+    # tempdf = df[(df["load"] == 1) & (df["megen cost"] == max(df['megen cost']))]
+    # tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
+    # tempdf.index = range(8760)    
+    # ax.plot(tempdf['grid to electricity link ts'], label = '10x methanation cost')
+
+
+
+    # tempdf = df[(df["load"] == 1) & (df["megen cost"] == min(df['megen cost']))]
+    # tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
+    # tempdf.index = range(8760)
+    # ax.plot(tempdf['grid to electricity link ts'], label = '0.1 x methanation cost')
+
+
+    fig.set_size_inches(11, 7)
+    ax.set_xlabel("Hours in a year")
+    ax.set_ylabel("kW to solar system (+) and to grid (-)")
+    ax.set_title("Dcurves for link between grid and electricity at 0.1 x and 10 x methanation costs")
+    cbar = fig.colorbar(plt.cm.ScalarMappable(norm = norm, cmap = cmap), label = "Average gas load (kWh)")
+
+    tls = cbar.ax.get_yticks()
+    tls = [tl * 10000 for tl in tls ]
+    cbar.set_ticklabels(tls)
+    # ax.legend()
+
+    plt.savefig("Presentations/November18pres/minmaxcosts_gridelec_dcurvs.pdf")
+    plt.savefig("Presentations/November18pres/minmaxcosts_gridelec_dcurvs.png", dpi = 500)
+    plt.show()
+
+
+
+
+
+
+def extract_colors():
+    cmap = plt.get_cmap('summer_r')
+    loads = np.logspace(0, 4, 10)
+    loadfracs = [x/10000 for x in loads]
+    norm = LogNorm(vmin = min(loadfracs), vmax = max(loadfracs))
+
+    testclr = [cmap(norm(x)) for x in range(len(loadfracs))]
+
+    
+
+
+    df = pd.read_csv("results/csvs/15_11_2022_gasdem_megencost_sweep.csv")
+
+
+
+def plot_methlink_dcurv():
+
+    df = pd.read_csv("results/csvs/15_11_2022_gasdem_megencost_sweep.csv")
+    loads = df['load'].unique()
+    megen_costs = df['megen cost'].unique()
+
+    maxload = df['load'].max()
+
+    pairs =  list(itertools.product(loads, megen_costs))
+    # minimum =  min(df['megen cost'])
+    # maximum = max (df['megen cost'])
+    # pairs = [x for x in pairs if x[1] == minimum or x[1] == maximum]
+
+
+    fig, ax = plt.subplots()
+    ax.set_yscale("log")
+    cmap = plt.get_cmap('summer_r')
+    norm = LogNorm(vmin = 1/10000, vmax = 1) #This is the range of fractions for log
+
+    for pair in pairs:
+        a_load = pair[0]
+        fracload = a_load / 10000
+
+        a_cost = pair[1]
+        tempdf = df[(df["load"] == a_load) & (df["megen cost"] == a_cost)]
+        tempdf = tempdf.sort_values(by = ["methanogen link ts"], ascending = False)
+        tempdf.index = range(8760)
+
+
+        ax.plot(tempdf['methanogen link ts'], color = cmap(norm(fracload)))
+
+    # tempdf = df[(df["load"] == 1) & (df["megen cost"] == max(df['megen cost']))]
+    # tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
+    # tempdf.index = range(8760)    
+    # ax.plot(tempdf['grid to electricity link ts'], label = '10x methanation cost')
+
+
+
+    # tempdf = df[(df["load"] == 1) & (df["megen cost"] == min(df['megen cost']))]
+    # tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
+    # tempdf.index = range(8760)
+    # ax.plot(tempdf['grid to electricity link ts'], label = '0.1 x methanation cost')
+
+
+    fig.set_size_inches(11, 7)
+    ax.set_xlabel("Hours in a year")
+    ax.set_ylabel("kWs of methane produced")
+    ax.set_title("Dcurves for methanogen link")
+    cbar = fig.colorbar(plt.cm.ScalarMappable(norm = norm, cmap = cmap), label = "Average gas load (kWh)")
+
+    tls = cbar.ax.get_yticks()
+    tls = [tl * 10000 for tl in tls ]
+    cbar.set_ticklabels(tls)
+    # ax.legend()
+
+    plt.savefig("Presentations/November18pres/allmethgen_dcurvs.pdf")
+    plt.savefig("Presentations/November18pres/allmethgen_dcurvs.png", dpi = 500)
+    plt.show()
+
+
+def plot_gasstore_dcurv():
+
+    df = pd.read_csv("results/csvs/15_11_2022_gasdem_megencost_sweep.csv")
+    
+    df['snapshot'] = pd.to_datetime(df['snapshot'])
+    loads = df['load'].unique()
+    megen_costs = df['megen cost'].unique()
+
+    maxload = df['load'].max()
+
+    pairs =  list(itertools.product(loads, megen_costs))
+    minimum =  min(df['megen cost'])
+    maximum = max (df['megen cost'])
+    # pairs = [x for x in pairs if x[1] == minimum or x[1] == maximum]
+
+
+    fig, ax = plt.subplots()
+    # ax.set_yscale("log")
+    cmap = plt.get_cmap('summer_r')
+    norm = LogNorm(vmin = 1/10000, vmax = 1) #This is the range of fractions for log
+
+    # for pair in pairs:
+    #     a_load = pair[0]
+    #     fracload = a_load / 10000
+
+    #     a_cost = pair[1]
+    #     tempdf = df[(df["load"] == a_load) & (df["megen cost"] == a_cost)]
+    #     # tempdf = tempdf.sort_values(by = ["snapshot"])
+
+    #     tempdf.index = tempdf['snapshot']
+
+
+    #     ax.plot(tempdf['gas store ts'], color = cmap(norm(fracload)))
+
+    tempdf = df[(df["load"] == maxload) & (df["megen cost"] == maximum)]
+    tempdf.index = tempdf['snapshot']
+    ax.plot(tempdf['gas store ts'], label = '10x methanation cost')
+
+
+    tempdf = df[(df["load"] == maxload) & (df["megen cost"] == minimum)]
+    tempdf.index = tempdf['snapshot']
+    ax.plot(tempdf['gas store ts'], label = '0.1x methanation cost')
+
+    # tempdf = df[(df["load"] == 1) & (df["megen cost"] == min(df['megen cost']))]
+    # tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
+    # tempdf.index = range(8760)
+    # ax.plot(tempdf['grid to electricity link ts'], label = '0.1 x methanation cost')
+
+
+    fig.set_size_inches(11, 7)
+    ax.set_xlabel("Time")
+    ax.set_ylabel("kWh of methane storage")
+    ax.set_title("Methane storage over the year")
+    # cbar = fig.colorbar(plt.cm.ScalarMappable(norm = norm, cmap = cmap), label = "Average gas load (kWh)")
+
+    # tls = cbar.ax.get_yticks()
+    # tls = [tl * 10000 for tl in tls ]
+    # cbar.set_ticklabels(tls)
+    ax.legend()
+
+    plt.savefig("Presentations/November18pres/minmaxcost_store_yr.pdf")
+    plt.savefig("Presentations/November18pres/minmaxcost_store_yr.png", dpi = 500)
+    plt.show()
+
+
+

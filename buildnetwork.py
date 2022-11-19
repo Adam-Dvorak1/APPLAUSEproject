@@ -232,11 +232,12 @@ def add_links(network):
 
 def add_methanogen(network):
     '''Efficiency = sabatier efficiency = 0.8
-    gas_CO2_intensity = 0.2
+    gas_CO2_intensity = 0.2 (This is tons of co2)
     CO2 emissions/MW H2= 0.01 
     gas compressor efficiency: 0.9885
     (2.154 kW CH4 / 100 kW CH4)'''
-
+    #Should the sabatier efficiency for methanogen really be a methanogen efficiency? 
+    #Is the heat  of enthalpy accounted for in the 0.8? Are we double counting the energy loss with efficiency and 
     network.add("Link",
         "methanogens",
         bus0="H2 compressed",
@@ -248,8 +249,8 @@ def add_methanogen(network):
         capital_cost=annual_cost("methanation") * 3,   # annualised capital costs. Assume
         p_nom_extendable=True,
         efficiency=0.8 * 0.9785,    # how much CH4 is produced per H2 input. So 0.8 MW Ch4 produced per MW of H2
-        efficiency2= 0.01, #I have no idea how many MW CO2 is emitted per MW of H2. hopefully not much. We are saying 0.01 MW of CO2 per  
-        efficiency3 = - 0.2 * 0.8, #Let's assume that 0.2 MW of compressed CO2 is used per 1 MW of CH4. Negative.
+        efficiency2= 0.01, #I have no idea how many MW CO2 is emitted per MW of H2. hopefully not much. We are saying 0.01 MW of CO2 per. What are the units for each of these? We need to know whether it is in tons, or energy 
+        efficiency3 = - 0.2 * 0.8 * 0.9785, #Let's assume that 0.2 MW of compressed CO2 is used per 1 MW of CH4. Negative.
         lifetime=30)
 
     return network
@@ -276,8 +277,8 @@ def add_sabatier(network):
         p_nom_extendable=True,
         efficiency= 0.993 * 0.8,    # how much CH4 is produced per H2 input. So 0.8 MW Ch4 produced per MW of H2
         efficiency2= 0.01, #I have no idea how many MW CO2 is emitted per MW H2. hopefully not much. We are saying 0.01 MW of CO2 per  
-        efficiency3 = - 0.8 * 0.2 * 0.98, #Let's assume that 0.2 MW of compressed CO2 is used per 1 MW of CH4. Negative.
-        efficiency4 = - 0.8 * 0.1, #How much electricity is used per 0.8 CH4 produced. Negative. 
+        efficiency3 = - 0.8 * 0.993 * 0.2 * 0.98, #Let's assume that 0.2 MW of compressed CO2 is used per 1 MW of CH4. Negative.
+        efficiency4 = - 0.8 * 0.993 * 0.1, #How much electricity is used per 0.8 CH4 produced. Negative. 
         #Let's say that we know that 0.1 MW electricity is used to produce 1 MW CH4. Then, the efficiency is - sabatier efficiency * 0.1
         lifetime=30)
 

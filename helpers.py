@@ -89,7 +89,9 @@ def extract_data(folder):
         tempdf['grid to electricity link ts'] = n.links_t.p0.loc[:, "High to low voltage"]
         tempdf['methanogen link ts'] = n.links_t.p0.loc[:, "methanogens"]
         tempdf['gas store ts'] = n.stores_t.e.loc[:, "gas store"]
-        tempdf['biogas generator ts'] = n.generators_t.p.loc[:, 'Biogas']
+        tempdf['biogas generator ts'] = n.generators_t.p.loc[:, 'Biogas'] #We actually don't care about the solar generator because we know it is completely maxed
+
+
 
 
         df = pd.concat([df, tempdf])
