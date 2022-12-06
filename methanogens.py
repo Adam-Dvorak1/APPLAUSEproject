@@ -17,7 +17,7 @@ import time
 from multiprocessing import Pool
 from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_links, add_methanogen, add_sabatier
 from helpers import override_component_attrs, annual_cost
-from modifynetwork import change_gasload, to_netcdf
+from modifynetwork import change_gasload, to_netcdf, remove_grid, remove_solar
 
 #  Lisa: We are going to need multi-links for modelling the CO2 management.
 #  Since default setting for links in PyPSA is having only one entry (bus0)
@@ -52,7 +52,9 @@ if __name__ == "__main__":
 
         ##---<<Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "gasdem_megencost_sweep" #name of the run, added to date
+        name = "gasdem_megencost_sweep_nogrid" #name of the run, added to date
+        solar = True
+        grid = False
 
         # costrange = np.logspace(0, 4, 10)        
         gas_dems = [x for x in np.logspace(0, 4, 10)] #number of kWh 
@@ -79,6 +81,14 @@ if __name__ == "__main__":
                 methanation = "sabatier"
 
 
+        if solar != True:
+                n = remove_solar(n)
+        
+
+        if grid != True:
+                n = remove_grid(n)
+
+
         ns = list([n])
 
 
@@ -88,9 +98,9 @@ if __name__ == "__main__":
         rel_path = get_relpath(allpath, homepath)
 
 
-        name = list([rel_path])
+        endpath = list([rel_path])
 
-        f = list(itertools.product(ns, gas_dems, methanogen_costs, name))
+        f = list(itertools.product(ns, gas_dems, methanogen_costs, endpath))
 
 
         with Pool(processes=4) as pool:

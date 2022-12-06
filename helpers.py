@@ -83,7 +83,7 @@ def extract_data(folder):
 
 
         tempdf['load'] = n.loads_t.p["Gas Load"].max()/8760 #This is an independent variable
-        tempdf['megen cost'] = n.links.loc['methanogens', 'capital_cost'] #This is an independent varaible
+        tempdf['megen cost'] = n.links.loc['methanogens', 'capital_cost'] #This is an independent varaible. Hm, but this is not the same as the 
         tempdf['megen size'] = n.links.loc['methanogens', 'p_nom_opt'] 
         tempdf['objective'] = n.objective 
         tempdf['grid to electricity link ts'] = n.links_t.p0.loc[:, "High to low voltage"]
@@ -114,14 +114,92 @@ def extract_summary(csvpath):
     df3.to_csv('results/csvs/summary_' + name )#no csv needed at the end because the name is from the other csv
 
 
+
+
+def get_gridcost(n):
+    '''Note: this assumes a constant grid load'''
+    gridgen = n.generators_t.p["Grid"] - n.loads_t.p["Grid Load"].mean() #subtracting the average load of the grid
+    
+    gridgen = gridgen.to_frame() #this is a series so turn into frame
+
+    marginal_cost = n.generators_t.marginal_cost #timeseries of marginal costs
+
+    costgrid = gridgen * marginal_cost #timeseries of real costs
+    total_cost = costgrid.sum().values[0] # total cost
+
+    return (total_cost)
+
+
+def get_costs(n, grid):
+
+    '''This takes a network and tries to find all of the relevant costs
+    If grid = True, then the total electricity '''
+
+
+
         
+    links = n.links.loc[:, "p_nom_opt"] * n.links.loc[:, "capital_cost"]
+    generators = n.generators.loc[:, "p_nom_opt"] * n.generators.loc[:, "capital_cost"]
+    stores = n.stores.loc[:, "e_nom_opt"] * n.stores.loc[:, "capital_cost"]
+   
+    gasload = n.loads_t.p["Gas Load"].max()/8760
+    gasload = pd.Series( gasload)
+    gasload.index = ["Gas Load"]
+
+    link_cap_cost =  n.links.loc["methanogens", "capital_cost"]
+    link_cap_cost = pd.Series(link_cap_cost)
+    link_cap_cost.index = ["methanogen capital cost"]
+
+    
+
+    cost_series = pd.concat([gasload, link_cap_cost, links, generators, stores])
+
+    if grid == True:
+        grid_cost = get_gridcost(n)
+        grid_cost = pd.Series(grid_cost)
+        grid_cost.index = ['grid elec total cost']
+        cost_series = pd.concat([cost_series, grid_cost])
+        
+
+    cost_df = pd.DataFrame([cost_series])
+    
+    return cost_df
+
+
+
+
+def costs_to_csv(path):
+    searchpath = path + "/*"
+    df = pd.DataFrame()
+
+    for file in glob.glob(searchpath):
+        n = pypsa.Network()
+        n.import_from_netcdf(file)
+        cost_df = get_costs(n, True) #True because we are looking for the marginal price of the grid sum, so we add a bit
+
+
+        df = pd.concat([df, cost_df])
+
+
+    name = path.split("/")
+    name = name[-1]
+    
+    df.to_csv('results/csvs/costs/' + name + ".csv")
+
+
 
 
 
 if __name__ == "__main__":
-    path = "results/NetCDF/15_11_2022_gasdem_megencost_sweep"
-    extract_data(path)
+    # path = "results/NetCDF/21_11_2022_gasdem_megencost_sweep_nogrid"
+    # results/NetCDF/21_11_2022_gasdem_megencost_sweep_nosolar
+    path = "results/NetCDF/21_11_2022_gasdem_megencost_sweep_nosolar"
+    costs_to_csv(path)
 
-    csvpath = "results/csvs/15_11_2022_gasdem_megencost_sweep.csv"
+
+
+    # extract_data(path)
+
+    # csvpath = "results/csvs/15_11_2022_gasdem_megencost_sweep.csv"
 
     # extract_summary(csvpath) 

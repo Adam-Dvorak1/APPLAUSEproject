@@ -7,6 +7,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.colors import LogNorm
+
 import re
 import math
 import glob
@@ -30,6 +31,11 @@ annualcosts = [str(round(x)) for x in np.logspace(-1, 1, 10) * annual_cost("meth
 linkcost_mults = [round(x, 1) for x in np.logspace(-1, 1, 10)]
 
 costmult_dict = dict(zip(annualcosts, linkcost_mults))
+
+#---------<<Other  dicts>------------------
+
+color_dict = {"battery": '#9467bd', "battery charger":'#1f77b4', "methanogens": '#2ca02c', "Solar PV": '#ff7f0e',
+"H2 Electrolysis": '#d62728', "grid elec total cost": '#7f7f7f'}
 
 #---------<<generatorplots>>------------------
 def generators_dcurve(path, yscale):
@@ -848,5 +854,88 @@ def plot_gasstore_dcurv():
     plt.savefig("Presentations/November18pres/minmaxcost_store_yr.png", dpi = 500)
     plt.show()
 
+#%%
+def plot_costs(path):
+    
+    costdf = pd.read_csv(path)
 
+    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
+
+    fulldf = costdf
+
+    for val in fulldf['Gas Load'].unique():
+        costdf = fulldf.loc[fulldf["Gas Load"] == val, :]
+        costdf = costdf.sort_values(by ="methanogen capital cost")
+        costdf.index = costdf["methanogen capital cost"].round(1)
+
+        ax = costdf[costdf.columns[2:]].plot( kind = "bar", stacked = True)
+        ax.set_ylabel("Euros")
+        ax.set_xlabel("Methanogen cost")
+        ax.set_title("Cost breakdown by no-grid element for a gas load of " + str(val), y = 1.04)
+
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                    box.width, box.height * 0.9])
+
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles[::-1], labels[::-1], loc='upper center', bbox_to_anchor=(0.5, -0.25), ncol =3)
+
+
+
+
+        plt.subplots_adjust(bottom = 0.2)
+        savepath = "Presentations/December2pres/costs/nogrid_barplot_" + str(val) + "_gas_dem"
+        plt.tight_layout()
+        plt.savefig(savepath + ".pdf")
+        plt.savefig(savepath + ".png", dpi = 500)
+        plt.close()
+
+
+def plot_costper(path): 
+
+
+    costdf = pd.read_csv(path)
+
+    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
+
+    fulldf = costdf
+
+
+    for val in fulldf['Gas Load'].unique():
+        costdf = fulldf.loc[fulldf["Gas Load"] == val, :]
+        costdf = costdf.sort_values(by ="methanogen capital cost")
+        costdf.index = costdf["methanogen capital cost"].round(1)
+        costdf = costdf/val/8760*1000 #price per MWh
+
+        colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[2:]]
+        ax = costdf[costdf.columns[2:]].plot( kind = "bar", stacked = True, color = colors)
+
+
+        ax.set_ylabel("Euros")
+        ax.set_xlabel("Methanogen cost")
+        ax.set_title("Cost per MWh breakdown by no grid element for a gas load of " + str(val))
+
+        ax.axhline(125)
+
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                    box.width, box.height * 0.9])
+
+        # ax.text(0.2, 0.4, "Europe price per MWh as of November 1", transform= ax.transAxes)
+        
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles[::-1], labels[::-1], loc='upper center', bbox_to_anchor=(0.5, -0.25), ncol =3)
+
+
+
+
+        plt.subplots_adjust(bottom = 0.2)
+        savepath = "Presentations/December2pres/nogrid_costsper/nogrid_barplot_" + str(val) + "_gas_dem"
+        plt.tight_layout()
+        plt.savefig(savepath + ".pdf")
+        plt.savefig(savepath + ".png", dpi = 500)
+        plt.close()
+
+
+# %%
 

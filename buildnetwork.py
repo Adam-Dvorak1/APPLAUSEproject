@@ -173,8 +173,8 @@ def add_links(network):
         #as in, electricity is producing hydrogen
         p_nom_extendable = True,
         carrier = "H2 Electrolysis",
-        capital_cost = annual_cost("electrolysis") * 2, #We are assuming that the cost of the compressor is equal to the cost of the electrolysis #Eur/kW/yr
-        efficiency = tech_data.query("technology == 'electrolysis' & parameter == 'efficiency'")['value'].values[0]* 0.993, 
+        capital_cost = annual_cost("electrolysis"), #We are assuming that the cost of the compressor is equal to the cost of the electrolysis #Eur/kW/yr
+        efficiency = tech_data.query("technology == 'electrolysis' & parameter == 'efficiency'")['value'].values[0], 
         #This efficiency takes in the efficiency of the compression as well as the efficiency of the electrolysis
         )
 
@@ -227,6 +227,8 @@ def add_links(network):
     return network
 
 
+
+
 ##-----<<METHANATION>>-------
 '''Either add_methanogen OR add_sabatier will be chosen'''
 
@@ -234,7 +236,7 @@ def add_methanogen(network):
     '''Efficiency = sabatier efficiency = 0.8
     gas_CO2_intensity = 0.2 (This is tons of co2)
     CO2 emissions/MW H2= 0.01 
-    gas compressor efficiency: 0.9885
+    gas compressor efficiency: 0.9785
     (2.154 kW CH4 / 100 kW CH4)'''
     #Should the sabatier efficiency for methanogen really be a methanogen efficiency? 
     #Is the heat  of enthalpy accounted for in the 0.8? Are we double counting the energy loss with efficiency and 
@@ -283,3 +285,7 @@ def add_sabatier(network):
         lifetime=30)
 
     return network
+
+
+
+
