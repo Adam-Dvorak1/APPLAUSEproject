@@ -52,9 +52,9 @@ if __name__ == "__main__":
 
         ##---<<Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "gasdem_megencost_sweep_nogrid" #name of the run, added to date
+        name = "gasdem_megencost_sweep" #name of the run, added to date
         solar = True
-        grid = False
+        grid = True
 
         # costrange = np.logspace(0, 4, 10)        
         gas_dems = [x for x in np.logspace(0, 4, 10)] #number of kWh 

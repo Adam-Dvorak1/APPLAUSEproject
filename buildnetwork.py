@@ -289,3 +289,11 @@ def add_sabatier(network):
 
 
 
+######################################################################
+######################################################################
+'''These functions are for experiments with adding hydrogen storage.
+Does the presence of hydrogen storage cause the electrolysis and methanation
+link to become decoupled? 9 Dec 22'''
+
+def add_hydrogen_store():
+    

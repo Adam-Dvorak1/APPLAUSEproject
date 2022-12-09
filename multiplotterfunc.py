@@ -35,520 +35,8 @@ costmult_dict = dict(zip(annualcosts, linkcost_mults))
 #---------<<Other  dicts>------------------
 
 color_dict = {"battery": '#9467bd', "battery charger":'#1f77b4', "methanogens": '#2ca02c', "Solar PV": '#ff7f0e',
-"H2 Electrolysis": '#d62728', "grid elec total cost": '#7f7f7f'}
+"H2 Electrolysis": '#d62728', "grid elec total cost": '#7f7f7f', "grid elec total income": '#e377c2'}
 
-#---------<<generatorplots>>------------------
-def generators_dcurve(path, yscale):
-    n = pypsa.Network()
-    n.import_from_netcdf(path)
-    o = path.split("/")
-    oo = o[-1]
-    num = re.findall('\d*\.?\d+',oo)[0]
-
-    methanogen = True
-
-    netlinks = n.generators_t.p
-
-    fig, ax = plt.subplots()
-    netlinks.index = range(8760)
-    for column in netlinks.columns:
-        netlinks = netlinks.sort_values(by = column)
-        netlinks.index = range(8760)
-        ax.plot(netlinks[column], label = column)
-
-    log = ""
-    if yscale == "log":
-        ax.set_yscale("log")
-        log = "log"
-
-    ax.set_ylabel("")
-    ax.legend()
-    ax.set_ylim(0.5, 10**7)
-    curDT = datetime.now()
-
-    version = "_" + num + log
-    if methanogen == True:
-        ax.set_title("Generators with methanogenesis")
-        plt.savefig("results/Images/03_11_2022_log_cost_sweep/methanogenesis_generator_dcurve" + version + ".pdf")
-    else:
-        ax.set_title("Generators with sabatier")
-        plt.savefig("results/Images/03_11_2022_log_cost_sweep/methanogenesis_generator_dcurve" + version + ".pdf")
-    plt.show()
-
-
-
-
-#---------<<battery plots>>------------------
-
-def battery_plot(path):
-    '''As of 24 October, this plots battery charging and discharging'''
-    n = pypsa.Network()
-    n.import_from_netcdf(path)
-    o = path.split("/")
-    oo = [item.split("_") for item in o]
-    oo = [item for sublist in oo for item in sublist]
-
-    if "methanogen" in oo:
-        methanogen = True
-    else:
-        methanogen = False
-    print (methanogen)
-
-    #battery plot
-    fig, ax = plt.subplots()
-    ax.plot(n.links_t.p0[['battery charger', 'battery discharger']], label = ["charger", "discharger"])
-    ax.set_ylabel("")
-    ax.legend()
-    curDT = datetime.now()
-    version = curDT.strftime("_%d_%m_%Y")
-    if methanogen == True:
-        ax.set_title("Methanogen--Battery Charge and Discharge")
-        plt.savefig("results/Images/methanogen_battery_links" + version + ".pdf")
-    else:
-        ax.set_title("Sabatier--Battery Charge and Discharge")
-        plt.savefig("results/Images/sabatier_battery_links" + version + ".pdf")
-    plt.show()
-
-def battery_dcurve(path, yscale):
-    '''As of 24 October, this plots battery charging and discharging'''
-    n = pypsa.Network()
-    n.import_from_netcdf(path)
-    o = path.split("/")
-    oo = o[-1]
-    num = re.findall('\d*\.?\d+',oo)[0]
-
-
-
-    fig, ax = plt.subplots()
-    charging = n.links_t.p0[['battery charger']]
-
-    charging = charging.sort_values(by = 'battery charger')
-    charging.index = range(8760)
-    
-
-    discharging = n.links_t.p0[['battery discharger']]
-    discharging = discharging.sort_values(by = 'battery discharger')
-    discharging.index = range(8760)
-
-    ax.plot(charging, label = "charger")
-    ax.plot(discharging, label = "discharger")
-    ax.set_ylabel("")
-    ax.legend()
-
- 
-
-    log = ""
-    if yscale == "log":
-        ax.set_yscale("log")
-        log = "log"
-
-    methanation = True
-
-
-    version = "_" + num + log
-    if methanation == True:
-
-        ax.set_title("Methanogen--Battery Charge and Discharge")
-        plt.savefig("results/Images/03_11_2022_log_cost_sweep/methanogen_battery_dcurve" + version + ".pdf")
-    else:
-        ax.set_title("Sabatier--Battery Charge and Discharge")
-        plt.savefig("results/Images/sabatier_battery_dcurve" + version + ".pdf")
-    plt.show()
-
-
-
-#---------<<Biogas link plots>>------------------
-def biogas_link_plot(path):
-    '''As of 24 October, this plots the methane link'''
-    n = pypsa.Network()
-    n.import_from_netcdf(path)
-    o = path.split("/")
-    oo = [item.split("_") for item in o]
-    oo = [item for sublist in oo for item in sublist]
-
-    if "methanogen" in oo:
-        methanogen = True
-    else:
-        methanogen = False
-
-
-    methanation = "Biogas upgrading"
-
-
-    #We are interested in the n.links_t dataframes that are dealing with the p in or out of the link
-    keydict = [f for f in n.links_t.keys() if "p" in f and f[1:].isdigit() and int(f[1:]) < 3]
-
-    netlinks = pd.DataFrame()
-
-    # We want to plot each of the p# time series present. To do so we add a pd column
-    # We want to name the p# values for what they are, and what they represent, using a dict. 
-    for key in keydict:
-        netlinks[biogas_dict[key]] = n.links_t[key][methanation]
-
-    netlinks = netlinks.rolling(24).mean()
-    netlinks = netlinks[::24]
-
-    fig, ax = plt.subplots()
-    ax.plot(netlinks, label = netlinks.columns)
-    ax.set_ylabel("")
-    ax.legend()
-    curDT = datetime.now()
-    version = curDT.strftime("_%d_%m_%Y")
-    if methanogen == True:
-        ax.set_title("Biogas upgrading link with methanogenesis")
-        plt.savefig("results/Images/methanogenesis_biogas_link" + version + ".pdf")
-    else:
-        ax.set_title("Biogas upgrading link with sabatier")
-        plt.savefig("results/Images/sabatier_biogas_link" + version + ".pdf")
-    plt.show()
-
-def biogas_dcurve(path):
-    '''As of 24 October, this plots the methane link'''
-    n = pypsa.Network()
-    n.import_from_netcdf(path)
-    o = path.split("/")
-    oo = [item.split("_") for item in o]
-    oo = [item for sublist in oo for item in sublist]
-
-    if "methanogen" in oo:
-        methanogen = True
-    else:
-        methanogen = False
-
-
-    methanation = "Biogas upgrading"
-
-
-    #We are interested in the n.links_t dataframes that are dealing with the p in or out of the link
-    keydict = [f for f in n.links_t.keys() if "p" in f and f[1:].isdigit() and int(f[1:]) < 3]
-
-    netlinks = pd.DataFrame()
-    fig, ax = plt.subplots()
-
-    # We want to plot each of the p# time series present. To do so we add a pd column
-    # We want to name the p# values for what they are, and what they represent, using a dict. 
-    for key in keydict:
-        netlinks[biogas_dict[key]] = n.links_t[key][methanation]
-
-    netlinks.index = range(8760)
-    for column in netlinks.columns:
-        netlinks = netlinks.sort_values(by = column)
-        netlinks.index = range(8760)
-        ax.plot(netlinks[column], label = column)
-
-    # ax.plot(netlinks, label = netlinks.columns)
-    ax.set_ylabel("")
-    ax.legend()
-    curDT = datetime.now()
-    date = curDT.strftime("_%d_%m_%Y")
-    fileday = oo[-3]
-    filemonth = oo[-2]
-    version = "_run_" + fileday + "_" + filemonth +  "_created_" + date
-    if methanogen == True:
-        ax.set_title("Biogas upgrading link with methanogenesis")
-        plt.savefig("results/Images/methanogenesis_biogas_dcurve" + version + ".pdf")
-    else:
-        ax.set_title("Biogas upgrading link with sabatier")
-        plt.savefig("results/Images/sabatier_biogas_dcurve" + version + ".pdf")
-    plt.show()
-
-
-
-#---------<<Electrolysislink plots>>------------------
-def electrolysis_link_plot(path):
-    '''As of 24 October, this plots the methane link'''
-    n = pypsa.Network()
-    n.import_from_netcdf(path)
-    o = path.split("/")
-    oo = [item.split("_") for item in o]
-    oo = [item for sublist in oo for item in sublist]
-
-    if "methanogen" in oo:
-        methanogen = True
-    else:
-        methanogen = False
-
-
-    methanation = "H2 Electrolysis"
-
-
-    #We are interested in the n.links_t dataframes that are dealing with the p in or out of the link
-    keydict = [f for f in n.links_t.keys() if "p" in f and f[1:].isdigit() and int(f[1:]) < 2]
-
-    netlinks = pd.DataFrame()
-
-    # We want to plot each of the p# time series present. To do so we add a pd column
-    # We want to name the p# values for what they are, and what they represent, using a dict. 
-    for key in keydict:
-        netlinks[electrolysis_dict[key]] = n.links_t[key][methanation]
-
-    netlinks = netlinks.rolling(24).mean()
-    netlinks = netlinks[::24]
-
-    fig, ax = plt.subplots()
-    ax.plot(netlinks, label = netlinks.columns)
-    ax.set_ylabel("")
-    ax.legend()
-    curDT = datetime.now()
-    version = curDT.strftime("_%d_%m_%Y")
-    if methanogen == True:
-        ax.set_title("Electrolysis link with methanogenesis")
-        plt.savefig("results/Images/methanogenesis_electrolysis_link" + version + ".pdf")
-    else:
-        ax.set_title("Electrolysis link with sabatier")
-        plt.savefig("results/Images/sabatier_electrolysis_link" + version + ".pdf")
-    plt.show()
-
-def electrolysis_dcurve(path):
-    '''As of 24 October, this plots the methane link'''
-    n = pypsa.Network()
-    n.import_from_netcdf(path)
-    o = path.split("/")
-    oo = [item.split("_") for item in o]
-    oo = [item for sublist in oo for item in sublist]
-
-    if "methanogen" in oo:
-        methanogen = True
-    else:
-        methanogen = False
-
-
-    methanation = "H2 Electrolysis"
-
-
-    #We are interested in the n.links_t dataframes that are dealing with the p in or out of the link
-    keydict = [f for f in n.links_t.keys() if "p" in f and f[1:].isdigit() and int(f[1:]) < 2]
-
-    netlinks = pd.DataFrame()
-
-    # We want to plot each of the p# time series present. To do so we add a pd column
-    # We want to name the p# values for what they are, and what they represent, using a dict. 
-    for key in keydict:
-        netlinks[electrolysis_dict[key]] = n.links_t[key][methanation]
-
-
-
-    fig, ax = plt.subplots()
-
-
-    netlinks.index = range(8760)
-    for column in netlinks.columns:
-        netlinks = netlinks.sort_values(by = column)
-        netlinks.index = range(8760)
-        ax.plot(netlinks[column], label = column)
-
-    ax.set_ylabel("")
-    ax.legend()
-    curDT = datetime.now()
-    date = curDT.strftime("_%d_%m_%Y")
-    fileday = oo[-3]
-    filemonth = oo[-2]
-    version = "_run_" + fileday + "_" + filemonth +  "_created_" + date
-    if methanogen == True:
-        ax.set_title("Electrolysis link with methanogenesis")
-        plt.savefig("results/Images/methanogenesis_electrolysis_dcurve" + version + ".pdf")
-    else:
-        ax.set_title("Electrolysis link with sabatier")
-        plt.savefig("results/Images/sabatier_electrolysis_dcurve" + version + ".pdf")
-    plt.show()
-
-
-
-#---------<<Storage plots>>------------------
-def storage_plots(path):
-    '''As of 24 October, this plots the methane link'''
-    n = pypsa.Network()
-    n.import_from_netcdf(path)
-    o = path.split("/")
-    oo = [item.split("_") for item in o]
-    oo = [item for sublist in oo for item in sublist]
-
-    if "methanogen" in oo:
-        methanogen = True
-    else:
-        methanogen = False
-
-
-    netlinks = pd.DataFrame()
-
-    columns = [column for column in n.stores_t['e'].columns]
-    for column in columns:
-        netlinks[column] = n.stores_t['e'][column]
-
-    netlinks = netlinks.rolling(24).mean()
-    netlinks = netlinks[::24]
-    
-
-    fig, ax = plt.subplots()
-    ax.plot(netlinks, label = netlinks.columns)
-    ax.set_ylabel("")
-    ax.legend()
-    ax.set_yscale("log")
-    curDT = datetime.now()
-    date = curDT.strftime("_%d_%m_%Y")
-    fileday = oo[-3]
-    filemonth = oo[-2]
-    version =  "_run_" + fileday + "_" + filemonth +  "_created_" + date
-    if methanogen == True:
-        ax.set_title("Store units with methanogenesis")
-        plt.savefig("results/Images/methanogenesis_stores" + version + ".pdf")
-    else:
-        ax.set_title("Store units sabatier")
-        plt.savefig("results/Images/sabatier_stores" + version + ".pdf")
-    plt.show()
-
-def storage_dcurve(path, yscale):
-    '''As of 24 October, this plots the methane link'''
-    n = pypsa.Network()
-    n.import_from_netcdf(path)
-    o = path.split("/")
-    name = o[-2]
-    oo = o[-1]
-    num = re.findall('\d*\.?\d+',oo)[0]
-
-    netlinks = pd.DataFrame()
-
-    columns = [column for column in n.stores_t['e'].columns]
-    for column in columns:
-        netlinks[column] = n.stores_t['e'][column]
-
-
-    fig, ax = plt.subplots()
-    netlinks.index = range(8760)
-    for column in netlinks.columns:
-        netlinks = netlinks.sort_values(by = column)
-        netlinks.index = range(8760)
-        ax.plot(netlinks[column], label = column)
-    
-
-
-
-    ax.set_ylabel("")
-    ax.legend()
-    log = ""
-    if yscale == "log":
-        ax.set_yscale("log")
-        log = "log"
-    methanogen = True
-    version = "_" + num + log
-    
-
-    if methanogen == True:
-        ax.set_title("Store units with methanogenesis " + num + " kW")
-        plt.savefig("results/Images/" + name + "/methanogenesis_stores_dcurve" + version + ".pdf")
-    else:
-        ax.set_title("Store units sabatier")
-        plt.savefig("results/Images/sabatier_stores_dcurve" + version + ".pdf")
-    plt.show()
-
-
-
-#---------<<Methanation link plots>>------------------
-def methane_link_plot(path):
-    '''As of 24 October, this plots the methane link'''
-    n = pypsa.Network()
-    n.import_from_netcdf(path)
-    o = path.split("/")
-    oo = [item.split("_") for item in o]
-    oo = [item for sublist in oo for item in sublist]
-
-    if "methanogen" in oo:
-        methanogen = True
-        methanation = "methanogens"
-    else:
-        methanogen = False
-        methanation = "sabatier"
-
-    #We are interested in the n.links_t dataframes that are dealing with the p in or out of the link
-    keydict = [f for f in n.links_t.keys() if "p" in f and f[1:].isdigit()]
-
-    netlinks = pd.DataFrame()
-
-    # We want to plot each of the p# time series present. To do so we add a pd column
-    # We want to name the p# values for what they are, and what they represent, using a dict. 
-    for key in keydict:
-        netlinks[methanation_link_dict[key]] = n.links_t[key][methanation]
-
-    fig, ax = plt.subplots()
-    ax.plot(netlinks, label = netlinks.columns)
-    ax.set_ylabel("")
-    ax.legend()
-    curDT = datetime.now()
-    version = curDT.strftime("_%d_%m_%Y")
-    if methanogen == True:
-        ax.set_title("Methanogenesis link")
-        plt.savefig("results/Images/methanogenesis_link" + version + ".pdf")
-    else:
-        ax.set_title("Sabatier link")
-        plt.savefig("results/Images/sabatier_link" + version + ".pdf")
-    plt.show()
-
-def methane_link_dcurve(path):
-    '''As of 24 October, this plots the methane link'''
-    n = pypsa.Network()
-    n.import_from_netcdf(path)
-    o = path.split("/")
-    name = o[-2]
-    oo = o[-1]
-    num = re.findall('\d*\.?\d+',oo)[0]
-
-    #We are interested in the n.links_t dataframes that are dealing with the p in or out of the link
-    keydict = [f for f in n.links_t.keys() if "p" in f and f[1:].isdigit()]
-
-    netlinks = pd.DataFrame()
-
-    # We want to plot each of the p# time series present. To do so we add a pd column
-    # We want to name the p# values for what they are, and what they represent, using a dict. 
-    for key in keydict:
-        netlinks[methanation_link_dict[key]] = n.links_t[key]['methanogens']
-
-
-
-
-
-    fig, ax = plt.subplots()
-
-    netlinks.index = range(8760)
-    for column in netlinks.columns:
-        netlinks = netlinks.sort_values(by = column)
-        netlinks.index = range(8760)
-        ax.plot(netlinks[column], label = column)
-    ax.set_ylabel("")
-    ax.legend()
-
-
-    version = "_" + num
-
-    methanogen = True
-    if methanogen == True:
-        ax.set_title("Methanogenesis link " + num + " kW")
-        plt.savefig("results/Images/" + name + "/methanogenesis_dcurve" + version + ".pdf")
-    else:
-        ax.set_title("Sabatier link--gas out")
-        plt.savefig("results/Images/sabatier_dcurve" + version + ".pdf")
-    plt.show()
-
-
-def dcurve_gridlink():
-    path = "results/NetCDF/03_11_2022_log_cost_sweep"
-    fig, ax = plt.subplots()
-
-    for file in glob.glob(path):
-        n = pypsa.Network()
-        n.import_from_netcdf(file)
-        o = file.split("/")
-        o = o[-1]
-        oo = o.split(".")
-        oo 
-        
-
-        gridlink = n.links_t.p1.loc[:, "High to low voltage"]
-        gridlink = gridlink.apply(lambda row: 0 if row['High to low voltage'] < 0 else row ['High to low voltage'], axis = 1)
-        gridlink = gridlink.abs()
-        gridlink = gridlink.sort_values(ascending = False)
-        gridlink.index = range(8760)
-        ax.plot(gridlink)
-        
 
 
 #%%
@@ -618,6 +106,62 @@ def plot_objective():
     plt.savefig("Presentations/November18pres/objective.png", dpi = 500)
     plt.show()  
         
+        
+def plot_solarsize():
+    data = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nogrid.csv")
+    sumdata = data.drop_duplicates(['megen cost', 'load'])
+    fig, ax = plt.subplots()
+    cmap = plt.get_cmap('summer_r')
+    
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("Annualized cost of methanogenesis (Eur/kW)")
+    ax.set_ylabel("Solar generator capacity (kW)")
+    ax.set_title("Size of the solar generator")
+
+    norm = LogNorm()# The log norm is necessary to show the logarithmic spacing of the "third axis"
+    myax = ax.scatter(sumdata['megen cost'], sumdata['solar size'], c = sumdata['load']/sumdata['load'].max(), cmap = cmap, norm = norm)
+    ax.axvline(annual_cost('methanation'), color='black',ls='--') #This is the benchmark cost
+    ax.text(annual_cost('methanation')* 0.9, 100, "Base cost of sabatier methanation", horizontalalignment = "center", rotation = "vertical")
+
+    ax.axhline(130000, color='black',ls='--')
+    cbar = fig.colorbar(myax, label = "Average gas load (kWh)")
+    #     spacing='proportional',  format='%1i')
+    tls = cbar.ax.get_yticks()
+    tls = [tl * 10000 for tl in tls ]
+    cbar.set_ticklabels(tls)
+
+    plt.savefig("Presentations/December8pres/nogrid/solarsize.pdf")
+    plt.savefig("Presentations/December8pres/nogrid/solarsize.png", dpi = 500)
+    plt.show()  
+        
+def plot_battsize():
+    data = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nogrid.csv")
+    sumdata = data.drop_duplicates(['megen cost', 'load'])
+    fig, ax = plt.subplots()
+    cmap = plt.get_cmap('summer_r')
+    
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("Annualized cost of methanogenesis (Eur/kW)")
+    ax.set_ylabel("Battery capacity (kWh)")
+    ax.set_title("Size of the battery")
+
+    norm = LogNorm()# The log norm is necessary to show the logarithmic spacing of the "third axis"
+    myax = ax.scatter(sumdata['megen cost'], sumdata['battery size'], c = sumdata['load']/sumdata['load'].max(), cmap = cmap, norm = norm)
+    ax.axvline(annual_cost('methanation'), color='black',ls='--') #This is the benchmark cost
+    ax.text(annual_cost('methanation')* 0.9, 100, "Base cost of sabatier methanation", horizontalalignment = "center", rotation = "vertical")
+
+    ax.axhline(240000, color='black',ls='--')
+    cbar = fig.colorbar(myax, label = "Average gas load (kWh)")
+    #     spacing='proportional',  format='%1i')
+    tls = cbar.ax.get_yticks()
+    tls = [tl * 10000 for tl in tls ]
+    cbar.set_ticklabels(tls)
+
+    plt.savefig("Presentations/December8pres/nogrid/batterysize.pdf")
+    plt.savefig("Presentations/December8pres/nogrid/batterysize.png", dpi = 500)
+    plt.show()  
         
 
 def plot_costpergas():
@@ -730,9 +274,19 @@ def extract_colors():
 
 
 
-def plot_methlink_dcurv():
+def plot_methlink_dcurv(path):
+    '''This uses a csv provided by extract_data(), in helpers, to make a plot of all of the duration curves
+    for the methanogen link in a given folder '''
+    df = pd.read_csv(path)
 
-    df = pd.read_csv("results/csvs/15_11_2022_gasdem_megencost_sweep.csv")
+    o = path.split("_")
+    if 'nogrid.csv' in o:
+        experiment = "nogrid"
+    elif "nosolar.csv" in o:
+        experiment = "nosolar"
+    else:
+        experiment = "gridsolar"
+
     loads = df['load'].unique()
     megen_costs = df['megen cost'].unique()
 
@@ -777,7 +331,7 @@ def plot_methlink_dcurv():
     fig.set_size_inches(11, 7)
     ax.set_xlabel("Hours in a year")
     ax.set_ylabel("kWs of methane produced")
-    ax.set_title("Dcurves for methanogen link")
+    ax.set_title("Dcurves for methanogen link " + experiment)
     cbar = fig.colorbar(plt.cm.ScalarMappable(norm = norm, cmap = cmap), label = "Average gas load (kWh)")
 
     tls = cbar.ax.get_yticks()
@@ -785,8 +339,8 @@ def plot_methlink_dcurv():
     cbar.set_ticklabels(tls)
     # ax.legend()
 
-    plt.savefig("Presentations/November18pres/allmethgen_dcurvs.pdf")
-    plt.savefig("Presentations/November18pres/allmethgen_dcurvs.png", dpi = 500)
+    plt.savefig("Presentations/December8pres/" + experiment + "/allmethgen_dcurvs.pdf")
+    plt.savefig("Presentations/December8pres/" + experiment + "/allmethgen_dcurvs.png", dpi = 500)
     plt.show()
 
 
@@ -892,11 +446,24 @@ def plot_costs(path):
 
 
 def plot_costper(path): 
-
+    #December 5
+    '''We are interested in the price of gas per MWh. The november 1 price is about 125 Euro/MWh. so this is included
+    Takes a costs csv as input, made from get_costs() in helpers.py, which should be stored in results/csvs/costs'''
 
     costdf = pd.read_csv(path)
 
-    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
+    o = path.split("_")
+    if 'nogrid.csv' in o:
+        experiment = "nogrid"
+    elif "nosolar.csv" in o:
+        experiment = "nosolar"
+    else:
+        experiment = "gridsolar"
+
+    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]#If any of the values of the column are not 0, keep them. Gets rid of generators/links etc with no cost
+
+    #only positive--so no "income"
+    costdf = costdf.loc[:,  (costdf > 0).any(axis=0)]#If any of the values of the column are not negative, keep them. Gets rid of the "income"
 
     fulldf = costdf
 
@@ -911,11 +478,17 @@ def plot_costper(path):
         ax = costdf[costdf.columns[2:]].plot( kind = "bar", stacked = True, color = colors)
 
 
-        ax.set_ylabel("Euros")
-        ax.set_xlabel("Methanogen cost")
-        ax.set_title("Cost per MWh breakdown by no grid element for a gas load of " + str(val))
+        ax.set_ylabel("LCOE (Euros/MWh_energy)")
+        ax.set_xlabel("Methanogen cost (Eur/kWh)")
+        
+        val = round(val, 1)
+        ax.set_title("Cost(+) per MWh breakdown " + experiment +  " model for gas load of " + str(val) + "kWh")
 
-        ax.axhline(125)
+        ax.axhline(135, label = "2-Dec-22 price")
+        ax.axhline (36, label = "1-Jul-21 price", color = "#ff7f0e")
+        ax.axhline (10, label = "1-Jul-19 price", color = "#2ca02c")
+        ax.axhline (235, label = "2-Dec-22 price", color = "#2ca02c")
+
 
         box = ax.get_position()
         ax.set_position([box.x0, box.y0 + box.height * 0.1,
@@ -929,13 +502,45 @@ def plot_costper(path):
 
 
 
+
         plt.subplots_adjust(bottom = 0.2)
-        savepath = "Presentations/December2pres/nogrid_costsper/nogrid_barplot_" + str(val) + "_gas_dem"
+        savepath = "Presentations/December8pres/" +  experiment + "/" + experiment + "_costsper/"+ experiment + "_barplot_" + str(val) + "_gas_dem"
         plt.tight_layout()
         plt.savefig(savepath + ".pdf")
         plt.savefig(savepath + ".png", dpi = 500)
         plt.close()
 
+def compare_dcurves():
+    nosolar = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nosolar.csv")
+    nogrid = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nogrid.csv")
+    gridsolar = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep.csv")
 
-# %%
+    nosolarmax = nosolar.query('load == load.max() & `megen cost` == `megen cost`.max() ')
+    nogridmax = nogrid.query('load == load.max() & `megen cost` == `megen cost`.max() ')
+    gridsolarmax = gridsolar.query('load == load.max() & `megen cost` == `megen cost`.max() ')
 
+
+    nosolarmax= nosolarmax.sort_values(by = ["methanogen link ts"], ascending = False)
+    nosolarmax.index = range(8760)
+
+    nogridmax = nogridmax.sort_values(by = ["methanogen link ts"], ascending = False)
+    nogridmax.index = range(8760)
+
+    gridsolarmax= gridsolarmax.sort_values(by = ["methanogen link ts"], ascending = False)
+    gridsolarmax.index = range(8760)
+
+    fig, ax = plt.subplots()
+
+    ax.plot(gridsolarmax['methanogen link ts'], label = "Grid and solar", color = "C2")
+    ax.plot(nosolarmax['methanogen link ts'], label = "Only grid", color = "C0")
+    ax.plot(nogridmax['methanogen link ts'], label = "Only solar", color = "C1")
+
+
+    ax.set_title("Dcurve of megen link 3 scenarios, 10MW load and 10x sabatier cost")
+    ax.set_xlabel("hours")
+    ax.set_ylabel("kWh/h")
+    
+    ax.legend()
+    plt.savefig("Presentations/December8pres/three_dcurve_reverse.pdf")
+    plt.savefig("Presentations/December8pres/three_dcurves_reverse.png", dpi = 500)
+    plt.show()

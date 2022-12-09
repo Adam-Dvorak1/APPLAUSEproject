@@ -85,10 +85,15 @@ def extract_data(folder):
         tempdf['load'] = n.loads_t.p["Gas Load"].max()/8760 #This is an independent variable
         tempdf['megen cost'] = n.links.loc['methanogens', 'capital_cost'] #This is an independent varaible. Hm, but this is not the same as the 
         tempdf['megen size'] = n.links.loc['methanogens', 'p_nom_opt'] 
+        if "Solar PV" in n.generators.index:
+            tempdf['solar size'] = n.generators.p_nom_opt["Solar PV"]
+            tempdf['battery size'] = n.stores.e_nom_opt['battery']
         tempdf['objective'] = n.objective 
+
         tempdf['grid to electricity link ts'] = n.links_t.p0.loc[:, "High to low voltage"]
         tempdf['methanogen link ts'] = n.links_t.p0.loc[:, "methanogens"]
         tempdf['gas store ts'] = n.stores_t.e.loc[:, "gas store"]
+        tempdf["battery store ts"] = n.stores_t.e.loc[:, "battery"]#Note--we have experiments where we remove the solar, but not the battery. In this case, the battery just has 0s
         tempdf['biogas generator ts'] = n.generators_t.p.loc[:, 'Biogas'] #We actually don't care about the solar generator because we know it is completely maxed
 
 
@@ -114,20 +119,21 @@ def extract_summary(csvpath):
     df3.to_csv('results/csvs/summary_' + name )#no csv needed at the end because the name is from the other csv
 
 
-
+#n.links_t.p0['High to low voltage']
 
 def get_gridcost(n):
     '''Note: this assumes a constant grid load'''
-    gridgen = n.generators_t.p["Grid"] - n.loads_t.p["Grid Load"].mean() #subtracting the average load of the grid
+    gridgen = n.generators_t.p["Grid"] - n.loads_t.p["Grid Load"].mean() #subtracting the average load of the grid. This is the EXACT SAME as n.links_t.p0["High to low voltage"]
     
     gridgen = gridgen.to_frame() #this is a series so turn into frame
 
     marginal_cost = n.generators_t.marginal_cost #timeseries of marginal costs
 
     costgrid = gridgen * marginal_cost #timeseries of real costs
-    total_cost = costgrid.sum().values[0] # total cost
+    total_costs = costgrid.query('`Grid` > 0').sum().values[0]# total cost. Positive ecause we are looking at p
+    total_income = costgrid.query('`Grid` < 0').sum().values[0]
 
-    return (total_cost)
+    return total_costs, total_income
 
 
 def get_costs(n, grid):
@@ -155,10 +161,15 @@ def get_costs(n, grid):
     cost_series = pd.concat([gasload, link_cap_cost, links, generators, stores])
 
     if grid == True:
-        grid_cost = get_gridcost(n)
+        grid_cost, grid_income = get_gridcost(n)
         grid_cost = pd.Series(grid_cost)
         grid_cost.index = ['grid elec total cost']
-        cost_series = pd.concat([cost_series, grid_cost])
+
+
+        grid_income= pd.Series(grid_income)
+        grid_income.index = ['grid elec total income']
+
+        cost_series = pd.concat([cost_series, grid_cost, grid_income])
         
 
     cost_df = pd.DataFrame([cost_series])
@@ -168,14 +179,14 @@ def get_costs(n, grid):
 
 
 
-def costs_to_csv(path):
+def costs_to_csv(path, isgrid):
     searchpath = path + "/*"
     df = pd.DataFrame()
 
     for file in glob.glob(searchpath):
         n = pypsa.Network()
         n.import_from_netcdf(file)
-        cost_df = get_costs(n, True) #True because we are looking for the marginal price of the grid sum, so we add a bit
+        cost_df = get_costs(n, isgrid) #True because we are looking for the marginal price of the grid sum, so we add a bit
 
 
         df = pd.concat([df, cost_df])
@@ -193,13 +204,15 @@ def costs_to_csv(path):
 if __name__ == "__main__":
     # path = "results/NetCDF/21_11_2022_gasdem_megencost_sweep_nogrid"
     # results/NetCDF/21_11_2022_gasdem_megencost_sweep_nosolar
-    path = "results/NetCDF/21_11_2022_gasdem_megencost_sweep_nosolar"
-    costs_to_csv(path)
-
-
-
+    # path = "results/NetCDF/06_12_2022_gasdem_megencost_sweep_nogrid"
+    # extract_data(path)
+    path = "results/NetCDF/06_12_2022_gasdem_megencost_sweep_nogrid"
+    extract_data(path)
+    # path = "results/NetCDF/06_12_2022_gasdem_megencost_sweep"
     # extract_data(path)
 
     # csvpath = "results/csvs/15_11_2022_gasdem_megencost_sweep.csv"
 
     # extract_summary(csvpath) 
+
+    # costs_to_csv(path, True)
