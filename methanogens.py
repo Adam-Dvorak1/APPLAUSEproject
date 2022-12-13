@@ -15,7 +15,7 @@ import pathlib
 import itertools
 import time
 from multiprocessing import Pool
-from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_links, add_methanogen, add_sabatier
+from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_links, add_methanogen, add_sabatier, add_hydrogen_store
 from helpers import override_component_attrs, annual_cost
 from modifynetwork import change_gasload, to_netcdf, remove_grid, remove_solar
 
@@ -52,9 +52,10 @@ if __name__ == "__main__":
 
         ##---<<Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "gasdem_megencost_sweep" #name of the run, added to date
+        name = "gasdem_megencost_sweep_w_hstore" #name of the run, added to date
         solar = True
         grid = True
+        h_store = True
 
         # costrange = np.logspace(0, 4, 10)        
         gas_dems = [x for x in np.logspace(0, 4, 10)] #number of kWh 
@@ -79,6 +80,9 @@ if __name__ == "__main__":
         else:
                 n = add_sabatier(n)
                 methanation = "sabatier"
+
+        if h_store == True:
+                n = add_hydrogen_store(n)
 
 
         if solar != True:

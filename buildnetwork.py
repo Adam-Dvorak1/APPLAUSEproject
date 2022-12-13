@@ -295,5 +295,28 @@ def add_sabatier(network):
 Does the presence of hydrogen storage cause the electrolysis and methanation
 link to become decoupled? 9 Dec 22'''
 
-def add_hydrogen_store():
+def add_hydrogen_store(n):
+
+    n.add("Bus", "H2 store", carrier = "H2 store")
+    n.add("Store",
+            "H2 store",
+            bus = "H2 store",
+            e_cyclic = True, #NO FREE LUNCH must return back to original position by end of the year
+            e_nom_extendable = True,
+            capital_cost = annual_cost("hydrogen storage tank incl. compressor"))#Note, I am not sure whether
+
+    n.add("Link",
+            "To H2 store",
+            bus0 = "H2 compressed",
+            bus1 = "H2 store",
+            p_nom_extendable = True,
+            capital_cost = 0)
+
+    n.add("Link",
+            "From H2 store",
+            bus1 = "H2 compressed",
+            bus0 = "H2 store",
+            p_nom_extendable = True,
+            capital_cost = 0)
     
+    return n
