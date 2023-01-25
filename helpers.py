@@ -85,9 +85,14 @@ def extract_data(folder):
         tempdf['load'] = n.loads_t.p["Gas Load"].max()/8760 #This is an independent variable
         tempdf['megen cost'] = n.links.loc['methanogens', 'capital_cost'] #This is an independent varaible. Hm, but this is not the same as the 
         tempdf['megen size'] = n.links.loc['methanogens', 'p_nom_opt'] 
+        tempdf['electrolyzer size'] = n.links.loc["H2 Electrolysis", "p_nom_opt"]
         if "Solar PV" in n.generators.index:
             tempdf['solar size'] = n.generators.p_nom_opt["Solar PV"]
             tempdf['battery size'] = n.stores.e_nom_opt['battery']
+        if "H2 store" in n.stores.index:
+            tempdf["H2 store size"] = n.stores.e_nom_opt['H2 store']
+            tempdf['H2 store ts'] = n.stores_t.e.loc[:, "H2 store"]
+
         tempdf['objective'] = n.objective 
 
         tempdf['grid to electricity link ts'] = n.links_t.p0.loc[:, "High to low voltage"]
@@ -102,7 +107,8 @@ def extract_data(folder):
         df = pd.concat([df, tempdf])
 
     name = folder.split("/")
-    name = name[-1]
+    name = name [-1]
+
     
     df.to_csv('results/csvs/' + name + ".csv")
 
@@ -200,16 +206,22 @@ def costs_to_csv(path, isgrid):
 
 
 
+#%%
+
+
+#%%
+
+
 
 if __name__ == "__main__":
     # path = "results/NetCDF/21_11_2022_gasdem_megencost_sweep_nogrid"
     # results/NetCDF/21_11_2022_gasdem_megencost_sweep_nosolar
-    # path = "results/NetCDF/06_12_2022_gasdem_megencost_sweep_nogrid"
-    # extract_data(path)
-    path = "results/NetCDF/06_12_2022_gasdem_megencost_sweep_nogrid"
+    path = "results/NetCDF/15_12_2022_gasdem_megencost_sweep_nosolar_w_hstore"
     extract_data(path)
-    # path = "results/NetCDF/06_12_2022_gasdem_megencost_sweep"
-    # extract_data(path)
+    path = "results/NetCDF/15_12_2022_gasdem_megencost_sweep_nogrid_w_hstore"
+    extract_data(path)
+    path = "results/NetCDF/15_12_2022_gasdem_megencost_sweep_w_hstore"
+    extract_data(path)
 
     # csvpath = "results/csvs/15_11_2022_gasdem_megencost_sweep.csv"
 

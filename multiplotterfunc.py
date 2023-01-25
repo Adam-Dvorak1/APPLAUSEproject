@@ -1,4 +1,4 @@
-
+'''The purpose of this file is to house the functions that I use to plot my results'''
 # %%
 import pypsa
 import numpy as np
@@ -135,7 +135,36 @@ def plot_solarsize():
     plt.savefig("Presentations/December8pres/nogrid/solarsize.png", dpi = 500)
     plt.show()  
         
-def plot_battsize():
+def plot_eltrzr_size():
+    data = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nogrid.csv")
+    sumdata = data.drop_duplicates(['megen cost', 'load'])
+    fig, ax = plt.subplots()
+    cmap = plt.get_cmap('summer_r')
+    
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("Annualized cost of methanogenesis (Eur/kW)")
+    ax.set_ylabel("Electrolyzer size (kW)")
+    ax.set_title("Size of Electrolyzer")
+
+    norm = LogNorm()# The log norm is necessary to show the logarithmic spacing of the "third axis"
+    myax = ax.scatter(sumdata['megen cost'], sumdata['electrolyzer size'], c = sumdata['load']/sumdata['load'].max(), cmap = cmap, norm = norm)
+    ax.axvline(annual_cost('methanation'), color='black',ls='--') #This is the benchmark cost
+    ax.text(annual_cost('methanation')* 0.9, 100, "Base cost of sabatier methanation", horizontalalignment = "center", rotation = "vertical")
+
+    ax.axhline(240000, color='black',ls='--')
+    cbar = fig.colorbar(myax, label = "Average gas load (kWh)")
+    #     spacing='proportional',  format='%1i')
+    tls = cbar.ax.get_yticks()
+    tls = [tl * 10000 for tl in tls ]
+    cbar.set_ticklabels(tls)
+
+    plt.savefig("Presentations/December16pres/nogrid/electrolyzersize.pdf")
+    plt.savefig("Presentations/December16pres/nogrid/electrolyzersize.png", dpi = 500)
+    plt.show()  
+        
+
+def plot_megensize(path):
     data = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nogrid.csv")
     sumdata = data.drop_duplicates(['megen cost', 'load'])
     fig, ax = plt.subplots()
@@ -162,7 +191,8 @@ def plot_battsize():
     plt.savefig("Presentations/December8pres/nogrid/batterysize.pdf")
     plt.savefig("Presentations/December8pres/nogrid/batterysize.png", dpi = 500)
     plt.show()  
-        
+
+
 
 def plot_costpergas():
     sumdata = pd.read_csv("results/csvs/summary_15_11_2022_gasdem_megencost_sweep.csv")
@@ -544,3 +574,4 @@ def compare_dcurves():
     plt.savefig("Presentations/December8pres/three_dcurve_reverse.pdf")
     plt.savefig("Presentations/December8pres/three_dcurves_reverse.png", dpi = 500)
     plt.show()
+

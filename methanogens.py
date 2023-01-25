@@ -50,30 +50,37 @@ if __name__ == "__main__":
         __spec__ = "ModuleSpec(name='builtins', loader=<class '_frozen_importlib.BuiltinImporter'>)"
         startime = time.time()
 
-        ##---<<Variables>>-----
+        ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "gasdem_megencost_sweep_w_hstore" #name of the run, added to date
-        solar = True
+        name = "gasdem_megencost_sweep_nosolar_w_hstore" #name of the run, added to date
+        solar = False
         grid = True
         h_store = True
 
-        # costrange = np.logspace(0, 4, 10)        
-        gas_dems = [x for x in np.logspace(0, 4, 10)] #number of kWh 
-        methanogen_costs = [x for x in np.logspace(-1, 1, 10)]#multiplier to sabatier price
-        # methane_cost = annual_cost('methanation')
-        # methanogen_costs = [methane_cost * x for x in methanogen_costs]
+        # We are doing huge sweeps to see the extremes--under what conditions is it worth it to produce methane from our methanogenesis? 
+        # It may be that it is basically never worth it. In fact, our first results show that it is actually better to just use
+        # The solar generator to produce electricity rather than produce methane
 
+        gas_dems = [x for x in np.logspace(0, 4, 10)] #number of kWh 
+        methanogen_costs = [x for x in np.logspace(-1, 1, 10)]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
+
+
+
+        ##---<<Network creation>>-----
         overrides = override_component_attrs("override_component_attrs")
 
         n = pypsa.Network(override_component_attrs=overrides)
 
-
+        #Here, we are building the network, one type of component at a time. 
         n = add_buses(n)
         n = add_generators(n)
         n = add_loads(n)
         n = add_stores(n)
         n = add_links(n)
 
+
+
+        ##---<<Network experiment choices>>------
         if methanogens == True:
                 n = add_methanogen(n)
                 methanation = "methanogen"
@@ -81,26 +88,28 @@ if __name__ == "__main__":
                 n = add_sabatier(n)
                 methanation = "sabatier"
 
+        #25 Jan this function is a mystery to me. Why did we want hydrogen stores?
         if h_store == True:
                 n = add_hydrogen_store(n)
 
-
+        #I have previously given myself the option of removing the solar generator and forcing the methanogen to only use
+        # electricity from the generator
         if solar != True:
                 n = remove_solar(n)
         
-
+        # In contrast, I also gave myself the option of removing the grid and forcing the system to rely on the solar generator.
+        # Obviously, it makes no sense to remove both generators.
         if grid != True:
                 n = remove_grid(n)
 
 
+        ##---<<Running the experiment>>-------
+        
         ns = list([n])
 
-
- 
         allpath = new_folder(name)
         homepath = pathlib.Path().resolve()
         rel_path = get_relpath(allpath, homepath)
-
 
         endpath = list([rel_path])
 

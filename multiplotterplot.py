@@ -2,6 +2,7 @@ import pypsa
 import numpy as np
 import pandas as pd
 from datetime import datetime
+'''The purpose of this function is to import the functions from multiplotterfunc.py and then execute the function (ie, plot them)'''
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
