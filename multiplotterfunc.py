@@ -48,7 +48,7 @@ def extract_pathinfo(path):
     return oo
 
 
-def plot_linksize():
+def plot_linksize(path):
 
     #This needs:
 
@@ -480,15 +480,21 @@ def plot_costper(path):
     '''We are interested in the price of gas per MWh. The november 1 price is about 125 Euro/MWh. so this is included
     Takes a costs csv as input, made from get_costs() in helpers.py, which should be stored in results/csvs/costs'''
 
-    costdf = pd.read_csv(path)
+    costdf = pd.read_csv(path, index_col = 0)
 
     o = path.split("_")
-    if 'nogrid.csv' in o:
+    if 'nogrid' in o:
         experiment = "nogrid"
-    elif "nosolar.csv" in o:
+    elif "nosolar" in o:
         experiment = "nosolar"
     else:
         experiment = "gridsolar"
+
+
+    if 'w' in o:
+        hstore = "with hstore"
+    else:
+        hstore = "without hstore"
 
     costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]#If any of the values of the column are not 0, keep them. Gets rid of generators/links etc with no cost
 
@@ -534,10 +540,12 @@ def plot_costper(path):
 
 
         plt.subplots_adjust(bottom = 0.2)
-        savepath = "Presentations/December8pres/" +  experiment + "/" + experiment + "_costsper/"+ experiment + "_barplot_" + str(val) + "_gas_dem"
+
         plt.tight_layout()
-        plt.savefig(savepath + ".pdf")
-        plt.savefig(savepath + ".png", dpi = 500)
+
+        # savepath = "Presentations/December8pres/" +  experiment + "/" + experiment + "_costsper/"+ experiment + "_barplot_" + str(val) + "_gas_dem"
+        # plt.savefig(savepath + ".pdf")
+        # plt.savefig(savepath + ".png", dpi = 500)
         plt.close()
 
 def compare_dcurves():

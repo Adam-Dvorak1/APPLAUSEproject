@@ -1,3 +1,4 @@
+'''The purpose of this script is to house generally helpful helper functions'''
 import os
 from pypsa.components import components, component_attrs
 from pypsa.descriptors import Dict
@@ -6,6 +7,12 @@ import glob
 import pathlib
 from datetime import datetime
 import pypsa
+
+
+#  Lisa: We are going to need multi-links for modelling the CO2 management.
+#  Since default setting for links in PyPSA is having only one entry (bus0)
+#  and one exit point (bus1) with a given efficieny (efficiency) we have to
+#  overwrite some component settings with the following function
 
 def override_component_attrs(directory):
     """Lisa: Tell PyPSA that links can have multiple outputs by
@@ -216,11 +223,17 @@ def costs_to_csv(path, isgrid):
 if __name__ == "__main__":
     # path = "results/NetCDF/21_11_2022_gasdem_megencost_sweep_nogrid"
     # results/NetCDF/21_11_2022_gasdem_megencost_sweep_nosolar
-    path = "results/NetCDF/15_12_2022_gasdem_megencost_sweep_nosolar_w_hstore"
+    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_wo_hstore"
     extract_data(path)
-    path = "results/NetCDF/15_12_2022_gasdem_megencost_sweep_nogrid_w_hstore"
+    path = "rresults/NetCDF/25_01_2023_gasdem_megencost_sweep_w_hstore"
     extract_data(path)
-    path = "results/NetCDF/15_12_2022_gasdem_megencost_sweep_w_hstore"
+    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore"
+    extract_data(path)
+    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_wo_hstore"
+    extract_data(path)
+    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore"
+    extract_data(path)
+    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore"
     extract_data(path)
 
     # csvpath = "results/csvs/15_11_2022_gasdem_megencost_sweep.csv"

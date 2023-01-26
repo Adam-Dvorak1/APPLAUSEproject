@@ -10,7 +10,7 @@ def add_buses(network):
 
     network.add("Bus","local elec", carrier = "local elec")
 
-    network.add("Bus", "H2 compressed", carrier  = "H2 compressed")
+    network.add("Bus", "H2 compressed", carrier  = "H2 compressed") #I believe that the H2 is not necessarily compressed--we just call it that. The multilink adds compression (or not)
 
     network.add("Bus", "gas", carrier = "gas")
 
@@ -18,7 +18,7 @@ def add_buses(network):
 
     network.add("Bus", "biogas", carrier = "biogas") 
 
-    network.add("Bus", "CO2 compressed", carrier = "co2 compressed") #Note, CO2 compressed is actually only CO2 for the methanogen case 
+    network.add("Bus", "CO2 compressed", carrier = "co2 compressed") #Note, CO2 compressed is actually only CO2 in for the methanogen case 
 
     network.add("Bus", "grid", carrier = "grid")
 
@@ -27,21 +27,22 @@ def add_buses(network):
 
 def add_generators(network):
     '''There are three generators: solar, biogas, and grid. The grid is huge and has a 
-    marginal cost.
+    marginal cost. The solar generator has a max size of 130 MW. The biogas generator is free and can be infinitely big.
+
     This also sets the network snapshots'''
     hours_in_2019 = pd.date_range('2019-01-01T00:00:00','2019-12-31T23:00:00', freq='H') #I changed the date rate from Z
     network.set_snapshots(hours_in_2019)
 
-    df_cal_solar = pd.read_csv('data/RealCalFlatsSolarCFs.csv', index_col=0)
+    df_cal_solar = pd.read_csv('data/RealCalFlatsSolarCFs.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location (lat/lon)
     df_cal_solar.index = pd.to_datetime(df_cal_solar.index)
-    df_cal_biogas = df_cal_solar['biogas'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]]
-    df_cal_solar = df_cal_solar['solar'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series
+    df_cal_biogas = df_cal_solar['biogas'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #This is just assuming a constant generator, which I added to the original data from renewables.ninja
+    df_cal_solar = df_cal_solar['solar'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series 
 
 
-    gridprice = pd.read_csv("data/2019UTCCAISOprice.csv", index_col = 0)
+    gridprice = pd.read_csv("data/2019UTCCAISOprice.csv", index_col = 0) #From http://www.energyonline.com/Data/GenericData.aspx?DataId=20, which is taken from CAISO. Units of /MWh
     gridprice.index = pd.to_datetime(gridprice.index)
     gridprice = gridprice['price'][[hour.strftime("%Y-%m-%d %H:%M:%S") for hour in network.snapshots]]
-    gridprice = gridprice/100
+    gridprice = gridprice/1000 #Before, I used to divide by 100. But I believe that I should have divided by 1000, because we want per kWh, and we had per MWh ##note this is incorrect. 
 
 
     gridgen = pd.DataFrame(index = range (8760))
@@ -51,11 +52,11 @@ def add_generators(network):
 
     network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
         carrier = 'solar', capital_cost = annual_cost('solar-utility'), #Eur/kW/yr
-        marginal_cost = 0, p_nom_max = 130000, p_max_pu = df_cal_solar) #
+        marginal_cost = 0, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
 
     network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True, 
         carrier = 'biogas', capital_cost = 0,
-        marginal_cost = 0, p_max_pu = df_cal_biogas) 
+        marginal_cost = 0, p_max_pu = df_cal_biogas) # In reality, there is a marginal cost for biogas. What is it? 
 
     network.add("Generator", "Grid", bus = 'grid', p_nom = 100000000,#100 GW. The capacity is for free. However, we still pay marginal cost
         carrier = "grid", capital_cost = 0, marginal_cost = gridprice, p_max_pu = gridgen['grid'])#The datafile gives US cents/kWh. I wanted dollars (or euros) per kWh.     # This is using 2019 (UTC) data from CAISO, LCG consulting.Prices are in c/kWh
@@ -82,7 +83,7 @@ def add_loads(network):
     network.add("Load", 
         "Grid Load", 
         bus="grid", 
-        p_set=gasdf["Constant_MW_methane"] * 1000000)
+        p_set=gasdf["Constant_MW_methane"] * 1000000)#Assuming 3 GW of demand from the grid
 
     return network
 
@@ -100,14 +101,14 @@ def add_stores(network):
         bus = "battery",
         e_cyclic = True, #NO FREE LUNCH must return back to original position by end of the year
         e_nom_extendable = True,
-        e_nom_max = 240000,
+        e_nom_max = 240000, #Because Apple is planning a 240 MWh battery storage. This corresponds to 2 hr storage
         capital_cost = annual_cost("battery storage")) #Eur/kWh/yr
     network.add("Link",
         "battery charger",
         bus0 = "local elec",
         bus1 = "battery",
         carrier = "battery charger",
-        efficiency =tech_data.query("technology == 'battery inverter' & parameter == 'efficiency'")['value'].values[0] ** 0.5,
+        efficiency =tech_data.query("technology == 'battery inverter' & parameter == 'efficiency'")['value'].values[0] ** 0.5, #Taking square root because 
         p_nom_extendable = True,
         capital_cost = annual_cost("battery inverter"))
     network.add("Link",
@@ -120,6 +121,7 @@ def add_stores(network):
         ) 
 
     ## ---------------------gas-----------------------------
+    #We want a completely free gas storage, as its only purpose is to serve as flexibility for the load
     network.add("Bus", "gas store", carrier = "gas store")
     network.add("Store",
         "gas store",
@@ -142,6 +144,7 @@ def add_stores(network):
 
 
     ## -------CO2 environment--------------------------
+    #The purpose of this store is to keep track of any CO2 emissions, if any
     network.add("Bus", "CO2 environment", carrier = "CO2 environment")
     network.add("Store",
         "CO2 environment",
@@ -166,8 +169,9 @@ def add_links(network):
     tech_data = pd.read_csv("data/costs_2025.csv")
 
     ## ---------------Electrolysis--------------------------
+    '''Compression is taken in during the methanogenesis link'''
     network.add("Link",
-        "H2 Electrolysis", #in reality, this is both compression and electrolysis
+        "H2 Electrolysis", 
         bus0 = "electricity",
         bus1 = "H2 compressed",
         #as in, electricity is producing hydrogen
@@ -181,13 +185,12 @@ def add_links(network):
 
     ## ---------------Electricity bus to Grid bus--------------------------
     '''This combination of links serves as the transformer to and from the local electricity
-    grid and the global electricity grid'''
+    grid and the global electricity grid. It is bidirectional, lossless, and free'''
 
     network.add("Link",
-        "High to low voltage", #in reality, this is both compression and electrolysis
+        "High to low voltage", 
         bus0 = "grid",
         bus1 = "electricity",
-        #as in, electricity is producing hydrogen
         p_nom_extendable = True,
         carrier = "electricity",
         capital_cost = 0,
@@ -200,10 +203,9 @@ def add_links(network):
     ## ---------------local elec bus to electricity bus--------------------------
 
     network.add("Link",
-        "Solar system to electricity", #in reality, this is both compression and electrolysis
+        "Solar system to electricity", 
         bus0 = "local elec",
         bus1 = "electricity",
-        #as in, electricity is producing hydrogen
         p_nom_extendable = True,
         carrier = "electricity",
         capital_cost = 0,
@@ -212,16 +214,15 @@ def add_links(network):
     ## ---------------Biogas bus to CO2 compressed and gas bus--------------------------
 
     network.add("Link",
-        "Biogas upgrading", #in reality, this is both compression and electrolysis
-        bus0 = "biogas", #as in, electricity is producing hydrogen
+        "Biogas upgrading", 
+        bus0 = "biogas", 
         bus1 = "CO2 compressed",
         bus2 = "gas",
         p_nom_extendable = True,
         carrier = "biogas",
-        capital_cost = 0, #annual_cost("biogas upgrading")/1000 * 2, #Does it make a difference that the compressor is only
-        #for one of the links? Can we still add
+        capital_cost = 0, #annual_cost("biogas upgrading")/1000 * 2, 
         efficiency = 0.4 * 0.9, #We are assuming that the process efficiency is 90%. Of which 40% goes to CO2
-        efficiency2 = 0.6 * 0.9#The rest of the biogas turns into methane, at an efficiency of 0.9
+        efficiency2 = 0.6 * 0.9 #The rest of the biogas turns into methane, at an efficiency of 0.9
         )
 
     return network
@@ -234,7 +235,7 @@ def add_links(network):
 
 def add_methanogen(network):
     '''Efficiency = sabatier efficiency = 0.8
-    gas_CO2_intensity = 0.2 (This is tons of co2)
+    gas_CO2_intensity = 0.2 
     CO2 emissions/MW H2= 0.01 
     gas compressor efficiency: 0.9785
     (2.154 kW CH4 / 100 kW CH4)'''
@@ -248,10 +249,10 @@ def add_methanogen(network):
         bus3 = "CO2 compressed",
         carrier="methanation",
         marginal_cost=0,
-        capital_cost=annual_cost("methanation") * 3,   # annualised capital costs. Assume
+        capital_cost=annual_cost("methanation") * 3,   # annualised capital costs. it gets overridden in modifynetwork.py change_loads_costs() by  annual_cost("methanation") * megen_mult
         p_nom_extendable=True,
         efficiency=0.8 * 0.9785,    # how much CH4 is produced per H2 input. So 0.8 MW Ch4 produced per MW of H2
-        efficiency2= 0.01, #I have no idea how many MW CO2 is emitted per MW of H2. hopefully not much. We are saying 0.01 MW of CO2 per. What are the units for each of these? We need to know whether it is in tons, or energy 
+        efficiency2= 0.01, #I have no idea how many MW CO2 is emitted per MW of H2. 
         efficiency3 = - 0.2 * 0.8 * 0.9785, #Let's assume that 0.2 MW of compressed CO2 is used per 1 MW of CH4. Negative.
         lifetime=30)
 
@@ -264,7 +265,7 @@ def add_sabatier(network):
     CO2 emissions/MW H2= 0.01 
     CO2 compressor efficiency = 0.98
     H2 compressor efficiency = 0.993 
-    (0.695 kW H2/100 kW CH4 2.021 kW CO2/ 100 kW CH4)'''
+    (0.695 kW H2/ 100 kW CH4; 2.021 kW CO2/ 100 kW CH4)'''
 
     network.add("Link",
         "sabatier",

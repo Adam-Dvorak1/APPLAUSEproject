@@ -19,10 +19,7 @@ from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_l
 from helpers import override_component_attrs, annual_cost
 from modifynetwork import change_gasload, to_netcdf, remove_grid, remove_solar
 
-#  Lisa: We are going to need multi-links for modelling the CO2 management.
-#  Since default setting for links in PyPSA is having only one entry (bus0)
-#  and one exit point (bus1) with a given efficieny (efficiency) we have to
-#  overwrite some component settings with the following function
+
 def get_relpath(path, home):
         rel_path = os.path.relpath(path, home)
         return rel_path
@@ -52,10 +49,10 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "gasdem_megencost_sweep_nosolar_w_hstore" #name of the run, added to date
-        solar = False
-        grid = True
-        h_store = True
+        name = "gasdem_megencost_sweep_nogrid_wo_hstore" #name of the run, added to date
+        solar = True #whether using solar generator or not
+        grid = False #whether using grid generator or not
+        h_store = False #whether including h store. Experiment: Does the presence of hydrogen storage cause the electrolysis and methanation link to become decoupled?
 
         # We are doing huge sweeps to see the extremes--under what conditions is it worth it to produce methane from our methanogenesis? 
         # It may be that it is basically never worth it. In fact, our first results show that it is actually better to just use
@@ -88,7 +85,6 @@ if __name__ == "__main__":
                 n = add_sabatier(n)
                 methanation = "sabatier"
 
-        #25 Jan this function is a mystery to me. Why did we want hydrogen stores?
         if h_store == True:
                 n = add_hydrogen_store(n)
 
@@ -117,7 +113,9 @@ if __name__ == "__main__":
 
 
         with Pool(processes=4) as pool:
-                pool.starmap(to_netcdf, f)
+                pool.starmap(to_netcdf, f) #This also solves the network
+
+
 
         endtime = time.time()
         print(endtime-startime)

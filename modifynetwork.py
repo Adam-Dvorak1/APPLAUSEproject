@@ -48,7 +48,7 @@ and the solar if the other is removed. That being said, the solar will need to b
 
 def remove_solar(network):
 
-    #I don't think that I need to also remove the battery, because it can not be stored
+
     network.remove("Generator", "Solar PV")
 
 
@@ -65,6 +65,7 @@ def remove_grid(network):
     return network
 
 
+
 def solve_network(network, gas_mult, megen_mult):
 
     n = change_loads_costs(network, gas_mult, megen_mult)
@@ -73,10 +74,6 @@ def solve_network(network, gas_mult, megen_mult):
     n.lopf(n.snapshots, 
              pyomo=False,
              solver_name='gurobi')
-
-            
-
-
 
 
     return n
@@ -88,9 +85,9 @@ def to_netcdf(network, gas_mult, megen_mult, path):
    #the megen_mult becomes modified
     gas_mult = round(gas_mult)
 
-    megen_mult = megen_mult * annual_cost("methanation") #This should be a variable passed. I think it takes a significant time x 100 to do this. Maybe  maybe not
+    megen_mult = megen_mult * annual_cost("methanation") #This is the same calculated in change_loads_costs(). Redundant maybe, but I think it is pretty quick.
 
-    megen_mult = round(megen_mult) 
+    megen_mult = round(megen_mult) #The real cost is not rounded--this is just for documentation and plotting
 
     path = path + f"/gas_dem_{gas_mult}_megen_cost_{megen_mult}.nc"
     
