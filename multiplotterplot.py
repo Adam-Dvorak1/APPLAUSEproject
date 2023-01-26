@@ -19,7 +19,7 @@ if __name__ == "__main__":
     #path = 'results/csvs/costs/06_12_2022_gasdem_megencost_sweep.csv'
 
 
-    costpath = 'results/csvs/25_01_2023_gasdem_megencost_sweep_nosolar_wo_hstore.csv'
+    costpath = 'results/csvs/costs/21_11_2022_gasdem_megencost_sweep_nogrid.csv'
     # plot_battsize()
 
     # compare_dcurves()

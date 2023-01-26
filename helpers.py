@@ -221,20 +221,35 @@ def costs_to_csv(path, isgrid):
 
 
 if __name__ == "__main__":
+
+    '''It may be a bit confusing, but I can currently make up to 3 different csvs in helpers.py
+    
+    One of them is a general csv which has everything. This is the extract_data() function and delivers the entire timeseries
+    of data for each network. It takes in the network folder as input. This gets stored under results/csvs
+    
+    Another one is a summary csv which only records non-time dependent attributes. This is the extract_summary() function.
+    It reads the csv generated from extract_data() and delivers a csv stored under results/csvs with "summary_" attached to 
+    the front of it.
+     
+    Finally, we get a costs csv which allows us to assess how expensive the network is per kW supplied. This is made through 
+    a series of functions: costs_to_csv(path, isgrid), which takes the folder of the netcdfs as well as whether or not there
+    is a grid. Next, it calls get_costs(n, isgrid) which reads in each network of the folder and passes the isgrid variable. 
+    Finally, if isgrid is True, then get_costs() calls get_gridcost, which returns the relevant costs of the grid. This 
+    generates a csv that is stored in results/csvs/costs'''
     # path = "results/NetCDF/21_11_2022_gasdem_megencost_sweep_nogrid"
     # results/NetCDF/21_11_2022_gasdem_megencost_sweep_nosolar
     path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_wo_hstore"
-    extract_data(path)
-    path = "rresults/NetCDF/25_01_2023_gasdem_megencost_sweep_w_hstore"
-    extract_data(path)
+    costs_to_csv(path, True)
+    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_w_hstore"
+    costs_to_csv(path, True)
     path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore"
-    extract_data(path)
+    costs_to_csv(path, True)
     path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_wo_hstore"
-    extract_data(path)
+    costs_to_csv(path, True)
     path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore"
-    extract_data(path)
+    costs_to_csv(path, False)
     path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore"
-    extract_data(path)
+    costs_to_csv(path, False)
 
     # csvpath = "results/csvs/15_11_2022_gasdem_megencost_sweep.csv"
 
