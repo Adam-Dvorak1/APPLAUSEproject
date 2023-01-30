@@ -19,12 +19,13 @@ if __name__ == "__main__":
     #path = 'results/csvs/costs/06_12_2022_gasdem_megencost_sweep.csv'
 
 
-    costpath = 'results/csvs/costs/21_11_2022_gasdem_megencost_sweep_nogrid.csv'
+    costpath = 'results/csvs/costs/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore.csv'
     # plot_battsize()
 
+    allpath = "results/csvs/alldata/06_12_2022_gasdem_megencost_sweep_nosolar.csv"
     # compare_dcurves()
-    plot_costper(costpath)
-    #plot_gridtoelec_dcurv()
+    # plot_costper(costpath)
+    plot_gridtoelec_dcurv(allpath)
     # plot_methlink_dcurv(path)
     # plot_gasstore_dcurv()
 

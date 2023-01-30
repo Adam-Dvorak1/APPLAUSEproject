@@ -7,7 +7,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.colors import LogNorm
-
+from pathlib import Path
 import re
 import math
 import glob
@@ -35,7 +35,7 @@ costmult_dict = dict(zip(annualcosts, linkcost_mults))
 #---------<<Other  dicts>------------------
 
 color_dict = {"battery": '#9467bd', "battery charger":'#1f77b4', "methanogens": '#2ca02c', "Solar PV": '#ff7f0e',
-"H2 Electrolysis": '#d62728', "grid elec total cost": '#7f7f7f', "grid elec total income": '#e377c2'}
+"H2 Electrolysis": '#d62728', "grid elec total cost": '#7f7f7f', "grid elec total income": '#e377c2', "H2 store": '#c251ae'}
 
 
 
@@ -226,64 +226,6 @@ def plot_costpergas():
 
 
 
-def plot_gridtoelec_dcurv():
-    
-    df = pd.read_csv("results/csvs/15_11_2022_gasdem_megencost_sweep.csv")
-    loads = df['load'].unique()
-    megen_costs = df['megen cost'].unique()
-
-    maxload = df['load'].max()
-
-    pairs =  list(itertools.product(loads, megen_costs))
-    minimum =  min(df['megen cost'])
-    maximum = max (df['megen cost'])
-    pairs = [x for x in pairs if x[1] == minimum or x[1] == maximum]
-
-    fig, ax = plt.subplots()
-    ax.set_yscale("symlog", linthresh = 1)
-    cmap = plt.get_cmap('summer_r')
-    norm = LogNorm(vmin = 1/10000, vmax = 1) #This is the range of fractions for log
-
-    for pair in pairs:
-        a_load = pair[0]
-        fracload = a_load / 10000
-
-        a_cost = pair[1]
-        tempdf = df[(df["load"] == a_load) & (df["megen cost"] == a_cost)]
-        tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
-        tempdf.index = range(8760)
-
-
-        fax = ax.plot(tempdf['grid to electricity link ts'], color = cmap(norm(fracload)))
-
-    # tempdf = df[(df["load"] == 1) & (df["megen cost"] == max(df['megen cost']))]
-    # tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
-    # tempdf.index = range(8760)    
-    # ax.plot(tempdf['grid to electricity link ts'], label = '10x methanation cost')
-
-
-
-    # tempdf = df[(df["load"] == 1) & (df["megen cost"] == min(df['megen cost']))]
-    # tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
-    # tempdf.index = range(8760)
-    # ax.plot(tempdf['grid to electricity link ts'], label = '0.1 x methanation cost')
-
-
-    fig.set_size_inches(11, 7)
-    ax.set_xlabel("Hours in a year")
-    ax.set_ylabel("kW to solar system (+) and to grid (-)")
-    ax.set_title("Dcurves for link between grid and electricity at 0.1 x and 10 x methanation costs")
-    cbar = fig.colorbar(plt.cm.ScalarMappable(norm = norm, cmap = cmap), label = "Average gas load (kWh)")
-
-    tls = cbar.ax.get_yticks()
-    tls = [tl * 10000 for tl in tls ]
-    cbar.set_ticklabels(tls)
-    # ax.legend()
-
-    plt.savefig("Presentations/November18pres/minmaxcosts_gridelec_dcurvs.pdf")
-    plt.savefig("Presentations/November18pres/minmaxcosts_gridelec_dcurvs.png", dpi = 500)
-    plt.show()
-
 
 
 
@@ -304,15 +246,169 @@ def extract_colors():
 
 
 
+#%%
+def plot_costs(path):
+    
+    costdf = pd.read_csv(path)
+
+    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
+
+    fulldf = costdf
+
+    for val in fulldf['Gas Load'].unique():
+        costdf = fulldf.loc[fulldf["Gas Load"] == val, :]
+        costdf = costdf.sort_values(by ="methanogen capital cost")
+        costdf.index = costdf["methanogen capital cost"].round(1)
+
+        ax = costdf[costdf.columns[2:]].plot( kind = "bar", stacked = True)
+        ax.set_ylabel("Euros")
+        ax.set_xlabel("Methanogen cost")
+        ax.set_title("Cost breakdown by no-grid element for a gas load of " + str(val), y = 1.04)
+
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                    box.width, box.height * 0.9])
+
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles[::-1], labels[::-1], loc='upper center', bbox_to_anchor=(0.5, -0.25), ncol =3)
+
+
+
+
+        plt.subplots_adjust(bottom = 0.2)
+        savepath = "Presentations/December2pres/costs/nogrid_barplot_" + str(val) + "_gas_dem"
+        plt.tight_layout()
+        plt.savefig(savepath + ".pdf")
+        plt.savefig(savepath + ".png", dpi = 500)
+        plt.close()
+
+
+def plot_costper(path): 
+    #December 5
+    '''We are interested in the price of gas per MWh. The november 1 price is about 125 Euro/MWh. so this is included
+    Takes a costs csv as input, made from get_costs() in helpers.py, which should be stored in results/csvs/costs'''
+
+    costdf = pd.read_csv(path, index_col = 0)
+
+    o = path.split("_")
+    if 'nogrid' in o:
+        experiment = "nogrid"
+    elif "nosolar" in o:
+        experiment = "nosolar"
+    else:
+        experiment = "gridsolar"
+
+
+    if 'w' in o:
+        hstore = "with_hstore"
+    else:
+        hstore = "without hstore"
+
+    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]#If any of the values of the column are not 0, keep them. Gets rid of generators/links etc with no cost
+
+    #only positive--so no "income"
+    if experiment != "gridsolar":
+        costdf = costdf.loc[:,  (costdf > 0).any(axis=0)]#If any of the values of the column are not negative, keep them. Gets rid of the "income"
+
+    fulldf = costdf
+
+
+    folderpath = "Presentations/January31pres/" +  experiment + "/" + experiment + "_costsper" 
+
+    if hstore == "with_hstore":
+        folderpath += "_" + hstore
+
+    Path(folderpath).mkdir(parents = True, exist_ok = True)
+
+    for val in fulldf['Gas Load'].unique():
+        costdf = fulldf.loc[fulldf["Gas Load"] == val, :]
+        costdf = costdf.sort_values(by ="methanogen capital cost")
+        costdf.index = costdf["methanogen capital cost"].round(1)
+        costdf = costdf/val/8760*1000 #price per MWh
+
+        colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[2:]]
+        ax = costdf[costdf.columns[2:]].plot( kind = "bar", stacked = True, color = colors)
+
+
+        ax.set_ylabel("LCOE (Euros/MWh_energy)")
+        ax.set_xlabel("Methanogen cost (Eur/kWh)")
+        
+        val = round(val, 1)
+        ax.set_title("Cost(+) per MWh breakdown " + experiment +  " model for gas load of " + str(val) + "kWh")
+
+        ax.axhline(135, label = "2-Dec-22 price")
+        ax.axhline (36, label = "1-Jul-21 price", color = "#ff7f0e")
+        ax.axhline (10, label = "1-Jul-19 price", color = "#2ca02c")
+
+
+
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                    box.width, box.height * 0.9])
+
+        # ax.text(0.2, 0.4, "Europe price per MWh as of November 1", transform= ax.transAxes)
+        
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles[::-1], labels[::-1], loc='upper center', bbox_to_anchor=(0.5, -0.25), ncol =3)
+
+
+
+
+
+        plt.subplots_adjust(bottom = 0.2)
+
+        plt.tight_layout()
+
+        savepath = folderpath + "/"+ experiment + "_barplot_" + str(val) + "_gas_dem"
+        plt.savefig(savepath + ".pdf")
+        plt.savefig(savepath + ".png", dpi = 500)
+        plt.close()
+
+def compare_dcurves():
+    nosolar = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nosolar.csv")
+    nogrid = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nogrid.csv")
+    gridsolar = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep.csv")
+
+    nosolarmax = nosolar.query('load == load.max() & `megen cost` == `megen cost`.max() ')
+    nogridmax = nogrid.query('load == load.max() & `megen cost` == `megen cost`.max() ')
+    gridsolarmax = gridsolar.query('load == load.max() & `megen cost` == `megen cost`.max() ')
+
+
+    nosolarmax= nosolarmax.sort_values(by = ["methanogen link ts"], ascending = False)
+    nosolarmax.index = range(8760)
+
+    nogridmax = nogridmax.sort_values(by = ["methanogen link ts"], ascending = False)
+    nogridmax.index = range(8760)
+
+    gridsolarmax= gridsolarmax.sort_values(by = ["methanogen link ts"], ascending = False)
+    gridsolarmax.index = range(8760)
+
+    fig, ax = plt.subplots()
+
+    ax.plot(gridsolarmax['methanogen link ts'], label = "Grid and solar", color = "C2")
+    ax.plot(nosolarmax['methanogen link ts'], label = "Only grid", color = "C0")
+    ax.plot(nogridmax['methanogen link ts'], label = "Only solar", color = "C1")
+
+
+    ax.set_title("Dcurve of megen link 3 scenarios, 10MW load and 10x sabatier cost")
+    ax.set_xlabel("hours")
+    ax.set_ylabel("kWh/h")
+    
+    ax.legend()
+    plt.savefig("Presentations/December8pres/three_dcurve_reverse.pdf")
+    plt.savefig("Presentations/December8pres/three_dcurves_reverse.png", dpi = 500)
+    plt.show()
+
+
 def plot_methlink_dcurv(path):
     '''This uses a csv provided by extract_data(), in helpers, to make a plot of all of the duration curves
     for the methanogen link in a given folder '''
     df = pd.read_csv(path)
 
     o = path.split("_")
-    if 'nogrid.csv' in o:
+    if 'nogrid' in o:
         experiment = "nogrid"
-    elif "nosolar.csv" in o:
+    elif "nosolar" in o:
         experiment = "nosolar"
     else:
         experiment = "gridsolar"
@@ -438,148 +534,82 @@ def plot_gasstore_dcurv():
     plt.savefig("Presentations/November18pres/minmaxcost_store_yr.png", dpi = 500)
     plt.show()
 
-#%%
-def plot_costs(path):
     
-    costdf = pd.read_csv(path)
-
-    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
-
-    fulldf = costdf
-
-    for val in fulldf['Gas Load'].unique():
-        costdf = fulldf.loc[fulldf["Gas Load"] == val, :]
-        costdf = costdf.sort_values(by ="methanogen capital cost")
-        costdf.index = costdf["methanogen capital cost"].round(1)
-
-        ax = costdf[costdf.columns[2:]].plot( kind = "bar", stacked = True)
-        ax.set_ylabel("Euros")
-        ax.set_xlabel("Methanogen cost")
-        ax.set_title("Cost breakdown by no-grid element for a gas load of " + str(val), y = 1.04)
-
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0 + box.height * 0.1,
-                    box.width, box.height * 0.9])
-
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1], loc='upper center', bbox_to_anchor=(0.5, -0.25), ncol =3)
-
-
-
-
-        plt.subplots_adjust(bottom = 0.2)
-        savepath = "Presentations/December2pres/costs/nogrid_barplot_" + str(val) + "_gas_dem"
-        plt.tight_layout()
-        plt.savefig(savepath + ".pdf")
-        plt.savefig(savepath + ".png", dpi = 500)
-        plt.close()
-
-
-def plot_costper(path): 
-    #December 5
-    '''We are interested in the price of gas per MWh. The november 1 price is about 125 Euro/MWh. so this is included
-    Takes a costs csv as input, made from get_costs() in helpers.py, which should be stored in results/csvs/costs'''
-
-    costdf = pd.read_csv(path, index_col = 0)
-
+    
+def plot_gridtoelec_dcurv(path):
+    '''Note, since this plots a dcurv of the electricity flowing between the system and the grid,
+    it does not consider the nogrid csvs.
+    
+    In the old format, the model name would be attached to the .csv once the path is split, so it might save 
+    in gridsolar'''
+    df = pd.read_csv(path)
     o = path.split("_")
-    if 'nogrid' in o:
-        experiment = "nogrid"
-    elif "nosolar" in o:
-        experiment = "nosolar"
+    if "nosolar" in o:
+        model = "nosolar"
     else:
-        experiment = "gridsolar"
-
-
-    if 'w' in o:
-        hstore = "with hstore"
+        model = "gridsolar"
+    if "wo" in o:
+        h2 = "wo_hstore"
     else:
-        hstore = "without hstore"
+        h2 = "w_hstore"
 
-    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]#If any of the values of the column are not 0, keep them. Gets rid of generators/links etc with no cost
+    presentationdate = "January31pres"
 
-    #only positive--so no "income"
-    costdf = costdf.loc[:,  (costdf > 0).any(axis=0)]#If any of the values of the column are not negative, keep them. Gets rid of the "income"
+    loads = df['load'].unique()
 
-    fulldf = costdf
+    megen_costs = df['megen cost'].unique()
 
+    maxload = df['load'].max()
 
-    for val in fulldf['Gas Load'].unique():
-        costdf = fulldf.loc[fulldf["Gas Load"] == val, :]
-        costdf = costdf.sort_values(by ="methanogen capital cost")
-        costdf.index = costdf["methanogen capital cost"].round(1)
-        costdf = costdf/val/8760*1000 #price per MWh
-
-        colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[2:]]
-        ax = costdf[costdf.columns[2:]].plot( kind = "bar", stacked = True, color = colors)
-
-
-        ax.set_ylabel("LCOE (Euros/MWh_energy)")
-        ax.set_xlabel("Methanogen cost (Eur/kWh)")
-        
-        val = round(val, 1)
-        ax.set_title("Cost(+) per MWh breakdown " + experiment +  " model for gas load of " + str(val) + "kWh")
-
-        ax.axhline(135, label = "2-Dec-22 price")
-        ax.axhline (36, label = "1-Jul-21 price", color = "#ff7f0e")
-        ax.axhline (10, label = "1-Jul-19 price", color = "#2ca02c")
-        ax.axhline (235, label = "2-Dec-22 price", color = "#2ca02c")
-
-
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0 + box.height * 0.1,
-                    box.width, box.height * 0.9])
-
-        # ax.text(0.2, 0.4, "Europe price per MWh as of November 1", transform= ax.transAxes)
-        
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1], loc='upper center', bbox_to_anchor=(0.5, -0.25), ncol =3)
-
-
-
-
-
-        plt.subplots_adjust(bottom = 0.2)
-
-        plt.tight_layout()
-
-        # savepath = "Presentations/December8pres/" +  experiment + "/" + experiment + "_costsper/"+ experiment + "_barplot_" + str(val) + "_gas_dem"
-        # plt.savefig(savepath + ".pdf")
-        # plt.savefig(savepath + ".png", dpi = 500)
-        plt.close()
-
-def compare_dcurves():
-    nosolar = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nosolar.csv")
-    nogrid = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nogrid.csv")
-    gridsolar = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep.csv")
-
-    nosolarmax = nosolar.query('load == load.max() & `megen cost` == `megen cost`.max() ')
-    nogridmax = nogrid.query('load == load.max() & `megen cost` == `megen cost`.max() ')
-    gridsolarmax = gridsolar.query('load == load.max() & `megen cost` == `megen cost`.max() ')
-
-
-    nosolarmax= nosolarmax.sort_values(by = ["methanogen link ts"], ascending = False)
-    nosolarmax.index = range(8760)
-
-    nogridmax = nogridmax.sort_values(by = ["methanogen link ts"], ascending = False)
-    nogridmax.index = range(8760)
-
-    gridsolarmax= gridsolarmax.sort_values(by = ["methanogen link ts"], ascending = False)
-    gridsolarmax.index = range(8760)
+    pairs =  list(itertools.product(loads, megen_costs))
+    minimum =  min(df['megen cost'])
+    maximum = max (df['megen cost'])
+    # pairs = [x for x in pairs if x[1] == minimum or x[1] == maximum]
 
     fig, ax = plt.subplots()
+    ax.set_yscale("symlog", linthresh = 1)
+    cmap = plt.get_cmap('summer_r')
+    norm = LogNorm(vmin = 1/10000, vmax = 1) #This is the range of fractions for log
 
-    ax.plot(gridsolarmax['methanogen link ts'], label = "Grid and solar", color = "C2")
-    ax.plot(nosolarmax['methanogen link ts'], label = "Only grid", color = "C0")
-    ax.plot(nogridmax['methanogen link ts'], label = "Only solar", color = "C1")
+    for pair in pairs:
+        a_load = pair[0]
+        fracload = a_load / 10000
+
+        a_cost = pair[1]
+        tempdf = df[(df["load"] == a_load) & (df["megen cost"] == a_cost)]
+        tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
+        tempdf.index = range(8760)
 
 
-    ax.set_title("Dcurve of megen link 3 scenarios, 10MW load and 10x sabatier cost")
-    ax.set_xlabel("hours")
-    ax.set_ylabel("kWh/h")
-    
-    ax.legend()
-    plt.savefig("Presentations/December8pres/three_dcurve_reverse.pdf")
-    plt.savefig("Presentations/December8pres/three_dcurves_reverse.png", dpi = 500)
+        fax = ax.plot(tempdf['grid to electricity link ts'], color = cmap(norm(fracload)))
+
+    # tempdf = df[(df["load"] == 1) & (df["megen cost"] == max(df['megen cost']))]
+    # tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
+    # tempdf.index = range(8760)    
+    # ax.plot(tempdf['grid to electricity link ts'], label = '10x methanation cost')
+
+
+
+    # tempdf = df[(df["load"] == 1) & (df["megen cost"] == min(df['megen cost']))]
+    # tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
+    # tempdf.index = range(8760)
+    # ax.plot(tempdf['grid to electricity link ts'], label = '0.1 x methanation cost')
+
+
+    fig.set_size_inches(11, 7)
+    ax.set_xlabel("Hours in a year")
+    ax.set_ylabel("kW to solar system (+) and to grid (-)")
+    ax.set_title("Dcurves for link between grid and electricity for " + model + " " + h2)
+    cbar = fig.colorbar(plt.cm.ScalarMappable(norm = norm, cmap = cmap), label = "Average gas load (kWh)")
+
+    tls = cbar.ax.get_yticks()
+    tls = [tl * 10000 for tl in tls ]
+    cbar.set_ticklabels(tls)
+    # ax.legend()
+    prespath = "Presentations/" + presentationdate + "/"  + model + "/" + h2 + "/gridelec_dcurvs_oldcost"
+
+    plt.savefig(prespath + '.pdf')
+    plt.savefig(prespath + '.png', dpi = 500)
+
     plt.show()
 

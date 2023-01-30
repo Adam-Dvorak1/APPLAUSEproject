@@ -100,8 +100,10 @@ def extract_data(folder):
             tempdf["H2 store size"] = n.stores.e_nom_opt['H2 store']
             tempdf['H2 store ts'] = n.stores_t.e.loc[:, "H2 store"]
 
+
         tempdf['objective'] = n.objective 
 
+        tempdf['electrolyzer ts'] = n.links_t.p0.loc[:, "H2 Electrolysis"]
         tempdf['grid to electricity link ts'] = n.links_t.p0.loc[:, "High to low voltage"]
         tempdf['methanogen link ts'] = n.links_t.p0.loc[:, "methanogens"]
         tempdf['gas store ts'] = n.stores_t.e.loc[:, "gas store"]
@@ -117,7 +119,7 @@ def extract_data(folder):
     name = name [-1]
 
     
-    df.to_csv('results/csvs/' + name + ".csv")
+    df.to_csv('results/csvs/alldata/' + name + ".csv")
 
 def extract_summary(csvpath):
     '''This only deals with the time independent variables of each run'''
@@ -129,7 +131,7 @@ def extract_summary(csvpath):
     name = csvpath.split("/")
     name = name[-1]
 
-    df3.to_csv('results/csvs/summary_' + name )#no csv needed at the end because the name is from the other csv
+    df3.to_csv('results/csvs/sumdata/summary_' + name )#no csv needed at the end because the name is from the other csv
 
 
 #n.links_t.p0['High to low voltage']
@@ -211,7 +213,23 @@ def costs_to_csv(path, isgrid):
     df.to_csv('results/csvs/costs/' + name + ".csv")
 
 
+def make_pres_folders(prestitle):
 
+    '''The purpose of this function is to make nice organized folders. It first checks whether the 
+    subfolders gridsolar, nogrid, and nosolar have been made. If not, it makes them. Then, it checks
+    whether the sub sub folders w_hstore and wo_hstore have been made. If not, it makes them. '''
+
+    path = "Presentations/" + prestitle 
+    pathlib.Path(path+ "/gridsolar").mkdir(parents=True, exist_ok=True)
+    pathlib.Path(path + "/nogrid").mkdir(parents=True, exist_ok=True)
+    pathlib.Path(path + "/nosolar").mkdir(parents=True, exist_ok=True)
+
+
+    newpath = "Presentations/" + prestitle + "/*"
+    for folder in glob.glob(newpath):
+        if os.path.isdir(folder):
+            pathlib.Path(folder + "/w_hstore").mkdir(parents=True, exist_ok=True)
+            pathlib.Path(folder + "/wo_hstore").mkdir(parents=True, exist_ok=True)
 
 #%%
 
@@ -225,10 +243,10 @@ if __name__ == "__main__":
     '''It may be a bit confusing, but I can currently make up to 3 different csvs in helpers.py
     
     One of them is a general csv which has everything. This is the extract_data() function and delivers the entire timeseries
-    of data for each network. It takes in the network folder as input. This gets stored under results/csvs
+    of data for each network. It takes in the network folder as input. This gets stored under results/csvs/alldata
     
     Another one is a summary csv which only records non-time dependent attributes. This is the extract_summary() function.
-    It reads the csv generated from extract_data() and delivers a csv stored under results/csvs with "summary_" attached to 
+    It reads the csv generated from extract_data() and delivers a csv stored under results/csvs/sumdata with "summary_" attached to 
     the front of it.
      
     Finally, we get a costs csv which allows us to assess how expensive the network is per kW supplied. This is made through 
@@ -236,23 +254,25 @@ if __name__ == "__main__":
     is a grid. Next, it calls get_costs(n, isgrid) which reads in each network of the folder and passes the isgrid variable. 
     Finally, if isgrid is True, then get_costs() calls get_gridcost, which returns the relevant costs of the grid. This 
     generates a csv that is stored in results/csvs/costs'''
-    # path = "results/NetCDF/21_11_2022_gasdem_megencost_sweep_nogrid"
-    # results/NetCDF/21_11_2022_gasdem_megencost_sweep_nosolar
-    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_wo_hstore"
-    costs_to_csv(path, True)
-    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_w_hstore"
-    costs_to_csv(path, True)
-    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore"
-    costs_to_csv(path, True)
-    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_wo_hstore"
-    costs_to_csv(path, True)
-    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore"
-    costs_to_csv(path, False)
-    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore"
-    costs_to_csv(path, False)
 
-    # csvpath = "results/csvs/15_11_2022_gasdem_megencost_sweep.csv"
+    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_wo_hstore"
+    extract_data(path)
+    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_w_hstore"
+    extract_data(path)
+    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore"
+    extract_data(path)
+    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_wo_hstore"
+    extract_data(path)
+    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore"
+    extract_data(path)
+    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore"
+    extract_data(path)
+
+    # make_pres_folders(presdate)
+
 
     # extract_summary(csvpath) 
 
     # costs_to_csv(path, True)
+
+
