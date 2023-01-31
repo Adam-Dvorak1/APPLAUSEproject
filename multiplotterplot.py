@@ -10,7 +10,7 @@ import importlib
 import multiplotterfunc
 importlib.reload(multiplotterfunc)
 
-from multiplotterfunc import  compare_dcurves,  plot_solarsize, plot_costper, plot_costs, plot_costpergas, plot_gridtoelec_dcurv, plot_methlink_dcurv, plot_gasstore_dcurv
+from multiplotterfunc import  plot_anysize, compare_dcurves,  plot_solarsize, plot_costper, plot_costs, plot_costpergas, plot_gridtoelec_dcurv, plot_methlink_dcurv, plot_gasstore_dcurv
 
 #generators_dcurve, battery_dcurve, storage_dcurve, methane_link_dcurve, plot_linksize, plot_objective,
 
@@ -19,13 +19,24 @@ if __name__ == "__main__":
     #path = 'results/csvs/costs/06_12_2022_gasdem_megencost_sweep.csv'
 
 
+    rel_paths = ["results/csvs/alldata/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore.csv",
+                ]
     costpath = 'results/csvs/costs/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore.csv'
     # plot_battsize()
 
-    allpath = "results/csvs/alldata/06_12_2022_gasdem_megencost_sweep_nosolar.csv"
+    allpath = "results/csvs/alldata/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore.csv"
+    
+    
+    #plot_methlink_dcurv(allpath)
+
+    # plot_anysize can take "megen", 'H2', 
+
+
+    
+    plot_anysize(allpath, "megen")
     # compare_dcurves()
     # plot_costper(costpath)
-    plot_gridtoelec_dcurv(allpath)
-    # plot_methlink_dcurv(path)
+    # plot_gridtoelec_dcurv(allpath)
+    
     # plot_gasstore_dcurv()
 

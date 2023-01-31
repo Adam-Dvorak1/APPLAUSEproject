@@ -26,6 +26,10 @@ biogas_dict = {"p0": "Biogas in", "p1": "CO2 compressed out", "p2": "gas out" }
 
 electrolysis_dict = {"p0": "electricity in", "p1": "H2 out"}
 
+sizename_dict = {'megen': 'methanogen link', 'electrolyzer': 'electrolyzer', 'solar': 'solar generator', 'battery': 'battery', 'H2':'H2 store'}
+
+unit_dict = {'megen': 'kW', 'electrolyzer': 'kW', 'solar': 'kW', 'battery': 'kWh', 'H2': 'kWh'}
+
 annualcosts = [str(round(x)) for x in np.logspace(-1, 1, 10) * annual_cost("methanation")] #This is the list of all of the costs
 
 linkcost_mults = [round(x, 1) for x in np.logspace(-1, 1, 10)]
@@ -106,9 +110,33 @@ def plot_objective():
     plt.savefig("Presentations/November18pres/objective.png", dpi = 500)
     plt.show()  
         
-        
-def plot_solarsize():
-    data = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nogrid.csv")
+
+
+
+
+def plot_anysize(path, vartype):
+    '''The purpose of this function is to be able to plot any of the variables where we are keeping track of size.
+    This includes the methanogen (megen), electrolyzer, solar generator (solar), battery, and hydrogen store (H2)'''
+    data = pd.read_csv(path)
+
+
+    presentationdate = "January31pres"
+
+    o = path.split("_")
+    if "nosolar" in o:
+        model = "nosolar"
+    elif 'nogrid' in o:
+        model = 'nogrid'
+    else:
+        model = "gridsolar"
+
+    if "wo" in o:
+        h2 = "wo_hstore"
+    else:
+        h2 = "w_hstore"
+
+    varsize = vartype + " size"
+
     sumdata = data.drop_duplicates(['megen cost', 'load'])
     fig, ax = plt.subplots()
     cmap = plt.get_cmap('summer_r')
@@ -116,81 +144,31 @@ def plot_solarsize():
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("Annualized cost of methanogenesis (Eur/kW)")
-    ax.set_ylabel("Solar generator capacity (kW)")
-    ax.set_title("Size of the solar generator")
+    ax.set_ylabel(vartype + " capacity (" + unit_dict[vartype] + ")")
+    ax.set_title("Size of the " + sizename_dict[vartype] + " " + model + " " + h2)
 
     norm = LogNorm()# The log norm is necessary to show the logarithmic spacing of the "third axis"
-    myax = ax.scatter(sumdata['megen cost'], sumdata['solar size'], c = sumdata['load']/sumdata['load'].max(), cmap = cmap, norm = norm)
+    myax = ax.scatter(sumdata['megen cost'], sumdata[varsize], c = sumdata['load']/sumdata['load'].max(), cmap = cmap, norm = norm)
     ax.axvline(annual_cost('methanation'), color='black',ls='--') #This is the benchmark cost
-    ax.text(annual_cost('methanation')* 0.9, 100, "Base cost of sabatier methanation", horizontalalignment = "center", rotation = "vertical")
+    ax.text(0.48, 0.2, "Base cost of sabatier methanation", horizontalalignment = "center", rotation = "vertical", transform = ax.transAxes)
 
-    ax.axhline(130000, color='black',ls='--')
+
+
+    ##############    color bar    ##############
     cbar = fig.colorbar(myax, label = "Average gas load (kWh)")
-    #     spacing='proportional',  format='%1i')
     tls = cbar.ax.get_yticks()
     tls = [tl * 10000 for tl in tls ]
     cbar.set_ticklabels(tls)
 
-    plt.savefig("Presentations/December8pres/nogrid/solarsize.pdf")
-    plt.savefig("Presentations/December8pres/nogrid/solarsize.png", dpi = 500)
+    prespath = "Presentations/" + presentationdate + "/"  + model + "/" + h2 + "/" + vartype + "_size"
+
+    plt.savefig(prespath + '.pdf')
+    plt.savefig(prespath + '.png', dpi = 500)
+
     plt.show()  
-        
-def plot_eltrzr_size():
-    data = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nogrid.csv")
-    sumdata = data.drop_duplicates(['megen cost', 'load'])
-    fig, ax = plt.subplots()
-    cmap = plt.get_cmap('summer_r')
-    
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlabel("Annualized cost of methanogenesis (Eur/kW)")
-    ax.set_ylabel("Electrolyzer size (kW)")
-    ax.set_title("Size of Electrolyzer")
 
-    norm = LogNorm()# The log norm is necessary to show the logarithmic spacing of the "third axis"
-    myax = ax.scatter(sumdata['megen cost'], sumdata['electrolyzer size'], c = sumdata['load']/sumdata['load'].max(), cmap = cmap, norm = norm)
-    ax.axvline(annual_cost('methanation'), color='black',ls='--') #This is the benchmark cost
-    ax.text(annual_cost('methanation')* 0.9, 100, "Base cost of sabatier methanation", horizontalalignment = "center", rotation = "vertical")
 
-    ax.axhline(240000, color='black',ls='--')
-    cbar = fig.colorbar(myax, label = "Average gas load (kWh)")
-    #     spacing='proportional',  format='%1i')
-    tls = cbar.ax.get_yticks()
-    tls = [tl * 10000 for tl in tls ]
-    cbar.set_ticklabels(tls)
 
-    plt.savefig("Presentations/December16pres/nogrid/electrolyzersize.pdf")
-    plt.savefig("Presentations/December16pres/nogrid/electrolyzersize.png", dpi = 500)
-    plt.show()  
-        
-
-def plot_megensize(path):
-    data = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nogrid.csv")
-    sumdata = data.drop_duplicates(['megen cost', 'load'])
-    fig, ax = plt.subplots()
-    cmap = plt.get_cmap('summer_r')
-    
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlabel("Annualized cost of methanogenesis (Eur/kW)")
-    ax.set_ylabel("Battery capacity (kWh)")
-    ax.set_title("Size of the battery")
-
-    norm = LogNorm()# The log norm is necessary to show the logarithmic spacing of the "third axis"
-    myax = ax.scatter(sumdata['megen cost'], sumdata['battery size'], c = sumdata['load']/sumdata['load'].max(), cmap = cmap, norm = norm)
-    ax.axvline(annual_cost('methanation'), color='black',ls='--') #This is the benchmark cost
-    ax.text(annual_cost('methanation')* 0.9, 100, "Base cost of sabatier methanation", horizontalalignment = "center", rotation = "vertical")
-
-    ax.axhline(240000, color='black',ls='--')
-    cbar = fig.colorbar(myax, label = "Average gas load (kWh)")
-    #     spacing='proportional',  format='%1i')
-    tls = cbar.ax.get_yticks()
-    tls = [tl * 10000 for tl in tls ]
-    cbar.set_ticklabels(tls)
-
-    plt.savefig("Presentations/December8pres/nogrid/batterysize.pdf")
-    plt.savefig("Presentations/December8pres/nogrid/batterysize.png", dpi = 500)
-    plt.show()  
 
 
 
@@ -243,6 +221,11 @@ def extract_colors():
 
 
     df = pd.read_csv("results/csvs/15_11_2022_gasdem_megencost_sweep.csv")
+
+
+
+
+
 
 
 
@@ -364,6 +347,13 @@ def plot_costper(path):
         plt.savefig(savepath + ".png", dpi = 500)
         plt.close()
 
+
+
+
+##################################################################
+######################## DURATION CURVES #########################
+##################################################################
+
 def compare_dcurves():
     nosolar = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nosolar.csv")
     nogrid = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nogrid.csv")
@@ -403,6 +393,9 @@ def compare_dcurves():
 def plot_methlink_dcurv(path):
     '''This uses a csv provided by extract_data(), in helpers, to make a plot of all of the duration curves
     for the methanogen link in a given folder '''
+    
+    presentationdate = "January31pres"
+
     df = pd.read_csv(path)
 
     o = path.split("_")
@@ -412,6 +405,12 @@ def plot_methlink_dcurv(path):
         experiment = "nosolar"
     else:
         experiment = "gridsolar"
+
+
+    if "wo" in o:
+        h2 = "wo_hstore"
+    else:
+        h2 = "w_hstore"
 
     loads = df['load'].unique()
     megen_costs = df['megen cost'].unique()
@@ -425,26 +424,47 @@ def plot_methlink_dcurv(path):
 
 
     fig, ax = plt.subplots()
-    ax.set_yscale("log")
+    # ax.set_yscale("log")
     cmap = plt.get_cmap('summer_r')
     norm = LogNorm(vmin = 1/10000, vmax = 1) #This is the range of fractions for log
 
-    for pair in pairs:
-        a_load = pair[0]
-        fracload = a_load / 10000
+    # for pair in pairs:
+    #     a_load = pair[0]
+    #     fracload = a_load / 10000
 
-        a_cost = pair[1]
-        tempdf = df[(df["load"] == a_load) & (df["megen cost"] == a_cost)]
-        tempdf = tempdf.sort_values(by = ["methanogen link ts"], ascending = False)
-        tempdf.index = range(8760)
+    #     a_cost = pair[1]
+    #     tempdf = df[(df["load"] == a_load) & (df["megen cost"] == a_cost)]
+    #     tempdf = tempdf.sort_values(by = ["electrolyzer ts"], ascending = False)
+    #     tempdf.index = range(8760)
 
 
-        ax.plot(tempdf['methanogen link ts'], color = cmap(norm(fracload)))
+    #     ax.plot(tempdf['electrolyzer ts'], color = cmap(norm(fracload)))
 
-    # tempdf = df[(df["load"] == 1) & (df["megen cost"] == max(df['megen cost']))]
-    # tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
-    # tempdf.index = range(8760)    
-    # ax.plot(tempdf['grid to electricity link ts'], label = '10x methanation cost')
+    tempdf = df[(df["load"] == 10000) & (df["megen cost"] == max(df['megen cost']))]
+    tempdf = tempdf.sort_values(by = ["electrolyzer ts"], ascending = False)
+    tempdf.index = range(8760)    
+    tempdf['electrolyzer ts'] = tempdf['electrolyzer ts']/tempdf['electrolyzer ts'].max()
+    ax.plot(tempdf['electrolyzer ts'], color = 'C0', label = "electrolyzer max megen cost")
+
+    tempdf2 = df[(df["load"] == 10000) & (df["megen cost"] == min(df['megen cost']))]
+    tempdf2 = tempdf2.sort_values(by = ["electrolyzer ts"], ascending = False)
+    tempdf2.index = range(8760)    
+    tempdf2['electrolyzer ts'] = tempdf2['electrolyzer ts']/tempdf2['electrolyzer ts'].max()
+    ax.plot(tempdf2['electrolyzer ts'], color = 'C2', label = "electrolyzer min megen cost")
+
+    methlink = df[(df["load"] == 10000) & (df["megen cost"] == max(df['megen cost']))]
+    methlink = tempdf.sort_values(by = ["methanogen link ts"], ascending = False)
+    methlink.index = range(8760)
+    methlink["methanogen link ts"] = methlink["methanogen link ts"]/methlink["methanogen link ts"].max()
+    ax.plot(methlink["methanogen link ts"], color = 'C1', label = 'methanogen max megen cost', linewidth = 3)
+
+
+
+    methlink2 = df[(df["load"] == 10000) & (df["megen cost"] == min(df['megen cost']))]
+    methlink2 = tempdf.sort_values(by = ["methanogen link ts"], ascending = False)
+    methlink2.index = range(8760)
+    methlink2["methanogen link ts"] = methlink2["methanogen link ts"]/methlink2["methanogen link ts"].max()
+    ax.plot(methlink2["methanogen link ts"], color = 'C3', label = 'methanogen min megen cost', linewidth = 2, linestyle = ':')
 
 
 
@@ -454,19 +474,20 @@ def plot_methlink_dcurv(path):
     # ax.plot(tempdf['grid to electricity link ts'], label = '0.1 x methanation cost')
 
 
-    fig.set_size_inches(11, 7)
+    # fig.set_size_inches(11, 7)
     ax.set_xlabel("Hours in a year")
-    ax.set_ylabel("kWs of methane produced")
-    ax.set_title("Dcurves for methanogen link " + experiment)
-    cbar = fig.colorbar(plt.cm.ScalarMappable(norm = norm, cmap = cmap), label = "Average gas load (kWh)")
+    ax.set_ylabel("Normalized to maximum")
+    ax.set_title("Dcurves for methanogen link for " + experiment + " " + h2)
+    # cbar = fig.colorbar(plt.cm.ScalarMappable(norm = norm, cmap = cmap), label = "Average gas load (kWh)")
+    # tls = cbar.ax.get_yticks()
+    # tls = [tl * 10000 for tl in tls ]
+    # cbar.set_ticklabels(tls)
+    ax.legend()
 
-    tls = cbar.ax.get_yticks()
-    tls = [tl * 10000 for tl in tls ]
-    cbar.set_ticklabels(tls)
-    # ax.legend()
+    prespath = "Presentations/" + presentationdate + "/"  + experiment + "/" + h2 + "/methlink_electrolyzer_dcurves"
 
-    plt.savefig("Presentations/December8pres/" + experiment + "/allmethgen_dcurvs.pdf")
-    plt.savefig("Presentations/December8pres/" + experiment + "/allmethgen_dcurvs.png", dpi = 500)
+    plt.savefig(prespath + '.pdf')
+    plt.savefig(prespath + '.png', dpi = 500)
     plt.show()
 
 
@@ -535,7 +556,7 @@ def plot_gasstore_dcurv():
     plt.show()
 
     
-    
+
 def plot_gridtoelec_dcurv(path):
     '''Note, since this plots a dcurv of the electricity flowing between the system and the grid,
     it does not consider the nogrid csvs.
