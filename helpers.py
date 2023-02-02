@@ -276,7 +276,7 @@ if __name__ == "__main__":
     # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore"
     # extract_data(path)
 
-    presdate = "January31pres"
+    presdate = "February10pres"
     make_pres_folders(presdate)
 
 

@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "gasdem_megencost_sweep_nogrid_wo_hstore" #name of the run, added to date
+        name = "gasdem_megencost_sweep_nogrid_w_hstore" #name of the run, added to date
         solar = True #whether using solar generator or not
         grid = False #whether using grid generator or not
        

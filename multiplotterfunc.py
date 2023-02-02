@@ -130,10 +130,7 @@ def plot_anysize(path, vartype):
     else:
         model = "gridsolar"
 
-    if "wo" in o:
-        h2 = "wo_hstore"
-    else:
-        h2 = "w_hstore"
+
 
     varsize = vartype + " size"
 
@@ -145,7 +142,7 @@ def plot_anysize(path, vartype):
     ax.set_yscale("log")
     ax.set_xlabel("Annualized cost of methanogenesis (Eur/kW)")
     ax.set_ylabel(vartype + " capacity (" + unit_dict[vartype] + ")")
-    ax.set_title("Size of the " + sizename_dict[vartype] + " " + model + " " + h2)
+    ax.set_title("Size of the " + sizename_dict[vartype] + " " + model )
 
     norm = LogNorm()# The log norm is necessary to show the logarithmic spacing of the "third axis"
     myax = ax.scatter(sumdata['megen cost'], sumdata[varsize], c = sumdata['load']/sumdata['load'].max(), cmap = cmap, norm = norm)
@@ -160,7 +157,7 @@ def plot_anysize(path, vartype):
     tls = [tl * 10000 for tl in tls ]
     cbar.set_ticklabels(tls)
 
-    prespath = "Presentations/" + presentationdate + "/"  + model + "/" + h2 + "/sizes/" + vartype + "_size"
+    prespath = "Presentations/" + presentationdate + "/"  + model + "/sizes/" + vartype + "_size"
 
     plt.savefig(prespath + '.pdf')
     plt.savefig(prespath + '.png', dpi = 500)
@@ -304,10 +301,6 @@ def plot_costper(path):
         experiment = "gridsolar"
 
 
-    if 'w' in o:
-        hstore = "with_hstore"
-    else:
-        hstore = "without hstore"
 
     costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]#If any of the values of the column are not 0, keep them. Gets rid of generators/links etc with no cost
 
@@ -318,12 +311,9 @@ def plot_costper(path):
     fulldf = costdf
 
 
-    folderpath = "Presentations/January31pres/" +  experiment + "/" + experiment + "_costsper" 
+    folderpath = "Presentations/January31pres/" +  experiment + "/costsper" 
 
-    if hstore == "with_hstore":
-        folderpath += "_" + hstore
 
-    Path(folderpath).mkdir(parents = True, exist_ok = True)
 
     for val in fulldf['Gas Load'].unique():
         costdf = fulldf.loc[fulldf["Gas Load"] == val, :]
@@ -332,6 +322,7 @@ def plot_costper(path):
         costdf = costdf/val/8760*1000 #price per MWh
 
         colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[2:]]
+        
         ax = costdf[costdf.columns[2:]].plot( kind = "bar", stacked = True, color = colors)
 
 
@@ -371,6 +362,17 @@ def plot_costper(path):
 
 
 
+
+
+def find_net_income():
+    '''This function will be able to tell you the amount of money made in the system'''
+
+
+
+
+
+def find_req_profit_per_gas():
+    '''This function will be able to tell you how much the gas needs to cost in order to '''
 
 ##################################################################
 ######################## DURATION CURVES #########################
@@ -429,10 +431,7 @@ def plot_methlink_dcurv(path):
         experiment = "gridsolar"
 
 
-    if "wo" in o:
-        h2 = "wo_hstore"
-    else:
-        h2 = "w_hstore"
+
 
     loads = df['load'].unique()
     megen_costs = df['megen cost'].unique()
@@ -499,14 +498,14 @@ def plot_methlink_dcurv(path):
     # fig.set_size_inches(11, 7)
     ax.set_xlabel("Hours in a year")
     ax.set_ylabel("Normalized to maximum")
-    ax.set_title("Dcurves for methanogen link for " + experiment + " " + h2)
+    ax.set_title("Dcurves for methanogen link for " + experiment)
     # cbar = fig.colorbar(plt.cm.ScalarMappable(norm = norm, cmap = cmap), label = "Average gas load (kWh)")
     # tls = cbar.ax.get_yticks()
     # tls = [tl * 10000 for tl in tls ]
     # cbar.set_ticklabels(tls)
     ax.legend()
 
-    prespath = "Presentations/" + presentationdate + "/"  + experiment + "/" + h2 + "/methlink_electrolyzer_dcurves"
+    prespath = "Presentations/" + presentationdate + "/"  + experiment +  "/methlink_electrolyzer_dcurves"
 
     plt.savefig(prespath + '.pdf')
     plt.savefig(prespath + '.png', dpi = 500)
@@ -591,10 +590,7 @@ def plot_gridtoelec_dcurv(path):
         model = "nosolar"
     else:
         model = "gridsolar"
-    if "wo" in o:
-        h2 = "wo_hstore"
-    else:
-        h2 = "w_hstore"
+
 
     presentationdate = "January31pres"
 
@@ -642,14 +638,14 @@ def plot_gridtoelec_dcurv(path):
     fig.set_size_inches(11, 7)
     ax.set_xlabel("Hours in a year")
     ax.set_ylabel("kW to solar system (+) and to grid (-)")
-    ax.set_title("Dcurves for link between grid and electricity for " + model + " " + h2)
+    ax.set_title("Dcurves for link between grid and electricity for " + model )
     cbar = fig.colorbar(plt.cm.ScalarMappable(norm = norm, cmap = cmap), label = "Average gas load (kWh)")
 
     tls = cbar.ax.get_yticks()
     tls = [tl * 10000 for tl in tls ]
     cbar.set_ticklabels(tls)
     # ax.legend()
-    prespath = "Presentations/" + presentationdate + "/"  + model + "/" + h2 + "/gridelec_dcurvs_oldcost"
+    prespath = "Presentations/" + presentationdate + "/"  + model +  "/gridelec_dcurvs_oldcost"
 
     plt.savefig(prespath + '.pdf')
     plt.savefig(prespath + '.png', dpi = 500)
