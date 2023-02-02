@@ -52,7 +52,7 @@ if __name__ == "__main__":
         name = "gasdem_megencost_sweep_nogrid_wo_hstore" #name of the run, added to date
         solar = True #whether using solar generator or not
         grid = False #whether using grid generator or not
-        h_store = False #whether including h store. Experiment: Does the presence of hydrogen storage cause the electrolysis and methanation link to become decoupled?
+       
 
         # We are doing huge sweeps to see the extremes--under what conditions is it worth it to produce methane from our methanogenesis? 
         # It may be that it is basically never worth it. In fact, our first results show that it is actually better to just use
@@ -74,6 +74,7 @@ if __name__ == "__main__":
         n = add_loads(n)
         n = add_stores(n)
         n = add_links(n)
+        n = add_hydrogen_store(n)
 
 
 
@@ -84,9 +85,7 @@ if __name__ == "__main__":
         else:
                 n = add_sabatier(n)
                 methanation = "sabatier"
-
-        if h_store == True:
-                n = add_hydrogen_store(n)
+               
 
         #I have previously given myself the option of removing the solar generator and forcing the methanogen to only use
         # electricity from the generator

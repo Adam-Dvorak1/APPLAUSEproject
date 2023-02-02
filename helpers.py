@@ -217,19 +217,27 @@ def make_pres_folders(prestitle):
 
     '''The purpose of this function is to make nice organized folders. It first checks whether the 
     subfolders gridsolar, nogrid, and nosolar have been made. If not, it makes them. Then, it checks
-    whether the sub sub folders w_hstore and wo_hstore have been made. If not, it makes them. '''
+    whether the sub sub folders w_hstore and wo_hstore have been made. If not, it makes them. Etc. '''
 
     path = "Presentations/" + prestitle 
+    pathlib.Path(path).mkdir(parents = True, exist_ok = True)
+
     pathlib.Path(path+ "/gridsolar").mkdir(parents=True, exist_ok=True)
     pathlib.Path(path + "/nogrid").mkdir(parents=True, exist_ok=True)
     pathlib.Path(path + "/nosolar").mkdir(parents=True, exist_ok=True)
 
 
-    newpath = "Presentations/" + prestitle + "/*"
+    newpath = "Presentations/" + prestitle + "/*" #an example folder will be "Presentations/January31pres/nosolar"
     for folder in glob.glob(newpath):
         if os.path.isdir(folder):
-            pathlib.Path(folder + "/w_hstore").mkdir(parents=True, exist_ok=True)
-            pathlib.Path(folder + "/wo_hstore").mkdir(parents=True, exist_ok=True)
+            pathlib.Path(folder + "/costsper").mkdir(parents=True, exist_ok=True)
+            pathlib.Path(folder + "/sizes").mkdir(parents=True, exist_ok=True)
+
+
+
+
+
+            
 
 #%%
 
@@ -255,20 +263,21 @@ if __name__ == "__main__":
     Finally, if isgrid is True, then get_costs() calls get_gridcost, which returns the relevant costs of the grid. This 
     generates a csv that is stored in results/csvs/costs'''
 
-    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_wo_hstore"
-    extract_data(path)
-    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_w_hstore"
-    extract_data(path)
-    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore"
-    extract_data(path)
-    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_wo_hstore"
-    extract_data(path)
-    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore"
-    extract_data(path)
-    path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore"
-    extract_data(path)
+    # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_wo_hstore"
+    # extract_data(path)
+    # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_w_hstore"
+    # extract_data(path)
+    # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore"
+    # extract_data(path)
+    # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_wo_hstore"
+    # extract_data(path)
+    # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore"
+    # extract_data(path)
+    # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore"
+    # extract_data(path)
 
-    # make_pres_folders(presdate)
+    presdate = "January31pres"
+    make_pres_folders(presdate)
 
 
     # extract_summary(csvpath) 

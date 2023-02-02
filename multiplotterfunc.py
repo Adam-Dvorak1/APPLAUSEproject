@@ -26,9 +26,9 @@ biogas_dict = {"p0": "Biogas in", "p1": "CO2 compressed out", "p2": "gas out" }
 
 electrolysis_dict = {"p0": "electricity in", "p1": "H2 out"}
 
-sizename_dict = {'megen': 'methanogen link', 'electrolyzer': 'electrolyzer', 'solar': 'solar generator', 'battery': 'battery', 'H2':'H2 store'}
+sizename_dict = {'megen': 'methanogen link', 'electrolyzer': 'electrolyzer', 'solar': 'solar generator', 'battery': 'battery', 'H2 store':'H2 store'}
 
-unit_dict = {'megen': 'kW', 'electrolyzer': 'kW', 'solar': 'kW', 'battery': 'kWh', 'H2': 'kWh'}
+unit_dict = {'megen': 'kW', 'electrolyzer': 'kW', 'solar': 'kW', 'battery': 'kWh', 'H2 store': 'kWh'}
 
 annualcosts = [str(round(x)) for x in np.logspace(-1, 1, 10) * annual_cost("methanation")] #This is the list of all of the costs
 
@@ -160,15 +160,37 @@ def plot_anysize(path, vartype):
     tls = [tl * 10000 for tl in tls ]
     cbar.set_ticklabels(tls)
 
-    prespath = "Presentations/" + presentationdate + "/"  + model + "/" + h2 + "/" + vartype + "_size"
+    prespath = "Presentations/" + presentationdate + "/"  + model + "/" + h2 + "/sizes/" + vartype + "_size"
 
     plt.savefig(prespath + '.pdf')
     plt.savefig(prespath + '.png', dpi = 500)
-
-    plt.show()  
-
+    plt.close('all') 
 
 
+
+def plot_anysize_all():
+    rel_paths = ["results/csvs/alldata/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore.csv",
+                "results/csvs/alldata/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore.csv",
+                "results/csvs/alldata/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore.csv",
+                "results/csvs/alldata/25_01_2023_gasdem_megencost_sweep_nosolar_wo_hstore.csv",
+                "results/csvs/alldata/25_01_2023_gasdem_megencost_sweep_w_hstore.csv",
+                "results/csvs/alldata/25_01_2023_gasdem_megencost_sweep_wo_hstore.csv"
+                ]
+
+
+ 
+            
+    
+    for path in rel_paths:
+        o = path.split("_")
+        if "w" in o:
+            plot_anysize(path, "H2 store")
+        if "nosolar" not in o:
+            plot_anysize(path, "solar")
+            plot_anysize(path, "battery")
+        
+        plot_anysize(path, 'electrolyzer')
+        plot_anysize(path, 'megen')
 
 
 
