@@ -49,9 +49,17 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "gasdem_megencost_sweep_nogrid_w_hstore" #name of the run, added to date
+        name = "gasdem_electrolyzer_sweep_gridsolar_w_hstore" #name of the run, added to date
         solar = True #whether using solar generator or not
-        grid = False #whether using grid generator or not
+        grid = True #whether using grid generator or not
+
+        ##---<<Sweeping variables>>-----
+        '''If both are false, then it is a megen cost sweep'''
+        electrolyzer = True
+
+
+        year = False
+
        
 
         # We are doing huge sweeps to see the extremes--under what conditions is it worth it to produce methane from our methanogenesis? 

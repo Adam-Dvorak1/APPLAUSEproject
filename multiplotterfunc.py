@@ -365,17 +365,30 @@ def plot_costper(path):
 
 
 def find_net_income(path):
-    '''This function will be able to tell you the amount of money made in the system. It takes the costs csv as income'''
+    '''This function will be able to tell you the amount of money made in the system. It takes the costs csv as income, 
+    and it requires the full system model.'''
     costdf = pd.read_csv(path, index_col = 0)
 
-    experiment = "gridsolar"
+    
+
+    o = path.split("_")
+    if 'year' in o:
+        experiment = "grid_year"
+    elif "electrolyzer" in o:
+        experiment = "electrolyzer_cost"
+    else:
+        experiment = "megen_cost"
+
+    presentation = 'February10pres'
 
     # If any of the values of the column are not 0, keep them. 
     # Gets rid of generators/links etc with no cost
     costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
 
     # We are going to look at gas load == 10000, but we are using the gas load == 1 for reference
-    costdf = costdf.loc[(costdf['Gas Load'] == 10000) | (costdf['Gas Load'] == 1)]
+    gasload = 10000
+
+    costdf = costdf.loc[(costdf['Gas Load'] == gasload) | (costdf['Gas Load'] == 1)]
 
     # To find the net income, add up all of the total income and expenses. Costs are positive
     # and income is negative. Then, multiply by -1 to get the positive balance if you made money 
@@ -394,55 +407,46 @@ def find_net_income(path):
     costdf['cost diff']= costdf['Net income'] - sys_income 
    
     #Finding cost diff per MW per hour
-    costdf['cost diff'] = costdf['cost diff']/8760*1000/10000 #10000 kW or 10 MW
+    costdf['cost diff'] = costdf['cost diff']/8760*1000/gasload * -1 #10000 kW or 10 MW
 
-    #costdf = costdf/val/8760*1000
+    costdf = costdf.loc[costdf['Gas Load'] == gasload]
 
+    costdf.index = costdf["methanogen capital cost"].round(1)
 
-
-
-        costdf.index = costdf["methanogen capital cost"].round(1)
-
-        colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[2:]]
-
-        ax = costdf[costdf.columns[2:]].plot( kind = "bar", stacked = True, color = colors)
+    ax = costdf['cost diff'].plot(kind = "bar")
+    ax.set_ylabel ("Required gas cost (Eur/MWh)")
+    ax.set_xlabel("Methanogen cost (Eur/kWh)")
 
 
-        ax.set_ylabel("LCOE (Euros/MWh_energy)")
-        ax.set_xlabel("Methanogen cost (Eur/kWh)")
-        
-        val = round(val, 1)
-        ax.set_title("Cost(+) per MWh breakdown " + experiment +  " model for gas load of " + str(val) + "kWh")
-
-        ax.axhline(135, label = "2-Dec-22 price")
-        ax.axhline (36, label = "1-Jul-21 price", color = "#ff7f0e")
-        ax.axhline (10, label = "1-Jul-19 price", color = "#2ca02c")
-
-
-
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0 + box.height * 0.1,
-                    box.width, box.height * 0.9])
-
-        # ax.text(0.2, 0.4, "Europe price per MWh as of November 1", transform= ax.transAxes)
-        
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1], loc='upper center', bbox_to_anchor=(0.5, -0.25), ncol =3)
-
-
-
-
-
-        plt.subplots_adjust(bottom = 0.2)
-
-        plt.tight_layout()
+    ax.set_title("Minimum gas cost sweeping " + experiment)
     
-        folderpath = "Presentations/January31pres/" +  experiment + "/costsper" 
+    ax.axhline(340, label = '26-Aug-22 price (high)', color = "C0")
+    ax.axhline(144, label = "1-Jul-22 price", color = "C1")
+    ax.axhline (36, label = "1-Jul-21 price", color = "C2")
+    ax.axhline (10, label = "1-Jul-19 price", color = "C3")
 
-        savepath = folderpath + "/"+ experiment + "_barplot_" + str(val) + "_gas_dem"
-        plt.savefig(savepath + ".pdf")
-        plt.savefig(savepath + ".png", dpi = 500)
-        plt.close()
+
+
+    # box = ax.get_position()
+    # ax.set_position([box.x0, box.y0 + box.height * 0.1,
+    #             box.width, box.height * 0.9])
+
+    
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1], loc='upper center', bbox_to_anchor=(0.5, -0.3), ncol = 2)
+
+
+
+    plt.subplots_adjust(bottom = 0.2)
+
+    plt.tight_layout()
+    
+    folderpath = "Presentations/"+ presentation + "/gas_cost_req_by_" + experiment
+
+    savepath = folderpath 
+    plt.savefig(savepath + ".pdf")
+    plt.savefig(savepath + ".png", dpi = 500)
+    plt.close()
 
 
 
