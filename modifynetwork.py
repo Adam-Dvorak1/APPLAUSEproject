@@ -25,12 +25,19 @@ def change_gasload(network, multiplier):
 
 def change_loads_costs(network, sweep, sweep_mult, megen_mult):
     '''This function used to change the gasload, in addition to the methanogen cost. 
-    Now, it still changes the methanogen cost, but it also '''
+    Now, it still changes the methanogen cost, but it also can sweep the electrolyser cost
+     
+    it is not yet functional for the years. That is the hope '''
 
 
 
     network.links.loc['methanogens', 'capital_cost'] = annual_cost("methanation") * megen_mult
 
+    if sweep == "electrolyzer":
+        network.links.loc['H2 Electrolysis', 'capital_cost'] = annual_cost("electrolysis") * sweep_mult
+    
+    elif sweep == 'year':
+        network.remove("Generator", "Grid")
 
     return network
 

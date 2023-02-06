@@ -83,7 +83,7 @@ def add_loads(network):
     network.add("Load", 
         "Grid Load", 
         bus="grid", 
-        p_set=gasdf["Constant_MW_methane"] * 1000000)#Assuming 3 GW of demand from the grid
+        p_set=gasdf["Constant_MW_methane"] * 300)#Assuming 3 GW of demand from the grid
 
     return network
 
@@ -158,6 +158,33 @@ def add_stores(network):
         bus1 = "CO2 environment",
         p_nom_extendable = True,
         capital_cost = 0)
+    
+
+
+    ## -------H2 Store--------------------------
+    network.add("Bus", "H2 store", carrier = "H2 store")
+    network.add("Store",
+            "H2 store",
+            bus = "H2 store",
+            e_cyclic = True, #NO FREE LUNCH must return back to original position by end of the year
+            e_nom_extendable = True,
+            capital_cost = annual_cost("hydrogen storage tank incl. compressor"))#Note, I am not sure whether
+
+    network.add("Link",
+            "To H2 store",
+            bus0 = "H2 compressed",
+            bus1 = "H2 store",
+            p_nom_extendable = True,
+            capital_cost = 0)
+
+    network.add("Link",
+            "From H2 store",
+            bus1 = "H2 compressed",
+            bus0 = "H2 store",
+            p_nom_extendable = True,
+            capital_cost = 0)
+
+
 
     return network
 
@@ -289,35 +316,3 @@ def add_sabatier(network):
 
 
 
-
-######################################################################
-######################################################################
-'''These functions are for experiments with adding hydrogen storage.
-Does the presence of hydrogen storage cause the electrolysis and methanation
-link to become decoupled? 9 Dec 22'''
-
-def add_hydrogen_store(n):
-
-    n.add("Bus", "H2 store", carrier = "H2 store")
-    n.add("Store",
-            "H2 store",
-            bus = "H2 store",
-            e_cyclic = True, #NO FREE LUNCH must return back to original position by end of the year
-            e_nom_extendable = True,
-            capital_cost = annual_cost("hydrogen storage tank incl. compressor"))#Note, I am not sure whether
-
-    n.add("Link",
-            "To H2 store",
-            bus0 = "H2 compressed",
-            bus1 = "H2 store",
-            p_nom_extendable = True,
-            capital_cost = 0)
-
-    n.add("Link",
-            "From H2 store",
-            bus1 = "H2 compressed",
-            bus0 = "H2 store",
-            p_nom_extendable = True,
-            capital_cost = 0)
-    
-    return n

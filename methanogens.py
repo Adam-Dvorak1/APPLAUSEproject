@@ -64,6 +64,7 @@ if __name__ == "__main__":
         # The solar generator to produce electricity rather than produce methane
 
         methanogen_costs = [x for x in np.logspace(-1, 1, 10)]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
+        
         if sweep == 'electrolyzer':
                sweeper = [x for x in np.logspace (-1, 1, 10)] #If I want this to be year, then 
         elif sweep == "year":
@@ -81,7 +82,6 @@ if __name__ == "__main__":
         n = add_loads(n)
         n = add_stores(n)
         n = add_links(n)
-        n = add_hydrogen_store(n)
 
 
 
