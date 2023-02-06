@@ -23,19 +23,11 @@ def change_gasload(network, multiplier):
     return network
 
 
-def change_loads_costs(network, gas_mult, megen_mult):
-    '''Like change_gasload, this changes the gas load, but it also changes the 
-    price of the methanogenesis by a multiplier. he megen_cost is the annualized
-    cost of the methanogenesis. We are sweeping over both of these, with a logarithmic
-    range'''
-    gasdf = pd.read_csv('data/AppleGas.csv', index_col = 0)
-    gasdf.index = pd.to_datetime(gasdf.index)
+def change_loads_costs(network, sweep, sweep_mult, megen_mult):
+    '''This function used to change the gasload, in addition to the methanogen cost. 
+    Now, it still changes the methanogen cost, but it also '''
 
-    network.remove("Load", "Gas Load")
-    network.add("Load", 
-        "Gas Load", 
-        bus="gas", 
-        p_set=gasdf["All_in_one_demand"]/3 * gas_mult) #This is so it multiplies by 1
+
 
     network.links.loc['methanogens', 'capital_cost'] = annual_cost("methanation") * megen_mult
 
@@ -66,9 +58,9 @@ def remove_grid(network):
 
 
 
-def solve_network(network, gas_mult, megen_mult):
+def solve_network(network, sweep, sweep_mult, megen_mult):
 
-    n = change_loads_costs(network, gas_mult, megen_mult)
+    n = change_loads_costs(network, sweep, sweep_mult, megen_mult)
 
         
     n.lopf(n.snapshots, 
@@ -78,18 +70,22 @@ def solve_network(network, gas_mult, megen_mult):
 
     return n
 
-def to_netcdf(network, gas_mult, megen_mult, path):
-    n = solve_network(network, gas_mult, megen_mult)
+def to_netcdf(network, sweep, sweep_mult, megen_mult, path):
+    n = solve_network(network, sweep, sweep_mult, megen_mult)
 
    # With all the talk of multipliers, in reality gas_mult is the average gas demand in kW, 
    #the megen_mult becomes modified
-    gas_mult = round(gas_mult)
+    
 
     megen_mult = megen_mult * annual_cost("methanation") #This is the same calculated in change_loads_costs(). Redundant maybe, but I think it is pretty quick.
 
     megen_mult = round(megen_mult) #The real cost is not rounded--this is just for documentation and plotting
 
-    path = path + f"/gas_dem_{gas_mult}_megen_cost_{megen_mult}.nc"
+    if sweep == "electrolyser":
+        sweep_mult = sweep_mult * annual_cost('electrolysis')
+        sweep_mult = round (sweep_mult)
+
+    path = path + "/" + sweep + f"_{sweep_mult}_megen_cost_{megen_mult}.nc"
     
     n.export_to_netcdf(path)
 

@@ -53,22 +53,21 @@ if __name__ == "__main__":
         solar = True #whether using solar generator or not
         grid = True #whether using grid generator or not
 
-        ##---<<Sweeping variables>>-----
-        '''If both are false, then it is a megen cost sweep'''
-        electrolyzer = True
 
-
-        year = False
-
+        ##---<<Secondary sweeping variables>>-----
+        '''In addition to a megen cost sweep, the sweep can be electrolyzer, year, or gas_load'''
+        sweep = 'electrolyzer'
        
 
         # We are doing huge sweeps to see the extremes--under what conditions is it worth it to produce methane from our methanogenesis? 
         # It may be that it is basically never worth it. In fact, our first results show that it is actually better to just use
         # The solar generator to produce electricity rather than produce methane
 
-        gas_dems = [x for x in np.logspace(0, 4, 10)] #number of kWh 
         methanogen_costs = [x for x in np.logspace(-1, 1, 10)]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
-
+        if sweep == 'electrolyzer':
+               sweeper = [x for x in np.logspace (-1, 1, 10)] #If I want this to be year, then 
+        elif sweep == "year":
+               sweeper = ['2017', '2018', '2019', '2020', '2021']
 
 
         ##---<<Network creation>>-----
@@ -116,7 +115,7 @@ if __name__ == "__main__":
 
         endpath = list([rel_path])
 
-        f = list(itertools.product(ns, gas_dems, methanogen_costs, endpath))
+        f = list(itertools.product(ns, sweep, sweeper, methanogen_costs, endpath))
 
 
         with Pool(processes=4) as pool:
