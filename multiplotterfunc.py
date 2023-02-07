@@ -366,8 +366,14 @@ def plot_costper(path):
 
 def find_net_income(path):
     '''This function will be able to tell you the amount of money made in the system. It takes the costs csv as income, 
-    and it requires the full system model.'''
+    and it requires the full system model.
+    
+    We need a base system to compare to, so we take a very low (1 kW demand) system, to determine the system behavior
+    if there was "no" gas demand. This is put into mindf.'''
+
     costdf = pd.read_csv(path, index_col = 0)
+
+    mindf = pd.read_csv("results/NetCDF/25_01_2023_gasdem_megencost_sweep_w_hstore/gas_dem_1_megen_cost_11.nc", index_col=0)
 
     
 
@@ -385,10 +391,7 @@ def find_net_income(path):
     # Gets rid of generators/links etc with no cost
     costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
 
-    # We are going to look at gas load == 10000, but we are using the gas load == 1 for reference
-    gasload = 10000
 
-    costdf = costdf.loc[(costdf['Gas Load'] == gasload) | (costdf['Gas Load'] == 1)]
 
     # To find the net income, add up all of the total income and expenses. Costs are positive
     # and income is negative. Then, multiply by -1 to get the positive balance if you made money 

@@ -15,7 +15,7 @@ import pathlib
 import itertools
 import time
 from multiprocessing import Pool
-from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_links, add_methanogen, add_sabatier, add_hydrogen_store
+from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_links, add_methanogen, add_sabatier
 from helpers import override_component_attrs, annual_cost
 from modifynetwork import change_gasload, to_netcdf, remove_grid, remove_solar
 
@@ -107,7 +107,8 @@ if __name__ == "__main__":
 
         ##---<<Running the experiment>>-------
         
-        ns = list([n])
+        ns = [n]
+        sweeps = [sweep]
 
         allpath = new_folder(name)
         homepath = pathlib.Path().resolve()
@@ -115,7 +116,7 @@ if __name__ == "__main__":
 
         endpath = list([rel_path])
 
-        f = list(itertools.product(ns, sweep, sweeper, methanogen_costs, endpath))
+        f = list(itertools.product(ns, sweeps, sweeper, methanogen_costs, endpath))
 
 
         with Pool(processes=4) as pool:

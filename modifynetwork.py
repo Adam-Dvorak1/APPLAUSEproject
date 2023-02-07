@@ -25,7 +25,7 @@ def change_gasload(network, multiplier):
 
 def change_loads_costs(network, sweep, sweep_mult, megen_mult):
     '''This function used to change the gasload, in addition to the methanogen cost. 
-    Now, it still changes the methanogen cost, but it also can sweep the electrolyser cost
+    Now, it still changes the methanogen cost, but it also can sweep the electrolyzer cost
      
     it is not yet functional for the years. That is the hope '''
 
@@ -88,7 +88,7 @@ def to_netcdf(network, sweep, sweep_mult, megen_mult, path):
 
     megen_mult = round(megen_mult) #The real cost is not rounded--this is just for documentation and plotting
 
-    if sweep == "electrolyser":
+    if sweep == "electrolyzer":
         sweep_mult = sweep_mult * annual_cost('electrolysis')
         sweep_mult = round (sweep_mult)
 
