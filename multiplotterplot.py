@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
 
 
-    costpath = 'results/csvs/costs/25_01_2023_gasdem_megencost_sweep_w_hstore.csv'
+    costpath = 'results/csvs/costs/06_02_2023_gasdem_electrolyzer_sweep_gridsolar_w_hstore.csv'
 
     # plot_battsize()
 
@@ -32,10 +32,10 @@ if __name__ == "__main__":
     # plot_anysize can take "megen", 'H2', 
 
 
-    find_net_income(costpath)
+    # find_net_income(costpath)
     # plot_anysize_all()
     # compare_dcurves()
-    # plot_costper(costpath)
+    plot_costper(costpath)
     # plot_gridtoelec_dcurv(allpath)
     
     # plot_gasstore_dcurv()

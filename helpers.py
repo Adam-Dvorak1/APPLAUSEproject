@@ -163,17 +163,21 @@ def get_costs(n, grid):
     generators = n.generators.loc[:, "p_nom_opt"] * n.generators.loc[:, "capital_cost"]
     stores = n.stores.loc[:, "e_nom_opt"] * n.stores.loc[:, "capital_cost"]
    
-    gasload = n.loads_t.p["Gas Load"].max()/8760
+    gasload = n.loads_t.p["Gas Load"].max()/8760 #Note, we divide by 8760 because the max value is the total value, so we thus want the average val
     gasload = pd.Series( gasload)
     gasload.index = ["Gas Load"]
 
-    link_cap_cost =  n.links.loc["methanogens", "capital_cost"]
-    link_cap_cost = pd.Series(link_cap_cost)
-    link_cap_cost.index = ["methanogen capital cost"]
+    megen_cap_cost =  n.links.loc["methanogens", "capital_cost"]
+    megen_cap_cost = pd.Series(megen_cap_cost)
+    megen_cap_cost.index = ["methanogen capital cost"]
+
+    electrolyzer_cap_cost = n.links.loc['H2 Electrolysis', 'capital_cost']
+    electrolyzer_cap_cost = pd.Series(electrolyzer_cap_cost)
+    electrolyzer_cap_cost.index = ['electrolyzer capital cost']
 
     
 
-    cost_series = pd.concat([gasload, link_cap_cost, links, generators, stores])
+    cost_series = pd.concat([gasload, megen_cap_cost, electrolyzer_cap_cost, links, generators, stores])
 
     if grid == True:
         grid_cost, grid_income = get_gridcost(n)
@@ -232,6 +236,11 @@ def make_pres_folders(prestitle):
         if os.path.isdir(folder):
             pathlib.Path(folder + "/costsper").mkdir(parents=True, exist_ok=True)
             pathlib.Path(folder + "/sizes").mkdir(parents=True, exist_ok=True)
+            
+    deeperpath = "Presentations/" + prestitle + "/*/costsper"
+
+    for folder in glob.glob(deeperpath):
+        pathlib.Path(deeperpath + "/electrolysis").mkdir(parents=True, exist_ok=True)
 
 
 
@@ -273,7 +282,7 @@ if __name__ == "__main__":
     # extract_data(path)
     # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore"
     # extract_data(path)
-    # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore"
+    path = "results/NetCDF/06_02_2023_gasdem_electrolyzer_sweep_gridsolar_w_hstore"
     # extract_data(path)
 
     presdate = "February10pres"
@@ -282,6 +291,6 @@ if __name__ == "__main__":
 
     # extract_summary(csvpath) 
 
-    # costs_to_csv(path, True)
+
 
 

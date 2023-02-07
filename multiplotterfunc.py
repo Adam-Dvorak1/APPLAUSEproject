@@ -288,9 +288,13 @@ def plot_costs(path):
 def plot_costper(path): 
     #December 5
     '''We are interested in the price of gas per MWh. The november 1 price is about 125 Euro/MWh. so this is included
-    Takes a costs csv as input, made from get_costs() in helpers.py, which should be stored in results/csvs/costs'''
+    Takes a costs csv as input, made from get_costs() in helpers.py, which should be stored in results/csvs/costs
+    
+    We modified this 7.2 because now we are also looking at the electrolyzer capital cost'''
 
     costdf = pd.read_csv(path, index_col = 0)
+
+    presentation = 'February10pres'
 
     o = path.split("_")
     if 'nogrid' in o:
@@ -301,6 +305,12 @@ def plot_costper(path):
         experiment = "gridsolar"
 
 
+    if 'year' in o:
+        sweep = "grid_year"
+    elif "electrolyzer" in o:
+        sweep = "electrolyzer_cost"
+    else:
+        sweep = "megen_cost"
 
     costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]#If any of the values of the column are not 0, keep them. Gets rid of generators/links etc with no cost
 
@@ -311,26 +321,25 @@ def plot_costper(path):
     fulldf = costdf
 
 
-    folderpath = "Presentations/January31pres/" +  experiment + "/costsper" 
+    folderpath = "Presentations/"+ presentation + "/" +  experiment + "/costsper" 
 
 
-
-    for val in fulldf['Gas Load'].unique():
-        costdf = fulldf.loc[fulldf["Gas Load"] == val, :]
-        costdf = costdf.sort_values(by ="methanogen capital cost")
-        costdf.index = costdf["methanogen capital cost"].round(1)
+    for val in fulldf['methanogen capital cost'].unique():
+        costdf = fulldf.loc[fulldf['methanogen capital cost'] == val, :]
+        costdf = costdf.sort_values(by ="electrolyzer capital cost")
+        costdf.index = costdf["electrolyzer capital cost"].round(1)
         costdf = costdf/val/8760*1000 #price per MWh
 
-        colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[2:]]
+        colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[3:]]
 
-        ax = costdf[costdf.columns[2:]].plot( kind = "bar", stacked = True, color = colors)
+        ax = costdf[costdf.columns[3:]].plot( kind = "bar", stacked = True, color = colors)
 
 
         ax.set_ylabel("LCOE (Euros/MWh_energy)")
-        ax.set_xlabel("Methanogen cost (Eur/kWh)")
+        ax.set_xlabel("Electrolyzer cost (Eur/kWh)")
         
         val = round(val, 1)
-        ax.set_title("Cost(+) per MWh breakdown " + experiment +  " model for gas load of " + str(val) + "kWh")
+        ax.set_title("Cost(+) per MWh breakdown " + experiment + " " + sweep +  " model for megen cost of " + str(val) + "kWh")
 
         ax.axhline(135, label = "2-Dec-22 price")
         ax.axhline (36, label = "1-Jul-21 price", color = "#ff7f0e")
@@ -355,7 +364,7 @@ def plot_costper(path):
 
         plt.tight_layout()
 
-        savepath = folderpath + "/"+ experiment + "_barplot_" + str(val) + "_gas_dem"
+        savepath = folderpath + "/"+ experiment + "_barplot_" + sweep + "_megen_cost_" + str(val)
         plt.savefig(savepath + ".pdf")
         plt.savefig(savepath + ".png", dpi = 500)
         plt.close()
@@ -369,13 +378,16 @@ def find_net_income(path):
     and it requires the full system model.
     
     We need a base system to compare to, so we take a very low (1 kW demand) system, to determine the system behavior
-    if there was "no" gas demand. This is put into mindf.'''
+    if there was "no" gas demand. This is put into mindf.
+    
+    Note: whenever we add or subtract columns, we may need to adjust the columns here. If we want to plot csvs older than
+    6 February, we may need to adjust columsn here.'''
 
     costdf = pd.read_csv(path, index_col = 0)
 
-    mindf = pd.read_csv("results/NetCDF/25_01_2023_gasdem_megencost_sweep_w_hstore/gas_dem_1_megen_cost_11.nc", index_col=0)
+    mindf = pd.read_csv("results/csvs/costs/25_01_2023_gasdem_megencost_sweep_w_hstore.csv", index_col=0)
 
-    
+    gasload = 10000
 
     o = path.split("_")
     if 'year' in o:
@@ -395,11 +407,14 @@ def find_net_income(path):
 
     # To find the net income, add up all of the total income and expenses. Costs are positive
     # and income is negative. Then, multiply by -1 to get the positive balance if you made money 
-    costdf['Net income'] = costdf[costdf.columns[2:]].sum(axis = 1) * -1
+    # This skips over Gas Load, methanogen capital cost, and electrolyzer capital cost
+    costdf['Net income'] = costdf[costdf.columns[3:]].sum(axis = 1) * -1
+
+    mindf['Net income'] = mindf[mindf.columns[2:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well.
 
     # How much can you expect to make with basically 0 gas load--ie, the solar system and the
     # battery is financing itself for the grid
-    sys_income = costdf.loc[(costdf['Gas Load'] == 1) & (costdf['methanogen capital cost'] == costdf['methanogen capital cost'].min())]['Net income'].values[0]
+    sys_income = mindf.loc[(mindf['Gas Load'] == 1) & (mindf['methanogen capital cost'] == mindf['methanogen capital cost'].min())]['Net income'].values[0]
 
     # Making it orderly for my view
     costdf = costdf.sort_values(['Gas Load', 'methanogen capital cost'])
@@ -414,7 +429,15 @@ def find_net_income(path):
 
     costdf = costdf.loc[costdf['Gas Load'] == gasload]
 
-    costdf.index = costdf["methanogen capital cost"].round(1)
+
+
+
+    if experiment == "megen_cost":
+        costdf.index = costdf["methanogen capital cost"].round(1)
+    elif experiment == "electrolyzer_cost":
+        costdf = costdf.loc[costdf['methanogen capital cost'] == 86.72922452359094]
+        costdf = costdf.sort_values(['Gas Load', 'electrolyzer capital cost'])
+        costdf.index = costdf['electrolyzer capital cost'].round(1)
 
     ax = costdf['cost diff'].plot(kind = "bar")
     ax.set_ylabel ("Required gas cost (Eur/MWh)")
@@ -446,6 +469,7 @@ def find_net_income(path):
     
     folderpath = "Presentations/"+ presentation + "/gas_cost_req_by_" + experiment
 
+    # plt.show()
     savepath = folderpath 
     plt.savefig(savepath + ".pdf")
     plt.savefig(savepath + ".png", dpi = 500)
@@ -453,12 +477,6 @@ def find_net_income(path):
 
 
 
-
-
-
-
-def find_req_profit_per_gas():
-    '''This function will be able to tell you how much the gas needs to cost in order to '''
 
 ##################################################################
 ######################## DURATION CURVES #########################

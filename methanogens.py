@@ -52,11 +52,23 @@ if __name__ == "__main__":
         name = "gasdem_electrolyzer_sweep_gridsolar_w_hstore" #name of the run, added to date
         solar = True #whether using solar generator or not
         grid = True #whether using grid generator or not
-
-
+        
         ##---<<Secondary sweeping variables>>-----
+        electrolyzer = True
+        year = True
+
+        #The sweeps is a list that contain the name of the sweeping variable. The sweeper is a list that 
+        # contains the range being swept over
+        sweeps = []
+        sweeper = []
         '''In addition to a megen cost sweep, the sweep can be electrolyzer, year, or gas_load'''
-        sweep = 'electrolyzer'
+        if electrolyzer == True:
+               sweeps.append("electrolyzer")
+               sweeper.append([x for x in np.logspace (-1, 1, 10)] )
+
+        if year == True:
+               sweeps.append("year")
+               sweeper.append(['2017', '2018', '2019', '2020', '2021'])
        
 
         # We are doing huge sweeps to see the extremes--under what conditions is it worth it to produce methane from our methanogenesis? 
@@ -108,7 +120,7 @@ if __name__ == "__main__":
         ##---<<Running the experiment>>-------
         
         ns = [n]
-        sweeps = [sweep]
+        sweeps = [sweeps]
 
         allpath = new_folder(name)
         homepath = pathlib.Path().resolve()
