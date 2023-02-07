@@ -2,6 +2,7 @@ import pandas as pd
 from helpers import annual_cost
 import numpy as np
 
+sweep_dict = {'electrolyzer': [x for x in np.logspace (-1, 1, 10)], "year": ['2017', '2018', '2019', '2020', '2021']}
 
 def change_gasload(network, multiplier):
     '''There are two loads, one for gas demand, and one ginormous grid demand.
@@ -38,6 +39,7 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
     
     elif sweep == 'year':
         network.remove("Generator", "Grid")
+        
 
     return network
 
@@ -77,6 +79,7 @@ def solve_network(network, sweep, sweep_mult, megen_mult):
 
     return n
 
+
 def to_netcdf(network, sweep, sweep_mult, megen_mult, path):
     n = solve_network(network, sweep, sweep_mult, megen_mult)
 
@@ -91,6 +94,8 @@ def to_netcdf(network, sweep, sweep_mult, megen_mult, path):
     if sweep == "electrolyzer":
         sweep_mult = sweep_mult * annual_cost('electrolysis')
         sweep_mult = round (sweep_mult)
+
+
 
     path = path + "/" + sweep + f"_{sweep_mult}_megen_cost_{megen_mult}.nc"
     

@@ -19,6 +19,8 @@ from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_l
 from helpers import override_component_attrs, annual_cost
 from modifynetwork import change_gasload, to_netcdf, remove_grid, remove_solar
 
+sweep_dict = {'electrolyzer': [x for x in np.logspace (-1, 1, 10)], "year": ['2017', '2018', '2019', '2020', '2021']}
+
 
 def get_relpath(path, home):
         rel_path = os.path.relpath(path, home)
@@ -54,21 +56,22 @@ if __name__ == "__main__":
         grid = True #whether using grid generator or not
         
         ##---<<Secondary sweeping variables>>-----
-        electrolyzer = True
+        # Modify the sweeping range in the sweeping dict in modifynetwork.py
+        electrolyzer = False
         year = True
 
         #The sweeps is a list that contain the name of the sweeping variable. The sweeper is a list that 
         # contains the range being swept over
-        sweeps = []
-        sweeper = []
+        
+        
         '''In addition to a megen cost sweep, the sweep can be electrolyzer, year, or gas_load'''
         if electrolyzer == True:
-               sweeps.append("electrolyzer")
-               sweeper.append([x for x in np.logspace (-1, 1, 10)] )
+               sweeps = "electrolyzer"
+               sweeper = [x for x in np.logspace (-1, 1, 10)]
+        elif year == True:
+               sweeps = "year"
+               sweeper = ['2017', '2018', '2019', '2020', '2021']
 
-        if year == True:
-               sweeps.append("year")
-               sweeper.append(['2017', '2018', '2019', '2020', '2021'])
        
 
         # We are doing huge sweeps to see the extremes--under what conditions is it worth it to produce methane from our methanogenesis? 
@@ -76,11 +79,7 @@ if __name__ == "__main__":
         # The solar generator to produce electricity rather than produce methane
 
         methanogen_costs = [x for x in np.logspace(-1, 1, 10)]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
-        
-        if sweep == 'electrolyzer':
-               sweeper = [x for x in np.logspace (-1, 1, 10)] #If I want this to be year, then 
-        elif sweep == "year":
-               sweeper = ['2017', '2018', '2019', '2020', '2021']
+
 
 
         ##---<<Network creation>>-----
