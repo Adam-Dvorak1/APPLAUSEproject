@@ -70,7 +70,7 @@ if __name__ == "__main__":
                sweeper = [x for x in np.logspace (-1, 1, 10)]
         elif year == True:
                sweeps = "year"
-               sweeper = ['2017', '2018', '2019', '2020', '2021']
+               sweeper = ['2017', '2018', '2019', '2020']
 
        
 
