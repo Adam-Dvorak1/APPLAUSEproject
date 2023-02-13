@@ -10,7 +10,7 @@ import importlib
 import multiplotterfunc
 importlib.reload(multiplotterfunc)
 
-from multiplotterfunc import find_net_income, plot_anysize_all, plot_anysize, compare_dcurves,  plot_costper, plot_costs, plot_costpergas, plot_gridtoelec_dcurv, plot_methlink_dcurv, plot_gasstore_dcurv
+from multiplotterfunc import four_cost_plot, find_net_income_multiyear, find_net_income, plot_anysize_all, plot_anysize, compare_dcurves,  plot_costper, plot_costs, plot_costpergas, plot_gridtoelec_dcurv, plot_methlink_dcurv, plot_gasstore_dcurv
 
 #generators_dcurve, battery_dcurve, storage_dcurve, methane_link_dcurve, plot_linksize, plot_objective,
 
@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
 
 
-    costpath = 'results/csvs/costs/06_02_2023_gasdem_electrolyzer_sweep_gridsolar_w_hstore.csv'
+    costpath = 'results/csvs/costs/08_02_2023_gasdem_year_sweep_gridsolar_w_hstore.csv'
 
     # plot_battsize()
 
@@ -32,10 +32,10 @@ if __name__ == "__main__":
     # plot_anysize can take "megen", 'H2', 
 
 
-    # find_net_income(costpath)
+    four_cost_plot()
     # plot_anysize_all()
     # compare_dcurves()
-    plot_costper(costpath)
+    # plot_costper(costpath)
     # plot_gridtoelec_dcurv(allpath)
     
     # plot_gasstore_dcurv()

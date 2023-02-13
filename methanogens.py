@@ -13,11 +13,15 @@ import numpy as np
 import os
 import pathlib
 import itertools
+import importlib
 import time
 from multiprocessing import Pool
+import buildnetwork
+importlib.reload(buildnetwork)
 from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_links, add_methanogen, add_sabatier
 from helpers import override_component_attrs, annual_cost
 from modifynetwork import change_gasload, to_netcdf, remove_grid, remove_solar
+
 
 sweep_dict = {'electrolyzer': [x for x in np.logspace (-1, 1, 10)], "year": ['2017', '2018', '2019', '2020', '2021']}
 
@@ -51,7 +55,7 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "gasdem_electrolyzer_sweep_gridsolar_w_hstore" #name of the run, added to date
+        name = "gasdem_year_sweep_gridsolar_w_hstore" #name of the run, added to date
         solar = True #whether using solar generator or not
         grid = True #whether using grid generator or not
         

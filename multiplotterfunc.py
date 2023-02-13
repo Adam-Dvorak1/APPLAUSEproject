@@ -12,6 +12,7 @@ import re
 import math
 import glob
 import itertools
+import seaborn as sns
 
 from helpers import annual_cost
 
@@ -407,8 +408,12 @@ def find_net_income(path):
 
     # To find the net income, add up all of the total income and expenses. Costs are positive
     # and income is negative. Then, multiply by -1 to get the positive balance if you made money 
-    # This skips over Gas Load, methanogen capital cost, and electrolyzer capital cost
-    costdf['Net income'] = costdf[costdf.columns[3:]].sum(axis = 1) * -1
+    # This skips over Gas Load, methanogen capital cost, and electrolyzer capital cost. If 'year'
+    # is in the columns, it also skips over that
+    if 'year' not in costdf.columns:
+        costdf['Net income'] = costdf[costdf.columns[3:]].sum(axis = 1) * -1
+    else:
+        costdf['Net income'] = costdf[costdf.columns[4:]].sum(axis = 1) * -1
 
     mindf['Net income'] = mindf[mindf.columns[2:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well.
 
@@ -475,6 +480,283 @@ def find_net_income(path):
     plt.savefig(savepath + ".png", dpi = 500)
     plt.close()
 
+def find_net_income_pass(path, ax):
+    '''This function is the same as find_net_income() except it passes an ax on to another function'''
+
+    costdf = pd.read_csv(path, index_col = 0)
+
+    mindf = pd.read_csv("results/csvs/costs/25_01_2023_gasdem_megencost_sweep_w_hstore.csv", index_col=0)
+
+    gasload = 10000
+
+    o = path.split("_")
+    if 'year' in o:
+        experiment = "grid_year"
+    elif "electrolyzer" in o:
+        experiment = "electrolyzer_cost"
+    else:
+        experiment = "megen_cost"
+
+    presentation = 'February10pres'
+
+    # If any of the values of the column are not 0, keep them. 
+    # Gets rid of generators/links etc with no cost
+    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
+
+
+
+    # To find the net income, add up all of the total income and expenses. Costs are positive
+    # and income is negative. Then, multiply by -1 to get the positive balance if you made money 
+    # This skips over Gas Load, methanogen capital cost, and electrolyzer capital cost. If 'year'
+    # is in the columns, it also skips over that
+    if 'year' not in costdf.columns:
+        costdf['Net income'] = costdf[costdf.columns[3:]].sum(axis = 1) * -1
+    else:
+        costdf['Net income'] = costdf[costdf.columns[4:]].sum(axis = 1) * -1
+
+    mindf['Net income'] = mindf[mindf.columns[2:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well.
+
+    # How much can you expect to make with basically 0 gas load--ie, the solar system and the
+    # battery is financing itself for the grid
+    sys_income = mindf.loc[(mindf['Gas Load'] == 1) & (mindf['methanogen capital cost'] == mindf['methanogen capital cost'].min())]['Net income'].values[0]
+
+    # Making it orderly for my view
+    costdf = costdf.sort_values(['Gas Load', 'methanogen capital cost'])
+
+    # Now the 'cost diff' column is how much money is being lost--it is the cost of the case
+    # with the methanogen, minus the revenue of the case with no gas demand. This only makes
+    # sense for the case with high gas load
+    costdf['cost diff']= costdf['Net income'] - sys_income 
+   
+    #Finding cost diff per MW per hour
+    costdf['cost diff'] = costdf['cost diff']/8760*1000/gasload * -1 #10000 kW or 10 MW
+
+    costdf = costdf.loc[costdf['Gas Load'] == gasload]
+
+
+
+
+    if experiment == "megen_cost":
+        costdf.index = costdf["methanogen capital cost"].round(1)
+    elif experiment == "electrolyzer_cost":
+        costdf = costdf.loc[costdf['methanogen capital cost'] == 86.72922452359094]
+        costdf = costdf.sort_values(['Gas Load', 'electrolyzer capital cost'])
+        costdf.index = costdf['electrolyzer capital cost'].round(1)
+
+    costdf['cost diff'].plot(kind = "bar", ax = ax)
+    # ax.set_ylabel ("Required gas cost (Eur/MWh)")
+    ax.set_xlabel("")
+    
+
+
+
+    ax.set_title("Income Req", fontsize = 20)
+    
+    ax.axhline(340, label = '26-Aug-22 price (high)', color = "C0")
+    ax.axhline(144, label = "1-Jul-22 price", color = "C1")
+    ax.axhline (36, label = "1-Jul-21 price", color = "C2")
+    ax.axhline (10, label = "1-Jul-19 price", color = "C3")
+
+
+
+
+
+
+def find_net_income_multiyear(path):
+    '''
+    9 Feb 2023
+    This function will; '''
+
+    costdf = pd.read_csv(path, index_col = 0)
+
+    mindf = pd.read_csv("results/csvs/costs/25_01_2023_gasdem_megencost_sweep_w_hstore.csv", index_col=0)
+
+    gasload = 10000
+
+    o = path.split("_")
+    if 'year' in o:
+        experiment = "year_sweep"
+    elif "electrolyzer" in o:
+        experiment = "electrolyzer_cost"
+    else:
+        experiment = "megen_cost"
+
+    presentation = 'February10pres'
+
+    # If any of the values of the column are not 0, keep them. 
+    # Gets rid of generators/links etc with no cost
+    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
+
+    print(costdf)
+
+    # To find the net income, add up all of the total income and expenses. Costs are positive
+    # and income is negative. Then, multiply by -1 to get the positive balance if you made money 
+    # This skips over year, Gas Load, methanogen capital cost, and electrolyzer capital cost. If 
+    # 'year' is in the columns, it also skips over that
+    
+    if 'year' not in costdf.columns:
+        costdf['Net income'] = costdf[costdf.columns[3:]].sum(axis = 1) * -1
+    else:
+        costdf['Net income'] = costdf[costdf.columns[4:]].sum(axis = 1) * -1
+
+    mindf['Net income'] = mindf[mindf.columns[2:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well.
+
+    # How much can you expect to make with basically 0 gas load--ie, the solar system and the
+    # battery is financing itself for the grid
+    sys_income = mindf.loc[(mindf['Gas Load'] == 1) & (mindf['methanogen capital cost'] == mindf['methanogen capital cost'].min())]['Net income'].values[0]
+
+    # Making it orderly for my view
+    costdf = costdf.sort_values(['Gas Load', 'methanogen capital cost'])
+
+    # Now the 'cost diff' column is how much money is being lost--it is the cost of the case
+    # with the methanogen, minus the revenue of the case with no gas demand. This only makes
+    # sense for the case with high gas load
+    costdf['cost diff']= costdf['Net income'] - sys_income 
+   
+    #Finding cost diff per MW per hour
+    costdf['cost diff'] = costdf['cost diff']/8760*1000/gasload * -1 #10000 kW or 10 MW
+
+    costdf = costdf.loc[costdf['Gas Load'] == gasload]
+
+    print(costdf)
+
+
+    if experiment == "megen_cost":
+        costdf.index = costdf["methanogen capital cost"].round(1)
+    elif experiment == "electrolyzer_cost":
+        costdf = costdf.loc[costdf['methanogen capital cost'] == 86.72922452359094]
+        costdf = costdf.sort_values(['Gas Load', 'electrolyzer capital cost'])
+        costdf.index = costdf['electrolyzer capital cost'].round(1)
+
+    if experiment != 'year_sweep':
+        ax = costdf['cost diff'].plot(kind = "bar")
+    else:
+        
+        costdf['methanogen capital cost'] = costdf["methanogen capital cost"].round(1)
+        ax = sns.barplot(x = 'methanogen capital cost', y = 'cost diff', hue = 'year', data = costdf)
+
+    ax.set_ylabel ("Required gas cost (Eur/MWh)")
+    ax.set_xlabel("Methanogen cost (Eur/kWh)")
+
+
+    ax.set_title("Minimum gas cost sweeping " + experiment)
+    
+    ax.axhline(340, label = '26-Aug-22 price (high)', color = "C0")
+    ax.axhline(144, label = "1-Jul-22 price", color = "C1")
+    ax.axhline (36, label = "1-Jul-21 price", color = "C2")
+    ax.axhline (10, label = "1-Jul-19 price", color = "C3")
+
+
+
+    # box = ax.get_position()
+    # ax.set_position([box.x0, box.y0 + box.height * 0.1,
+    #             box.width, box.height * 0.9])
+
+    
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1], loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol = 3)
+
+
+
+    plt.subplots_adjust(bottom = 0.2)
+
+    plt.tight_layout()
+    
+    folderpath = "Presentations/"+ presentation + "/gas_cost_req_by_" + experiment
+
+    savepath = folderpath 
+    plt.savefig(savepath + ".pdf")
+    plt.savefig(savepath + ".png", dpi = 500)
+    plt.close()
+
+
+def plot_cost_any(path, ax): 
+    #December 5
+    '''
+    9 Feb 2023
+    The purpose of this function is to be able to plot cost_any plots side by side
+    '''
+    costdf = pd.read_csv(path, index_col = 0)
+
+    val = 10000
+
+    o = path.split("_")
+    if 'nogrid' in o:
+        experiment = "No Grid"
+    elif "nosolar" in o:
+        experiment = "No Solar"
+    else:
+        experiment = "Full system"
+
+
+
+    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]#If any of the values of the column are not 0, keep them. Gets rid of generators/links etc with no cost
+
+    #only positive--so no "income"
+    if experiment != "Full system":
+        costdf = costdf.loc[:,  (costdf > 0).any(axis=0)]#If any of the values of the column are not negative, keep them. Gets rid of the "income"
+
+    
+    costdf = costdf.loc[costdf["Gas Load"] == val]
+    costdf = costdf.sort_values(by ="methanogen capital cost")
+    costdf.index = costdf["methanogen capital cost"].round(1)
+    costdf = costdf/val/8760*1000 #price per MWh
+
+    colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[2:]]
+
+    costdf[costdf.columns[2:]].plot( kind = "bar", stacked = True, color = colors, ax = ax)
+
+
+    # ax.set_ylabel("LCOE (Euros/MWh_energy)")
+    # ax.set_xlabel("Methanogen cost (Eur/kWh)")
+    
+    ax.set_xlabel("")
+    ax.set_title( experiment, fontsize = 20)
+    ax.axhline(340, label = '26-Aug-22 price (high)', color = "C0")
+    ax.axhline(144, label = "1-Jul-22 price", color = "C1")
+    ax.axhline (36, label = "1-Jul-21 price", color = "C2")
+    ax.axhline (10, label = "1-Jul-19 price", color = "C3")
+    ax.get_legend().remove()
+
+
+
+
+
+
+
+def four_cost_plot():
+    
+    presentation = 'February10pres'
+    fig, ax = plt.subplots(2,2,figsize=(10,9), sharex=True)
+    axs = ax.flatten()
+
+    
+
+    nogrid = 'results/csvs/costs/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore.csv'
+    nosolar = 'results/csvs/costs/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore.csv'
+    gridsolar = 'results/csvs/costs/25_01_2023_gasdem_megencost_sweep_w_hstore.csv'
+    plot_cost_any(nogrid, axs[0])
+    plot_cost_any(nosolar, axs[1])
+    plot_cost_any(gridsolar, axs[2])
+    find_net_income_pass(nosolar, axs[3])
+
+    for ax in axs:
+        ax.tick_params(axis='both', which='major', labelsize=14)
+    
+    fig.supylabel("Euro per MWh gas", fontsize = 16)
+    fig.supxlabel("Methanogen cost (Eur/kW)", fontsize = 16)
+    
+
+    handles, labels = axs[2].get_legend_handles_labels()
+    fig.legend(handles, labels, ncol = 3, loc = 'upper center', fontsize = 12)
+    fig.subplots_adjust(top = 0.84, bottom = 0.15)
+
+
+
+        
+    fig.savefig('Presentations/' + presentation + '/megencosts_income.pdf')
+    fig.savefig('Presentations/' + presentation + '/megencosts_income.png', dpi = 500)
+    plt.show()
 
 
 
@@ -755,4 +1037,5 @@ def plot_gridtoelec_dcurv(path):
     plt.savefig(prespath + '.png', dpi = 500)
 
     plt.show()
+
 

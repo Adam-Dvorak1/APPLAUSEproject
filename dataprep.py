@@ -58,11 +58,12 @@ def prepare_CAISO_elecprices(path):
     #The CAISO data comes in 5 minute intervals
     index = pd.date_range(start = '12/31/2016', end = '10/26/2022', freq = '5min')
 
-    #Unfortunately there are some missing values, so we fill those with np.nan in themean time
     df = df.reindex(index, fill_value = np.nan)
 
-    #Downsample, we only want the average per hour
     df = df.resample('H').mean()
+
+    #Unfortunately there are some missing values, so we fill those with np.nan in themean time
+
 
     #Now, we fill the missing hours using linear interpolation
     df['price'] = df['price'].interpolate()
@@ -77,24 +78,32 @@ def get_CAISO_year(path, year):
     '''
     8 Feb 2023 
     This function reads in a cleaned, 1-hr sampled csv courtesy of the function prepare_CAISO_elecprices()
-    Based on the year of data, '''
+    Based on the year of data, it takes a segment of the csv and puts it into a new csv. This new csv
+    is reindexed to UTC time, as the original csv uses local time
 
-    
+    It also takes the year as input, as a string
+    '''
 
-    # df.index = pd.to_datetime(df.index)
+    df = pd.read_csv(path, index_col=0)
 
-    # #Since we are dealing with local time
+    yearbelow = str(int(year)-1)
 
-    # lowindex = 
-    # df = [x for x in df.index if x > dt.strptime(yearbelow + '-12-31 15:55', "%Y-%m-%d %H:%M") and x < dt.strptime(year + '-12-31 16:05', "%Y-%m-%d %H:%M")]
-    
-    # df = df.groupby([df.index.year, df.index.month, df.index.day, df.index.hour]).mean()
-    # newindex = df.index.to_flat_index()
-    # newindex = [str(x[0]) + "-" + str(x[1]) + "-" + str(x[2]) + '-' + str(x[3]) for x in newindex]
-    # df.index = pd.to_datetime(newindex, format = '%Y-%m-%d-%H')
+    start = yearbelow + '-12-31 16:00'
+
+    end = year + '-12-31 16:00'
+
+    df = df.loc[start:end]
+
+    df = df.reset_index(drop = True)
+
+    startutc = '01/01/' + year + ' 00:00'
+    endutc = '12/31/' + year + ' 23:00'
+
+    df.index = pd.date_range(start = startutc, end = endutc, freq = 'H')
 
 
-    # df.to_csv('data/elecprice_csvs/' + year + "UTCCAISOprice.csv")
+
+    df.to_csv('data/elecprice_csvs/' + year + 'UTCCAISOprice.csv')
 
 
 
@@ -102,11 +111,18 @@ def get_CAISO_year(path, year):
 
 
 if __name__ == "__main__":
-    # path = "data/og_solar_renewablesninja/*"
+    path = 'data/dec2016_pres_localtime_CAISO.csv'
 
     # for apath in glob.glob(path):
     #     prepare_solar_yr(apath)
-    path = "data/20161231-20161231 CAISO Average Price.csv"
-    prepare_CAISO_elecprices(path)
+
+
+
+    # prepare_CAISO_elecprices(path)
+
+    get_CAISO_year('data/UTCCAISO_allyears.csv', '2020')
+
+
+
     
 

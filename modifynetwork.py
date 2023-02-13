@@ -11,7 +11,7 @@ def change_gasload(network, multiplier):
     applegas csv is 3kWh per hour, taken at the last hour of the year. It works because
     there is a free storage that can take all of the gas until the end of the year--this way
     we answer the question "we want this amount of gas per year, what is the optimal config"'''
-    gasdf = pd.read_csv('data/AppleGas.csv', index_col = 0)
+    gasdf = pd.read_csv('data/gasdem_csvs/2019AppleGas.csv', index_col = 0)
     gasdf.index = pd.to_datetime(gasdf.index)
 
     network.remove("Load", "Gas Load")
@@ -41,13 +41,16 @@ def add_generators_yrs(network, year):
     df_cal_solar = df_cal_solar['solar'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series 
 
 
-    gridprice = pd.read_csv("data/2019UTCCAISOprice.csv", index_col = 0) #From http://www.energyonline.com/Data/GenericData.aspx?DataId=20, which is taken from CAISO. Units of /MWh
+    gridprice = pd.read_csv("data/elecprice_csvs/" + year + "UTCCAISOprice.csv", index_col = 0) #From http://www.energyonline.com/Data/GenericData.aspx?DataId=20, which is taken from CAISO. Units of /MWh
     gridprice.index = pd.to_datetime(gridprice.index)
     gridprice = gridprice['price'][[hour.strftime("%Y-%m-%d %H:%M:%S") for hour in network.snapshots]]
-    gridprice = gridprice/1000 #Before, I used to divide by 100. But I believe that I should have divided by 1000, because we want per kWh, and we had per MWh ##note this is incorrect. 
+    gridprice = gridprice/1000 #Before, I used to divide by 100. But I believe that I should have divided by 1000, because we want per kWh, and we had per MWh 
 
+    if int(year) % 4 != 0:
+        gridgen = pd.DataFrame(index = range (8760))
+    else:
+        gridgen = pd.DataFrame(index = range(8784))
 
-    gridgen = pd.DataFrame(index = range (8760))
     gridgen = gridgen.set_index(hours_in_year)
     gridgen['grid'] = 1 #in kW, so 100GW
 
@@ -66,6 +69,23 @@ def add_generators_yrs(network, year):
     
     return network
 
+def add_loads_yrs(network, year):
+
+    gasdf = pd.read_csv('data/gasdem_csvs/' + year + 'AppleGas.csv', index_col = 0)
+    gasdf.index = pd.to_datetime(gasdf.index)
+
+    network.add("Load", #Why are there two loads here? Which is the name?
+        "Gas Load", 
+        bus="gas", 
+        p_set=gasdf["All_in_one_demand"])
+
+    network.add("Load", 
+        "Grid Load", 
+        bus="grid", 
+        p_set=gasdf["Constant_MW_methane"] * 300)#Assuming 3 GW of demand from the grid
+    
+    return network
+
 
 def change_loads_costs(network, sweep, sweep_mult, megen_mult):
     '''This function used to change the gasload, in addition to the methanogen cost. 
@@ -81,8 +101,12 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
         network.links.loc['H2 Electrolysis', 'capital_cost'] = annual_cost("electrolysis") * sweep_mult
     
     elif sweep == 'year':
-        network.remove("Generator", "Grid")
-        network.remove("Generator", "Solar PV")
+        network.mremove("Generator", ["Grid", "Solar PV", 'Biogas'])
+        network.mremove("Load", ['Gas Load', "Grid Load"])
+        network = add_generators_yrs(network, sweep_mult)
+        network = add_loads_yrs(network, sweep_mult)
+
+
         
 
     return network

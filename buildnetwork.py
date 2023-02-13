@@ -33,13 +33,13 @@ def add_generators(network):
     hours_in_2019 = pd.date_range('2019-01-01T00:00:00','2019-12-31T23:00:00', freq='H') #I changed the date rate from Z
     network.set_snapshots(hours_in_2019)
 
-    df_cal_solar = pd.read_csv('data/RealCalFlatsSolarCFs.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
+    df_cal_solar = pd.read_csv('data/final_solar_csvs/RealCalFlatsSolarCFs_2019.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
     df_cal_solar.index = pd.to_datetime(df_cal_solar.index)
     df_cal_biogas = df_cal_solar['biogas'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #This is just assuming a constant generator, which I added to the original data from renewables.ninja
     df_cal_solar = df_cal_solar['solar'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series 
 
 
-    gridprice = pd.read_csv("data/2019UTCCAISOprice.csv", index_col = 0) #From http://www.energyonline.com/Data/GenericData.aspx?DataId=20, which is taken from CAISO. Units of /MWh
+    gridprice = pd.read_csv("data/elecprice_csvs/2019UTCCAISOprice.csv", index_col = 0) #From http://www.energyonline.com/Data/GenericData.aspx?DataId=20, which is taken from CAISO. Units of /MWh
     gridprice.index = pd.to_datetime(gridprice.index)
     gridprice = gridprice['price'][[hour.strftime("%Y-%m-%d %H:%M:%S") for hour in network.snapshots]]
     gridprice = gridprice/1000 #Before, I used to divide by 100. But I believe that I should have divided by 1000, because we want per kWh, and we had per MWh ##note this is incorrect. 
@@ -73,7 +73,7 @@ def add_loads(network):
     applegas csv is 3kWh per hour, taken at the last hour of the year. It works because
     there is a free storage that can take all of the gas until the end of the year--this way
     we answer the question "we want this amount of gas per year, what is the optimal config"'''
-    gasdf = pd.read_csv('data/AppleGas.csv', index_col = 0)
+    gasdf = pd.read_csv('data/gasdem_csvs/2019AppleGas.csv', index_col = 0)
     gasdf.index = pd.to_datetime(gasdf.index)
 
     network.add("Load", #Why are there two loads here? Which is the name?

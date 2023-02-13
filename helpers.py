@@ -88,7 +88,7 @@ def extract_data(folder):
         n.import_from_netcdf(file)
         tempdf = pd.DataFrame(index = n.snapshots)
 
-
+        
         tempdf['load'] = n.loads_t.p["Gas Load"].max()/8760 #This is an independent variable
         tempdf['megen cost'] = n.links.loc['methanogens', 'capital_cost'] #This is an independent varaible. Hm, but this is not the same as the 
         tempdf['megen size'] = n.links.loc['methanogens', 'p_nom_opt'] 
@@ -163,6 +163,11 @@ def get_costs(n, grid):
     generators = n.generators.loc[:, "p_nom_opt"] * n.generators.loc[:, "capital_cost"]
     stores = n.stores.loc[:, "e_nom_opt"] * n.stores.loc[:, "capital_cost"]
    
+
+    year = n.snapshots[0].year
+    year = pd.Series(year)
+    year.index = ['year']
+    
     gasload = n.loads_t.p["Gas Load"].max()/8760 #Note, we divide by 8760 because the max value is the total value, so we thus want the average val
     gasload = pd.Series( gasload)
     gasload.index = ["Gas Load"]
@@ -177,7 +182,7 @@ def get_costs(n, grid):
 
     
 
-    cost_series = pd.concat([gasload, megen_cap_cost, electrolyzer_cap_cost, links, generators, stores])
+    cost_series = pd.concat([year, gasload, megen_cap_cost, electrolyzer_cap_cost, links, generators, stores])
 
     if grid == True:
         grid_cost, grid_income = get_gridcost(n)
@@ -260,17 +265,20 @@ if __name__ == "__main__":
     '''It may be a bit confusing, but I can currently make up to 3 different csvs in helpers.py
     
     One of them is a general csv which has everything. This is the extract_data() function and delivers the entire timeseries
-    of data for each network. It takes in the network folder as input. This gets stored under results/csvs/alldata
+    of data for each network. It takes in the network folder as input. This gets stored under results/csvs/alldata.
+    This is useful if you want to plot duration curves.
     
     Another one is a summary csv which only records non-time dependent attributes. This is the extract_summary() function.
     It reads the csv generated from extract_data() and delivers a csv stored under results/csvs/sumdata with "summary_" attached to 
-    the front of it.
+    the front of it. This is useful if you want to plot stuff like the objective, or optimal
+    sizes
      
     Finally, we get a costs csv which allows us to assess how expensive the network is per kW supplied. This is made through 
     a series of functions: costs_to_csv(path, isgrid), which takes the folder of the netcdfs as well as whether or not there
     is a grid. Next, it calls get_costs(n, isgrid) which reads in each network of the folder and passes the isgrid variable. 
     Finally, if isgrid is True, then get_costs() calls get_gridcost, which returns the relevant costs of the grid. This 
-    generates a csv that is stored in results/csvs/costs'''
+    generates a csv that is stored in results/csvs/costs. This is useful if you want to plot
+    info involving LCOE or income. '''
 
     # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_wo_hstore"
     # extract_data(path)
@@ -282,11 +290,13 @@ if __name__ == "__main__":
     # extract_data(path)
     # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore"
     # extract_data(path)
-    path = "results/NetCDF/06_02_2023_gasdem_electrolyzer_sweep_gridsolar_w_hstore"
+    # path = "results/NetCDF/08_02_2023_gasdem_year_sweep_gridsolar_w_hstore"
+    # costs_to_csv(path, True)
+
     # extract_data(path)
 
     presdate = "February10pres"
-    make_pres_folders(presdate)
+    # make_pres_folders(presdate)
 
 
     # extract_summary(csvpath) 
