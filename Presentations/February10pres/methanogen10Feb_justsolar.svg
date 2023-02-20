@@ -25,12 +25,12 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="0.96218296"
-     inkscape:cx="397.53354"
-     inkscape:cy="386.1012"
+     inkscape:cx="86.781832"
+     inkscape:cy="398.57285"
      inkscape:window-width="1296"
      inkscape:window-height="969"
-     inkscape:window-x="0"
-     inkscape:window-y="25"
+     inkscape:window-x="948"
+     inkscape:window-y="159"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg5" />
   <defs
@@ -657,4 +657,37 @@
      id="image1625"
      x="150.53957"
      y="8.9617872" />
+  <text
+     xml:space="preserve"
+     style="font-size:7.05556px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:Helvetica;word-spacing:0px;stroke-width:0.264583"
+     x="18.714252"
+     y="49.970184"
+     id="text9044"><tspan
+       sodipodi:role="line"
+       id="tspan9042"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.05556px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';stroke-width:0.264583"
+       x="18.714252"
+       y="49.970184">battery</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-size:7.05556px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:Helvetica;word-spacing:0px;stroke-width:0.264583"
+     x="30.916624"
+     y="127.90701"
+     id="text9044-3"><tspan
+       sodipodi:role="line"
+       id="tspan9042-9"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.05556px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';stroke-width:0.264583"
+       x="30.916624"
+       y="127.90701">store</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-size:7.05556px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:Helvetica;word-spacing:0px;stroke-width:0.264583"
+     x="49.805622"
+     y="178.94002"
+     id="text9044-3-5"><tspan
+       sodipodi:role="line"
+       id="tspan9042-9-5"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.05556px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';stroke-width:0.264583"
+       x="49.805622"
+       y="178.94002">store</tspan></text>
 </svg>

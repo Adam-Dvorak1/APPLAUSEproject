@@ -57,8 +57,11 @@ def annuity(n,r):
 def annual_cost(tech):
     '''Taking a string as input for the type of technology, this function
     calculates the annualized cost of a technology'''
+    #The conversion rate between euro and usd is 1.07 on February 16 2023
+
+    eur_usd = 1.07
     discount_rate = 0.07
-    data = pd.read_csv("data/costs_2025.csv")
+    data = pd.read_csv("data/costs_2025_NRELsolwind.csv")
     tech_data = data.loc[data['technology'] == tech]
     cap_cost =tech_data.query("parameter == 'investment'")['value'].values[0] #in eur/kW
     lifetime = tech_data.query("parameter == 'lifetime'")['value'].values[0]
@@ -67,7 +70,7 @@ def annual_cost(tech):
         fom = 0
     else:
         fom = fomset['value'].values[0]
-    annu_val = annuity(lifetime,discount_rate)*cap_cost*(1+fom) #in eur/kW
+    annu_val = annuity(lifetime,discount_rate)*cap_cost*(1+fom) * eur_usd #in usd/kW
     return annu_val
 
 
@@ -89,7 +92,7 @@ def extract_data(folder):
         tempdf = pd.DataFrame(index = n.snapshots)
 
         
-        tempdf['load'] = n.loads_t.p["Gas Load"].max()/8760 #This is an independent variable
+        tempdf['load'] = n.loads_t.p["Gas Load"].max()/len(n.snapshots) #This is an independent variable
         tempdf['megen cost'] = n.links.loc['methanogens', 'capital_cost'] #This is an independent varaible. Hm, but this is not the same as the 
         tempdf['megen size'] = n.links.loc['methanogens', 'p_nom_opt'] 
         tempdf['electrolyzer size'] = n.links.loc["H2 Electrolysis", "p_nom_opt"]

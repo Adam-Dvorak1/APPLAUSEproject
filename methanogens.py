@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "gasdem_year_sweep_gridsolar_w_hstore" #name of the run, added to date
+        name = "year_megen_sweep_gridsolar" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         solar = True #whether using solar generator or not
         grid = True #whether using grid generator or not
         
@@ -64,6 +64,10 @@ if __name__ == "__main__":
         electrolyzer = False
         year = True
 
+        ##---<<EUR-USD conversion rate>>-------
+        # eur_usd = 1.07, change in helpers.py, in the function annual_cost()
+        
+
         #The sweeps is a list that contain the name of the sweeping variable. The sweeper is a list that 
         # contains the range being swept over
         
@@ -71,7 +75,7 @@ if __name__ == "__main__":
         '''In addition to a megen cost sweep, the sweep can be electrolyzer, year, or gas_load'''
         if electrolyzer == True:
                sweeps = "electrolyzer"
-               sweeper = [x for x in np.logspace (-1, 1, 10)]
+               sweeper = [1/4, 1/2, 2/3, 5/6, 1, 1.2, 1.5, 2, 4]
         elif year == True:
                sweeps = "year"
                sweeper = ['2017', '2018', '2019', '2020']
@@ -82,7 +86,9 @@ if __name__ == "__main__":
         # It may be that it is basically never worth it. In fact, our first results show that it is actually better to just use
         # The solar generator to produce electricity rather than produce methane
 
-        methanogen_costs = [x for x in np.logspace(-1, 1, 10)]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
+        megen_costs_list = [20, 50, 80, 100, 120, 150, 200, 300, 500] #Now, 9 costs
+        megen_costs_list = [120]
+        methanogen_costs = [x/annual_cost('methanation') for x in megen_costs_list]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
 
 
 

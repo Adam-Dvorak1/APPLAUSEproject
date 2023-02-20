@@ -29,6 +29,8 @@ def add_generators(network):
     '''There are three generators: solar, biogas, and grid. The grid is huge and has a 
     marginal cost. The solar generator has a max size of 130 MW. The biogas generator is free and can be infinitely big.
 
+
+
     This also sets the network snapshots'''
     hours_in_2019 = pd.date_range('2019-01-01T00:00:00','2019-12-31T23:00:00', freq='H') #I changed the date rate from Z
     network.set_snapshots(hours_in_2019)
@@ -93,7 +95,7 @@ def add_stores(network):
     '''This adds three stores: a battery, for the solar generator; a gas store, for the load;
     and a CO2 environment, to capture the CO2 '''
 
-    tech_data = pd.read_csv("data/costs_2025.csv")
+    tech_data = pd.read_csv("data/costs_2025_NRELsolwind.csv")
 
     ## ------------------battery---------------------------
     network.add("Bus", "battery", carrier = "battery")
@@ -111,7 +113,7 @@ def add_stores(network):
         carrier = "battery charger",
         efficiency =tech_data.query("technology == 'battery inverter' & parameter == 'efficiency'")['value'].values[0] ** 0.5, #Taking square root because 
         p_nom_extendable = True,
-        capital_cost = annual_cost("battery inverter"))
+        capital_cost = annual_cost("battery inverter") )
     network.add("Link",
         "battery discharger",
         bus0 = "battery",
@@ -194,7 +196,7 @@ def add_links(network):
     '''This adds links that are not methanogenesis or connecting to stores:
     electrolysis, high to low voltage electricity, solar to electricity, biogas'''
     
-    tech_data = pd.read_csv("data/costs_2025.csv")
+    tech_data = pd.read_csv("data/costs_2025_NRELsolwind.csv")
 
     ## ---------------Electrolysis--------------------------
     '''Compression is taken in during the methanogenesis link'''
@@ -277,7 +279,7 @@ def add_methanogen(network):
         bus3 = "CO2 compressed",
         carrier="methanation",
         marginal_cost=0,
-        capital_cost=annual_cost("methanation") * 3,   # annualised capital costs. it gets overridden in modifynetwork.py change_loads_costs() by  annual_cost("methanation") * megen_mult
+        capital_cost=annual_cost("methanation") * 3 ,   # annualised capital costs. it gets overridden in modifynetwork.py change_loads_costs() by  annual_cost("methanation") * megen_mult
         p_nom_extendable=True,
         efficiency=0.8 * 0.9785,    # how much CH4 is produced per H2 input. So 0.8 MW Ch4 produced per MW of H2
         efficiency2= 0.01, #I have no idea how many MW CO2 is emitted per MW of H2. 

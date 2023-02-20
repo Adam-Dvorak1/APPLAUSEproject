@@ -7,9 +7,32 @@
    viewBox="0 0 213.44775 197.71231"
    version="1.1"
    id="svg5"
+   sodipodi:docname="methanogen10Feb.svg"
+   inkscape:version="1.1.2 (b8e25be8, 2022-02-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview952"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.2493507"
+     inkscape:cx="302.15696"
+     inkscape:cy="431.82432"
+     inkscape:window-width="1920"
+     inkscape:window-height="1087"
+     inkscape:window-x="-14"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg5" />
   <defs
      id="defs2">
     <rect
@@ -626,4 +649,37 @@
        id="tspan15923"
        x="13.51414"
        y="32.288387" /></text>
+  <text
+     xml:space="preserve"
+     style="font-size:7.05556px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:Helvetica;word-spacing:0px;stroke-width:0.264583"
+     x="18.714554"
+     y="49.969772"
+     id="text9044"><tspan
+       sodipodi:role="line"
+       id="tspan9042"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.05556px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';stroke-width:0.264583"
+       x="18.714554"
+       y="49.969772">battery</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-size:7.05556px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:Helvetica;word-spacing:0px;stroke-width:0.264583"
+     x="30.916895"
+     y="127.90736"
+     id="text9044-3"><tspan
+       sodipodi:role="line"
+       id="tspan9042-9"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.05556px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';stroke-width:0.264583"
+       x="30.916895"
+       y="127.90736">store</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-size:7.05556px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:Helvetica;word-spacing:0px;stroke-width:0.264583"
+     x="49.80608"
+     y="178.94029"
+     id="text9044-3-5"><tspan
+       sodipodi:role="line"
+       id="tspan9042-9-7"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.05556px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';stroke-width:0.264583"
+       x="49.80608"
+       y="178.94029">store</tspan></text>
 </svg>
