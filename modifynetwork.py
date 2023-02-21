@@ -23,36 +23,56 @@ def change_gasload(network, multiplier):
 
     return network
 
-def add_generators_yrs(network, year):
 
-    '''The purpose of this function is to be able to do a sensitivity analysis based on the 
-    year of electricity/solar data at cal flats. So, this is not present in the base case,
+def add_generators_sol_yrs(network, year):
+
+    '''
+    21 February 2023
+    
+    We are adding functionality to do similar tests to 
+    The purpose of this function is to be able to do a sensitivity analysis based on the 
+    year of electricity/wind data at 'cal flats'. So, this is not present in the base case,
     but it is present when modifying the network.
     
     It takes a string for year. 
     
     It is almost a copy of add_generators in buildnetwork.py'''
+    gridpresent = False #if the grid is not present already, then we don't want to add it back in
+    network.remove("Generator", "Biogas")
+    network.remove("Generator", "Solar PV")
+    if 'Grid' in network.generators.index:
+        network.remove("Generator", 'Grid')
+        gridpresent = True
+
+    
+    
     hours_in_year = pd.date_range(year + '-01-01T00:00:00', year + '-12-31T23:00:00', freq='H') #I changed the date rate from Z
     network.set_snapshots(hours_in_year)
+
 
     df_cal_solar = pd.read_csv('data/final_solar_csvs/RealCalFlatsSolarCFs_' + year + '.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
     df_cal_solar.index = pd.to_datetime(df_cal_solar.index)
     df_cal_biogas = df_cal_solar['biogas'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #This is just assuming a constant generator, which I added to the original data from renewables.ninja
     df_cal_solar = df_cal_solar['solar'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series 
 
+    if gridpresent == True:
+        gridprice = pd.read_csv("data/elecprice_csvs/" + year + "UTCCAISOprice.csv", index_col = 0) #From http://www.energyonline.com/Data/GenericData.aspx?DataId=20, which is taken from CAISO. Units of /MWh
+        gridprice.index = pd.to_datetime(gridprice.index)
+        gridprice = gridprice['price'][[hour.strftime("%Y-%m-%d %H:%M:%S") for hour in network.snapshots]]
+        gridprice = gridprice/1000 #Before, I used to divide by 100. But I believe that I should have divided by 1000, because we want per kWh, and we had per MWh 
 
-    gridprice = pd.read_csv("data/elecprice_csvs/" + year + "UTCCAISOprice.csv", index_col = 0) #From http://www.energyonline.com/Data/GenericData.aspx?DataId=20, which is taken from CAISO. Units of /MWh
-    gridprice.index = pd.to_datetime(gridprice.index)
-    gridprice = gridprice['price'][[hour.strftime("%Y-%m-%d %H:%M:%S") for hour in network.snapshots]]
-    gridprice = gridprice/1000 #Before, I used to divide by 100. But I believe that I should have divided by 1000, because we want per kWh, and we had per MWh 
+        if int(year) % 4 != 0:
+            gridgen = pd.DataFrame(index = range (8760))
+        else:
+            gridgen = pd.DataFrame(index = range(8784))
 
-    if int(year) % 4 != 0:
-        gridgen = pd.DataFrame(index = range (8760))
-    else:
-        gridgen = pd.DataFrame(index = range(8784))
+        gridgen = gridgen.set_index(hours_in_year)
+        gridgen['grid'] = 1 #in kW, so 100GW
 
-    gridgen = gridgen.set_index(hours_in_year)
-    gridgen['grid'] = 1 #in kW, so 100GW
+        network.add("Generator", "Grid", bus = 'grid', p_nom = 100000000,#100 GW. The capacity is for free. However, we still pay marginal cost
+            carrier = "grid", capital_cost = 0, marginal_cost = gridprice, p_max_pu = gridgen['grid'])#The datafile gives US cents/kWh. I wanted dollars (or euros) per kWh.     # This is using 2019 (UTC) data from CAISO, LCG consulting.Prices are in c/kWh
+
+    
 
 
     network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
@@ -63,14 +83,107 @@ def add_generators_yrs(network, year):
         carrier = 'biogas', capital_cost = 0,
         marginal_cost = 0, p_max_pu = df_cal_biogas) # In reality, there is a marginal cost for biogas. What is it? 
 
-    network.add("Generator", "Grid", bus = 'grid', p_nom = 100000000,#100 GW. The capacity is for free. However, we still pay marginal cost
-        carrier = "grid", capital_cost = 0, marginal_cost = gridprice, p_max_pu = gridgen['grid'])#The datafile gives US cents/kWh. I wanted dollars (or euros) per kWh.     # This is using 2019 (UTC) data from CAISO, LCG consulting.Prices are in c/kWh
 
-    
     return network
 
-def add_loads_yrs(network, year):
 
+
+def add_generators_wind_yrs(network, year):
+
+    '''
+    21 February 2023
+    
+    We are adding functionality to do similar tests to 
+    The purpose of this function is to be able to do a sensitivity analysis based on the 
+    year of electricity/wind data at 'cal flats'. So, this is not present in the base case,
+    but it is present when modifying the network.
+    
+    It takes a string for year. 
+    
+    It is almost a copy of add_generators in buildnetwork.py'''
+    gridpresent = False #if the grid is not present already, then we don't want to add it back in
+    network.remove("Generator", "Biogas")
+    network.remove("Generator", 'Onshore wind')
+    if 'Grid' in network.generators.index:
+        network.remove("Generator", 'Grid')
+        gridpresent = True
+
+    
+    
+    hours_in_year = pd.date_range(year + '-01-01T00:00:00', year + '-12-31T23:00:00', freq='H') #I changed the date rate from Z
+    network.set_snapshots(hours_in_year)
+
+    df_cal_solar = pd.read_csv('data/final_wind_csvs/RealCalFlatsWindCFs_' + year + '.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
+    df_cal_solar.index = pd.to_datetime(df_cal_solar.index)
+    df_cal_biogas = df_cal_solar['biogas'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #This is just assuming a constant generator, which I added to the original data from renewables.ninja
+    df_cal_solar = df_cal_solar['wind'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series 
+
+    if gridpresent == True:
+        gridprice = pd.read_csv("data/elecprice_csvs/" + year + "UTCCAISOprice.csv", index_col = 0) #From http://www.energyonline.com/Data/GenericData.aspx?DataId=20, which is taken from CAISO. Units of /MWh
+        gridprice.index = pd.to_datetime(gridprice.index)
+        gridprice = gridprice['price'][[hour.strftime("%Y-%m-%d %H:%M:%S") for hour in network.snapshots]]
+        gridprice = gridprice/1000 #Before, I used to divide by 100. But I believe that I should have divided by 1000, because we want per kWh, and we had per MWh 
+
+        if int(year) % 4 != 0:
+            gridgen = pd.DataFrame(index = range (8760))
+        else:
+            gridgen = pd.DataFrame(index = range(8784))
+
+        gridgen = gridgen.set_index(hours_in_year)
+        gridgen['grid'] = 1 #in kW, so 100GW
+
+        network.add("Generator", "Grid", bus = 'grid', p_nom = 100000000,#100 GW. The capacity is for free. However, we still pay marginal cost
+            carrier = "grid", capital_cost = 0, marginal_cost = gridprice, p_max_pu = gridgen['grid'])#The datafile gives US cents/kWh. I wanted dollars (or euros) per kWh.     # This is using 2019 (UTC) data from CAISO, LCG consulting.Prices are in c/kWh
+
+    
+
+
+    network.add("Generator", "Onshore wind", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
+        carrier = 'wind', capital_cost = annual_cost('onwind'), #Eur/kW/yr
+        marginal_cost = 0, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
+
+
+    network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True, 
+        carrier = 'biogas', capital_cost = 0,
+        marginal_cost = 0, p_max_pu = df_cal_biogas) # In reality, there is a marginal cost for biogas. What is it? 
+
+
+    return network
+
+
+def add_wind(network):
+    '''
+    20 Feb 2023
+
+    The purpose of this function is to remove the solar generator and add a wind generator instead.
+    As of now, it only deals with data from 2019
+    '''
+    hours_in_year = pd.date_range('2019-01-01T00:00:00', '2019-12-31T23:00:00', freq='H') #I changed the date rate from Z
+    network.set_snapshots(hours_in_year)
+
+    df_cal_wind = pd.read_csv('data/final_wind_csvs/RealCalFlatsWindCFs_2019.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
+    df_cal_wind.index = pd.to_datetime(df_cal_wind.index)
+    df_cal_wind = df_cal_wind['wind'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series 
+
+
+    network.add("Generator", "Onshore wind", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
+        carrier = 'wind', capital_cost = annual_cost('onwind'), #Eur/kW/yr
+        marginal_cost = 0, p_nom_max = 130000, p_max_pu = df_cal_wind) #Assuming that 
+
+
+    return network
+
+
+
+
+def add_loads_yrs(network, year):
+    network.remove("Load", 'Gas Load')
+    gridpres = False
+    if "Grid" in network.generators.index:
+        network.remove("Load", 'Grid Load')
+        gridpres = True
+
+    
     gasdf = pd.read_csv('data/gasdem_csvs/' + year + 'AppleGas.csv', index_col = 0)
     gasdf.index = pd.to_datetime(gasdf.index)
 
@@ -79,19 +192,18 @@ def add_loads_yrs(network, year):
         bus="gas", 
         p_set=gasdf["All_in_one_demand"])
 
-    network.add("Load", 
-        "Grid Load", 
-        bus="grid", 
-        p_set=gasdf["Constant_MW_methane"] * 300)#Assuming 3 GW of demand from the grid
-    
+    if gridpres == True:
+        network.add("Load", 
+            "Grid Load", 
+            bus="grid", 
+            p_set=gasdf["Constant_MW_methane"] * 300)#Assuming 3 GW of demand from the grid
+        
     return network
 
 
 def change_loads_costs(network, sweep, sweep_mult, megen_mult):
     '''This function used to change the gasload, in addition to the methanogen cost. 
-    Now, it still changes the methanogen cost, but it also can sweep the electrolyzer cost
-     
-    it is not yet functional for the years. That is the hope '''
+    Now, it still changes the methanogen cost, but it also can sweep the electrolyzer cost'''
 
 
 
@@ -101,10 +213,15 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
         network.links.loc['H2 Electrolysis', 'capital_cost'] = annual_cost("electrolysis") * sweep_mult
     
     elif sweep == 'year':
-        network.mremove("Generator", ["Grid", "Solar PV", 'Biogas'])
-        network.mremove("Load", ['Gas Load', "Grid Load"])
-        network = add_generators_yrs(network, sweep_mult)
+        
+        if 'Solar PV' in network.generators.index:
+            network = add_generators_sol_yrs(network, sweep_mult)
+        if 'Onshore wind' in network.generators.index:
+            network = add_generators_wind_yrs(network, sweep_mult)
+       
         network = add_loads_yrs(network, sweep_mult)
+
+
 
 
         
@@ -129,7 +246,10 @@ def remove_grid(network):
     network.remove("Generator", "Grid")
 
     #We also need to change the p_nom_max, as now solar needs to supply everything for the methane
-    network.generators.loc["Solar PV", "p_nom_max"] = np.inf
+    if 'Solar PV' in network.generators.index:
+        network.generators.loc["Solar PV", "p_nom_max"] = np.inf
+    elif 'Onshore wind' in network.generators.index:
+        network.generators.loc['Onshore wind', 'p_nom_max'] = np.inf
 
     return network
 

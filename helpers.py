@@ -235,8 +235,8 @@ def make_pres_folders(prestitle):
     pathlib.Path(path).mkdir(parents = True, exist_ok = True)
 
     pathlib.Path(path+ "/gridsolar").mkdir(parents=True, exist_ok=True)
-    pathlib.Path(path + "/nogrid").mkdir(parents=True, exist_ok=True)
-    pathlib.Path(path + "/nosolar").mkdir(parents=True, exist_ok=True)
+    pathlib.Path(path + "/justsolar").mkdir(parents=True, exist_ok=True)
+    pathlib.Path(path + "/justgrid").mkdir(parents=True, exist_ok=True)
 
 
     newpath = "Presentations/" + prestitle + "/*" #an example folder will be "Presentations/January31pres/nosolar"

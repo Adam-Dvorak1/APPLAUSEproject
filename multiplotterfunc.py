@@ -298,10 +298,12 @@ def plot_costper(path):
     presentation = 'February10pres'
 
     o = path.split("_")
-    if 'nogrid' in o:
-        experiment = "nogrid"
-    elif "nosolar" in o:
-        experiment = "nosolar"
+    if 'justsolar' in o:
+        experiment = "justsolar"
+    elif "justgrid" in o:
+        experiment = "justgrid"
+    elif 'justwind' in o:
+        experiment = 'justwind'
     else:
         experiment = "gridsolar"
 
@@ -671,7 +673,6 @@ def find_net_income_multiyear(path):
 
 
 def plot_cost_any(path, ax): 
-    #December 5
     '''
     9 Feb 2023
     The purpose of this function is to be able to plot cost_any plots side by side

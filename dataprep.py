@@ -34,6 +34,30 @@ def prepare_solar_yr(path):
     dfnew.to_csv('data/final_solar_csvs/RealCalFlatsSolarCFs_' + yr )
 
 
+def prepare_wind_yr(path):
+    '''
+    20 Feb 2023 
+    This function takes in a csv file from renewables.ninja, extracts the time and the wind
+    capacity factors, and stores it in the folder final_wind_csvs. 
+    
+    It assumes that the original path of the csv is renamed to the correct year, as in _2016.csv.
+    
+    It also assumes the existance of a constant biogas generator. We do not really have a better
+    assumption than this as of the moment
+    '''
+    df = pd.read_csv(path, skiprows = 3)
+
+    df = df.rename(columns = {'time': 'UTC'})
+    o = path.split("_")
+    yr = o[-1]
+    dfnew = pd.DataFrame() 
+    dfnew['wind'] = df['electricity']
+    dfnew.index = df['UTC']
+   
+    dfnew['biogas'] = 0.8
+
+    dfnew.to_csv('data/final_wind_csvs/RealCalFlatsWindCFs_' + yr )
+
     
     
 def prepare_CAISO_elecprices(path):
@@ -111,16 +135,13 @@ def get_CAISO_year(path, year):
 
 
 if __name__ == "__main__":
-    path = 'data/dec2016_pres_localtime_CAISO.csv'
+    path = 'data/og_wind_renewablesninja/*'
 
-    # for apath in glob.glob(path):
-    #     prepare_solar_yr(apath)
+    for apath in glob.glob(path):
+        prepare_wind_yr(apath)
 
 
 
-    # prepare_CAISO_elecprices(path)
-
-    get_CAISO_year('data/UTCCAISO_allyears.csv', '2020')
 
 
 

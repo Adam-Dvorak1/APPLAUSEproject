@@ -17,10 +17,12 @@ import importlib
 import time
 from multiprocessing import Pool
 import buildnetwork
+import modifynetwork
 importlib.reload(buildnetwork)
+importlib.reload(modifynetwork)
 from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_links, add_methanogen, add_sabatier
 from helpers import override_component_attrs, annual_cost
-from modifynetwork import change_gasload, to_netcdf, remove_grid, remove_solar
+from modifynetwork import change_gasload, to_netcdf, remove_grid, remove_solar, add_wind
 
 
 sweep_dict = {'electrolyzer': [x for x in np.logspace (-1, 1, 10)], "year": ['2017', '2018', '2019', '2020', '2021']}
@@ -55,14 +57,18 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "year_megen_sweep_gridsolar" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "year_megen_sweep_justsolar" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         solar = True #whether using solar generator or not
-        grid = True #whether using grid generator or not
+        wind = False
+        grid = False#whether using grid generator or not
+        
+
         
         ##---<<Secondary sweeping variables>>-----
         # Modify the sweeping range in the sweeping dict in modifynetwork.py
         electrolyzer = False
-        year = True
+        year = True #Note, if you are doing a year run, both solar and grid must be True
+
 
         ##---<<EUR-USD conversion rate>>-------
         # eur_usd = 1.07, change in helpers.py, in the function annual_cost()
@@ -87,7 +93,6 @@ if __name__ == "__main__":
         # The solar generator to produce electricity rather than produce methane
 
         megen_costs_list = [20, 50, 80, 100, 120, 150, 200, 300, 500] #Now, 9 costs
-        megen_costs_list = [120]
         methanogen_costs = [x/annual_cost('methanation') for x in megen_costs_list]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
 
 
@@ -115,15 +120,27 @@ if __name__ == "__main__":
                 methanation = "sabatier"
                
 
+
         #I have previously given myself the option of removing the solar generator and forcing the methanogen to only use
         # electricity from the generator
         if solar != True:
                 n = remove_solar(n)
+
+
+
+        #We are interested in the behavior of the system if we use wind instead. These will be cases without any solar, however
+
         
         # In contrast, I also gave myself the option of removing the grid and forcing the system to rely on the solar generator.
         # Obviously, it makes no sense to remove both generators.
         if grid != True:
                 n = remove_grid(n)
+
+
+        if wind == True:
+                n = add_wind(n)
+
+
 
 
         ##---<<Running the experiment>>-------
