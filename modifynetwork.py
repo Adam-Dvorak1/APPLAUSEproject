@@ -221,6 +221,9 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
        
         network = add_loads_yrs(network, sweep_mult)
 
+    elif sweep == 'grid_inverter':
+        network.links.loc['High to low voltage', 'p_nom_max'] = 14667 * sweep_mult
+
 
 
 

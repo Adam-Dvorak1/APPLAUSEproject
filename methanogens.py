@@ -57,17 +57,20 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "year_megen_sweep_justsolar" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
-        solar = True #whether using solar generator or not
-        wind = False
-        grid = False#whether using grid generator or not
+        name = "grid_invert_sweep_gridwind" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        #only solar or wind can be chosen at one time
+        solar = False #whether using solar generator or not
+        wind = True
+        grid = True#whether using grid generator or not
         
 
         
         ##---<<Secondary sweeping variables>>-----
         # Modify the sweeping range in the sweeping dict in modifynetwork.py
+        # Only do one of these at a time
         electrolyzer = False
-        year = True #Note, if you are doing a year run, both solar and grid must be True
+        year = False #Note, if you are doing a year run, both solar and grid must be True
+        gridinverter = True
 
 
         ##---<<EUR-USD conversion rate>>-------
@@ -85,6 +88,10 @@ if __name__ == "__main__":
         elif year == True:
                sweeps = "year"
                sweeper = ['2017', '2018', '2019', '2020']
+        elif gridinverter == True:
+               sweeps = 'grid_inverter'
+               sweeper = [0.1, 0.5, 0.75, 1, 1.25, 1.5, 2] #These will be multiplied by the average electricity demand required per hour, which is 14667 kW
+               #As in, the grid inverter size will be limited by x times the mean
 
        
 
