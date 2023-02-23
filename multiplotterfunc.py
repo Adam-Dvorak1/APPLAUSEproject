@@ -40,7 +40,8 @@ costmult_dict = dict(zip(annualcosts, linkcost_mults))
 #---------<<Other  dicts>------------------
 
 color_dict = {"battery": '#9467bd', "battery charger":'#1f77b4', "methanogens": '#2ca02c', "Solar PV": '#ff7f0e',
-"H2 Electrolysis": '#d62728', "grid elec total cost": '#7f7f7f', "grid elec total income": '#e377c2', "H2 store": '#c251ae'}
+"H2 Electrolysis": '#d62728', "grid elec total cost": '#7f7f7f', "grid elec total income": '#e377c2', "H2 store": '#c251ae', 
+"Onshore wind": '#ADD8E6'}
 
 
 
@@ -252,6 +253,7 @@ def extract_colors():
 #%%
 def plot_costs(path):
     
+
     costdf = pd.read_csv(path)
 
     costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
@@ -293,6 +295,7 @@ def plot_costper(path):
     
     We modified this 7.2 because now we are also looking at the electrolyzer capital cost'''
 
+    costslist = ['battery charger', 'H2 Electrolysis', 'methanogens', 'battery', 'H2 store']
     costdf = pd.read_csv(path, index_col = 0)
 
     presentation = 'February10pres'
@@ -304,6 +307,8 @@ def plot_costper(path):
         experiment = "justgrid"
     elif 'justwind' in o:
         experiment = 'justwind'
+    elif 'gridwind' in o:
+        experiment = 'gridwind'
     else:
         experiment = "gridsolar"
 
@@ -384,7 +389,7 @@ def find_net_income(path):
     if there was "no" gas demand. This is put into mindf.
     
     Note: whenever we add or subtract columns, we may need to adjust the columns here. If we want to plot csvs older than
-    6 February, we may need to adjust columsn here.'''
+    6 February, we may need to adjust columns here.'''
 
     costdf = pd.read_csv(path, index_col = 0)
 
@@ -481,6 +486,8 @@ def find_net_income(path):
     plt.savefig(savepath + ".pdf")
     plt.savefig(savepath + ".png", dpi = 500)
     plt.close()
+
+
 
 def find_net_income_pass(path, ax):
     '''This function is the same as find_net_income() except it passes an ax on to another function'''
@@ -672,24 +679,30 @@ def find_net_income_multiyear(path):
     plt.close()
 
 
-def plot_cost_any(path, ax): 
+def plot_cost_any(path): #change back to (path, ax)
     '''
     9 Feb 2023
     The purpose of this function is to be able to plot cost_any plots side by side
     '''
+    presentation = 'February24pres'
     costdf = pd.read_csv(path, index_col = 0)
 
     val = 10000
 
-    o = path.split("_")
-    if 'nogrid' in o:
-        experiment = "No Grid"
-    elif "nosolar" in o:
-        experiment = "No Solar"
+    o = path.replace('.', ' ').replace('_', ' ').split() #.split() splits by space
+
+    if 'justgrid' in o:
+        experiment = "Just Grid"
+    elif "justsolar" in o:
+        experiment = "Just Solar"
+    elif 'justwind' in o:
+        experiment = "Just Wind"
+    elif 'gridwind' in o:
+        experiment = 'Full system with wind'
     else:
-        experiment = "Full system"
+        experiment = "Full system with solar"
 
-
+    fig, ax = plt.subplots() #remove
 
     costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]#If any of the values of the column are not 0, keep them. Gets rid of generators/links etc with no cost
 
@@ -698,26 +711,36 @@ def plot_cost_any(path, ax):
         costdf = costdf.loc[:,  (costdf > 0).any(axis=0)]#If any of the values of the column are not negative, keep them. Gets rid of the "income"
 
     
-    costdf = costdf.loc[costdf["Gas Load"] == val]
+    #costdf = costdf.loc[costdf["Gas Load"] == val]
+    if 'elctrlyzer' in o:
+        costdf = costdf.loc[costdf['electrolyzer capital cost'] == costdf['electrolyzer capital cost'].median()]
+    elif 'year' in o:
+        costdf = costdf.loc[costdf['year'] == 2019]
     costdf = costdf.sort_values(by ="methanogen capital cost")
     costdf.index = costdf["methanogen capital cost"].round(1)
     costdf = costdf/val/8760*1000 #price per MWh
 
-    colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[2:]]
+    colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[4:]]
 
-    costdf[costdf.columns[2:]].plot( kind = "bar", stacked = True, color = colors, ax = ax)
+    costdf[costdf.columns[4:]].plot( kind = "bar", stacked = True, color = colors, ax = ax)
 
-
-    # ax.set_ylabel("LCOE (Euros/MWh_energy)")
-    # ax.set_xlabel("Methanogen cost (Eur/kWh)")
+    #comment out these two lines
+    ax.set_ylabel("LCOE (Dollars/MWh_energy)")
+    ax.set_xlabel("Methanogen cost (Dollars/kWh)")
     
-    ax.set_xlabel("")
+
     ax.set_title( experiment, fontsize = 20)
-    ax.axhline(340, label = '26-Aug-22 price (high)', color = "C0")
-    ax.axhline(144, label = "1-Jul-22 price", color = "C1")
-    ax.axhline (36, label = "1-Jul-21 price", color = "C2")
-    ax.axhline (10, label = "1-Jul-19 price", color = "C3")
-    ax.get_legend().remove()
+    # ax.axhline(340, label = '26-Aug-22 price (high)', color = "C0")
+    ax.axhline(118, label = "Highest price", color = "C1")
+    ax.axhline (25, label = "2022 median", color = "C2")
+    ax.axhline (14, label = "2021 median", color = "C3")
+    ax.legend()
+
+    #fig.savefig('Presentations/' + presentation + '/costperMWh_by_year_wind.pdf')
+    #plt.show()#delete
+    # ax.get_legend().remove() #uncomment
+
+
 
 
 
@@ -744,8 +767,8 @@ def four_cost_plot():
     for ax in axs:
         ax.tick_params(axis='both', which='major', labelsize=14)
     
-    fig.supylabel("Euro per MWh gas", fontsize = 16)
-    fig.supxlabel("Methanogen cost (Eur/kW)", fontsize = 16)
+    fig.supylabel("Dollars per MWh gas", fontsize = 16)
+    fig.supxlabel("Methanogen cost (Dollars/kW)", fontsize = 16)
     
 
     handles, labels = axs[2].get_legend_handles_labels()
@@ -755,8 +778,8 @@ def four_cost_plot():
 
 
         
-    fig.savefig('Presentations/' + presentation + '/megencosts_income.pdf')
-    fig.savefig('Presentations/' + presentation + '/megencosts_income.png', dpi = 500)
+    # fig.savefig('Presentations/' + presentation + '/megencosts_income.pdf')
+    # fig.savefig('Presentations/' + presentation + '/megencosts_income.png', dpi = 500)
     plt.show()
 
 

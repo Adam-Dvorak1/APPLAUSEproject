@@ -99,6 +99,9 @@ def extract_data(folder):
         if "Solar PV" in n.generators.index:
             tempdf['solar size'] = n.generators.p_nom_opt["Solar PV"]
             tempdf['battery size'] = n.stores.e_nom_opt['battery']
+        if "Onshore wind" in n.generators.index:
+            tempdf['wind size'] = n.generators.p_nom_opt["Onshore wind"]
+            tempdf['battery size'] = n.stores.e_nom_opt['battery']
         if "H2 store" in n.stores.index:
             tempdf["H2 store size"] = n.stores.e_nom_opt['H2 store']
             tempdf['H2 store ts'] = n.stores_t.e.loc[:, "H2 store"]
@@ -161,17 +164,20 @@ def get_costs(n, grid):
 
 
 
-        
+    
     links = n.links.loc[:, "p_nom_opt"] * n.links.loc[:, "capital_cost"]
+    links = links[links != 0]
     generators = n.generators.loc[:, "p_nom_opt"] * n.generators.loc[:, "capital_cost"]
+    generators = generators[generators != 0]
     stores = n.stores.loc[:, "e_nom_opt"] * n.stores.loc[:, "capital_cost"]
    
+    
 
     year = n.snapshots[0].year
     year = pd.Series(year)
     year.index = ['year']
     
-    gasload = n.loads_t.p["Gas Load"].max()/8760 #Note, we divide by 8760 because the max value is the total value, so we thus want the average val
+    gasload = n.loads_t.p["Gas Load"].max()/len(n.snapshots) #Note, we divide by 8760 because the max value is the total value, so we thus want the average val
     gasload = pd.Series( gasload)
     gasload.index = ["Gas Load"]
 
@@ -195,6 +201,10 @@ def get_costs(n, grid):
 
         grid_income= pd.Series(grid_income)
         grid_income.index = ['grid elec total income']
+
+        grid_max =  n.links.loc['High to low voltage', 'p_nom_max']
+        grid_max = pd.Series(grid_max)
+        grid_max.index = ['grid link max size']
 
         cost_series = pd.concat([cost_series, grid_cost, grid_income])
         
@@ -235,7 +245,9 @@ def make_pres_folders(prestitle):
     pathlib.Path(path).mkdir(parents = True, exist_ok = True)
 
     pathlib.Path(path+ "/gridsolar").mkdir(parents=True, exist_ok=True)
+    pathlib.Path(path + "/gridwind").mkdir(parents=True, exist_ok=True)
     pathlib.Path(path + "/justsolar").mkdir(parents=True, exist_ok=True)
+    pathlib.Path(path + "/justwind")
     pathlib.Path(path + "/justgrid").mkdir(parents=True, exist_ok=True)
 
 
@@ -283,18 +295,21 @@ if __name__ == "__main__":
     generates a csv that is stored in results/csvs/costs. This is useful if you want to plot
     info involving LCOE or income. '''
 
-    # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_wo_hstore"
-    # extract_data(path)
-    # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_w_hstore"
-    # extract_data(path)
-    # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore"
-    # extract_data(path)
-    # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nosolar_wo_hstore"
-    # extract_data(path)
-    # path = "results/NetCDF/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore"
-    # extract_data(path)
-    # path = "results/NetCDF/08_02_2023_gasdem_year_sweep_gridsolar_w_hstore"
+    path = "results/NetCDF/21_02_2023_grid_invert_sweep_gridsolar"
+    costs_to_csv(path, True)
+    path = "results/NetCDF/21_02_2023_grid_invert_sweep_gridwind"
+    costs_to_csv(path, True)
+    # path = "results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_gridsolar"
     # costs_to_csv(path, True)
+    # path = "results/NetCDF/21_02_2023_elctrlyzer_megen_sweep_gridwind"
+    # costs_to_csv(path, True)
+    # path = "results/NetCDF/21_02_2023_year_megen_sweep_justsolar"
+    # costs_to_csv(path, False)
+    # path = "results/NetCDF/21_02_2023_year_megen_sweep_justwind"
+    # costs_to_csv(path, False)
+
+    # path = "results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_justsolar"
+    # costs_to_csv(path, False)
 
     # extract_data(path)
 
