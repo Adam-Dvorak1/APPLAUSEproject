@@ -46,14 +46,10 @@ color_dict = {"battery": '#9467bd', "battery charger":'#1f77b4', "methanogens": 
 
 
 #%%
-def extract_pathinfo(path):
-    o = path.split("/")
-    o = o[-1]
-    oo = re.findall(r"\d+", o)
-    #oo[0] = avg kW, oo[1] = annualcost
-    return oo
 
-
+####################################################################
+################     SINGLE DATA POINT PLOTS      ##################
+####################################################################
 def plot_linksize(path):
 
     #This needs:
@@ -193,55 +189,6 @@ def plot_anysize_all():
 
 
 
-def plot_costpergas():
-    sumdata = pd.read_csv("results/csvs/summary_15_11_2022_gasdem_megencost_sweep.csv")
-    sumdata = sumdata[sumdata['load'] != 1]
-
-    fig, ax = plt.subplots()
-    cmap = plt.get_cmap('summer_r')
-    
-    ax.set_xscale("log")
-    # ax.set_yscale("log")
-
-    ax.set_xlabel("Annualized cost of methanogenesis (Eur/kW)")
-    ax.set_ylabel("Price per kWh gas")
-    ax.set_title("Price per kWh gas, over the first kWh")
-
-    norm = LogNorm()# The log norm is necessary to show the logarithmic spacing of the "third axis"
-    myax = ax.scatter(sumdata['megen cost'], sumdata['obj per kWh gas'], c = sumdata['load']/sumdata['load'].max(), cmap = cmap, norm = norm)
-    ax.axvline(annual_cost('methanation'), color='black',ls='--') #This is the benchmark cost
-    ax.text(annual_cost('methanation')* 0.9, 100, "Base cost of sabatier methanation", horizontalalignment = "center", rotation = "vertical")
-
-    cbar = fig.colorbar(myax, label = "Average gas load (kWh)")
-    #     spacing='proportional',  format='%1i')
-    tls = cbar.ax.get_yticks()
-    tls = [tl * 10000 for tl in tls ]
-    cbar.set_ticklabels(tls)
-
-    # plt.savefig("Presentations/November18pres/objectiveper2log.pdf")
-    # plt.savefig("Presentations/November18pres/objectiveper2log.png", dpi = 500)
-    plt.show()     
-
-
-
-
-
-
-
-
-
-def extract_colors():
-    cmap = plt.get_cmap('summer_r')
-    loads = np.logspace(0, 4, 10)
-    loadfracs = [x/10000 for x in loads]
-    norm = LogNorm(vmin = min(loadfracs), vmax = max(loadfracs))
-
-    testclr = [cmap(norm(x)) for x in range(len(loadfracs))]
-
-    
-
-
-    df = pd.read_csv("results/csvs/15_11_2022_gasdem_megencost_sweep.csv")
 
 
 
@@ -251,56 +198,32 @@ def extract_colors():
 
 
 #%%
-def plot_costs(path):
-    
 
-    costdf = pd.read_csv(path)
-
-    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
-
-    fulldf = costdf
-
-    for val in fulldf['Gas Load'].unique():
-        costdf = fulldf.loc[fulldf["Gas Load"] == val, :]
-        costdf = costdf.sort_values(by ="methanogen capital cost")
-        costdf.index = costdf["methanogen capital cost"].round(1)
-
-        ax = costdf[costdf.columns[2:]].plot( kind = "bar", stacked = True)
-        ax.set_ylabel("Euros")
-        ax.set_xlabel("Methanogen cost")
-        ax.set_title("Cost breakdown by no-grid element for a gas load of " + str(val), y = 1.04)
-
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0 + box.height * 0.1,
-                    box.width, box.height * 0.9])
-
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1], loc='upper center', bbox_to_anchor=(0.5, -0.25), ncol =3)
-
-
-
-
-        plt.subplots_adjust(bottom = 0.2)
-        savepath = "Presentations/December2pres/costs/nogrid_barplot_" + str(val) + "_gas_dem"
-        plt.tight_layout()
-        plt.savefig(savepath + ".pdf")
-        plt.savefig(savepath + ".png", dpi = 500)
-        plt.close()
+####################################################################
+#################      LCOE AND INCOME DATA      ###################
+####################################################################
 
 
 def plot_costper(path): 
     #December 5
-    '''We are interested in the price of gas per MWh. The november 1 price is about 125 Euro/MWh. so this is included
+    '''
+    5 Dec 2022
+    We are interested in the price of gas per MWh. The november 1 price is about 125 Euro/MWh. so this is included
     Takes a costs csv as input, made from get_costs() in helpers.py, which should be stored in results/csvs/costs
     
-    We modified this 7.2 because now we are also looking at the electrolyzer capital cost'''
+    7 Feb 2023 Modified because now we are also looking at the electrolyzer capital cost
+    
+    24 Feb 2023 Modified to look at a grid size restriction. We are looking at runs on 21 Feb 2023 like "grid_invert_sweep"
+    
+    '''
 
-    costslist = ['battery charger', 'H2 Electrolysis', 'methanogens', 'battery', 'H2 store']
+    #costslist = ['battery charger', 'H2 Electrolysis', 'methanogens', 'battery', 'H2 store']
     costdf = pd.read_csv(path, index_col = 0)
 
-    presentation = 'February10pres'
+    presentation = 'February24pres'
 
-    o = path.split("_")
+    o = path.replace('.', ' ').replace('_', ' ').split()
+    
     if 'justsolar' in o:
         experiment = "justsolar"
     elif "justgrid" in o:
@@ -311,12 +234,14 @@ def plot_costper(path):
         experiment = 'gridwind'
     else:
         experiment = "gridsolar"
-
+    
 
     if 'year' in o:
-        sweep = "grid_year"
+        sweep = "year"
     elif "electrolyzer" in o:
         sweep = "electrolyzer_cost"
+    elif 'grid' in o:
+        sweep = 'grid size'
     else:
         sweep = "megen_cost"
 
@@ -329,29 +254,43 @@ def plot_costper(path):
     fulldf = costdf
 
 
-    folderpath = "Presentations/"+ presentation + "/" +  experiment + "/costsper" 
+    folderpath = "Presentations/"+ presentation + "/" + sweep + " sweep"
 
 
     for val in fulldf['methanogen capital cost'].unique():
         costdf = fulldf.loc[fulldf['methanogen capital cost'] == val, :]
-        costdf = costdf.sort_values(by ="electrolyzer capital cost")
-        costdf.index = costdf["electrolyzer capital cost"].round(1)
-        costdf = costdf/val/8760*1000 #price per MWh
 
-        colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[3:]]
+        if sweep == 'grid size':
+            costdf = costdf.sort_values(by ="grid link max size")
+            costdf['grid link max size'] = costdf['grid link max size']/ 14667
+            costdf.index = costdf["grid link max size"]
+        elif sweep == 'year':
+            costdf = costdf.sort_values(by = 'year')
+            costdf.index = costdf['year']
 
-        ax = costdf[costdf.columns[3:]].plot( kind = "bar", stacked = True, color = colors)
+
+        costdf = costdf/8760*1000/10000 #price per MWh
+
+        colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[5:]]
+
+        ax = costdf[costdf.columns[5:]].plot( kind = "bar", stacked = True, color = colors)
 
 
-        ax.set_ylabel("LCOE (Euros/MWh_energy)")
-        ax.set_xlabel("Electrolyzer cost (Eur/kWh)")
+
+        ax.set_ylabel("LCOE (Dollars/MWh_energy)")
+        if sweep == 'grid size':
+            ax.set_xlabel("Grid restriction (multiplier by average)")
+        elif sweep == 'year':
+            ax.set_xlabel('year')
         
         val = round(val, 1)
-        ax.set_title("Cost(+) per MWh breakdown " + experiment + " " + sweep +  " model for megen cost of " + str(val) + "kWh")
 
-        ax.axhline(135, label = "2-Dec-22 price")
-        ax.axhline (36, label = "1-Jul-21 price", color = "#ff7f0e")
-        ax.axhline (10, label = "1-Jul-19 price", color = "#2ca02c")
+
+        ax.set_title( experiment + " " + sweep +  " at megen cost of $" + str(val) + " per kW ")
+
+        ax.axhline(118, label = "Highest price", color = "C0")
+        ax.axhline (25, label = "2022 median", color = "C1")
+        ax.axhline (14, label = "2021 median", color = "C2")
 
 
 
@@ -374,9 +313,116 @@ def plot_costper(path):
 
         savepath = folderpath + "/"+ experiment + "_barplot_" + sweep + "_megen_cost_" + str(val)
         plt.savefig(savepath + ".pdf")
-        plt.savefig(savepath + ".png", dpi = 500)
+        # plt.savefig(savepath + ".png", dpi = 500)
         plt.close()
 
+def plot_costper_multiyr(path):
+    '''
+    24 Feb 2023
+     
+    The purpose of this function is to plot the cost per gas (ie LCOE) as it changes throughout the years'''
+
+    costdf = pd.read_csv(path, index_col = 0)
+
+    mindf = pd.read_csv("results/csvs/costs/25_01_2023_gasdem_megencost_sweep_w_hstore.csv", index_col=0)
+
+    gasload = 10000
+
+    o = path.split("_")
+    if 'year' in o:
+        experiment = "year_sweep"
+    elif "electrolyzer" in o:
+        experiment = "electrolyzer_cost"
+    else:
+        experiment = "megen_cost"
+
+    presentation = 'February10pres'
+
+    # If any of the values of the column are not 0, keep them. 
+    # Gets rid of generators/links etc with no cost
+    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
+
+    print(costdf)
+
+    # To find the net income, add up all of the total income and expenses. Costs are positive
+    # and income is negative. Then, multiply by -1 to get the positive balance if you made money 
+    # This skips over year, Gas Load, methanogen capital cost, and electrolyzer capital cost. If 
+    # 'year' is in the columns, it also skips over that
+    
+    if 'year' not in costdf.columns:
+        costdf['Net income'] = costdf[costdf.columns[3:]].sum(axis = 1) * -1
+    else:
+        costdf['Net income'] = costdf[costdf.columns[4:]].sum(axis = 1) * -1
+
+    mindf['Net income'] = mindf[mindf.columns[2:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well.
+
+    # How much can you expect to make with basically 0 gas load--ie, the solar system and the
+    # battery is financing itself for the grid
+    sys_income = mindf.loc[(mindf['Gas Load'] == 1) & (mindf['methanogen capital cost'] == mindf['methanogen capital cost'].min())]['Net income'].values[0]
+
+    # Making it orderly for my view
+    costdf = costdf.sort_values(['Gas Load', 'methanogen capital cost'])
+
+    # Now the 'cost diff' column is how much money is being lost--it is the cost of the case
+    # with the methanogen, minus the revenue of the case with no gas demand. This only makes
+    # sense for the case with high gas load
+    costdf['cost diff']= costdf['Net income'] - sys_income 
+   
+    #Finding cost diff per MW per hour
+    costdf['cost diff'] = costdf['cost diff']/8760*1000/gasload * -1 #10000 kW or 10 MW
+
+    costdf = costdf.loc[costdf['Gas Load'] == gasload]
+
+    print(costdf)
+
+
+    if experiment == "megen_cost":
+        costdf.index = costdf["methanogen capital cost"].round(1)
+    elif experiment == "electrolyzer_cost":
+        costdf = costdf.loc[costdf['methanogen capital cost'] == 86.72922452359094]
+        costdf = costdf.sort_values(['Gas Load', 'electrolyzer capital cost'])
+        costdf.index = costdf['electrolyzer capital cost'].round(1)
+
+    if experiment != 'year_sweep':
+        ax = costdf['cost diff'].plot(kind = "bar")
+    else:
+        
+        costdf['methanogen capital cost'] = costdf["methanogen capital cost"].round(1)
+        ax = sns.barplot(x = 'methanogen capital cost', y = 'cost diff', hue = 'year', data = costdf)
+
+    ax.set_ylabel ("Required gas cost (Eur/MWh)")
+    ax.set_xlabel("Methanogen cost (Eur/kWh)")
+
+
+    ax.set_title("Minimum gas cost sweeping " + experiment)
+    
+    ax.axhline(340, label = '26-Aug-22 price (high)', color = "C0")
+    ax.axhline(144, label = "1-Jul-22 price", color = "C1")
+    ax.axhline (36, label = "1-Jul-21 price", color = "C2")
+    ax.axhline (10, label = "1-Jul-19 price", color = "C3")
+
+
+
+    # box = ax.get_position()
+    # ax.set_position([box.x0, box.y0 + box.height * 0.1,
+    #             box.width, box.height * 0.9])
+
+    
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1], loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol = 3)
+
+
+
+    plt.subplots_adjust(bottom = 0.2)
+
+    plt.tight_layout()
+    
+    folderpath = "Presentations/"+ presentation + "/gas_cost_req_by_" + experiment
+
+    savepath = folderpath 
+    plt.savefig(savepath + ".pdf")
+    plt.savefig(savepath + ".png", dpi = 500)
+    plt.close()
 
 
 
@@ -393,7 +439,7 @@ def find_net_income(path):
 
     costdf = pd.read_csv(path, index_col = 0)
 
-    mindf = pd.read_csv("results/csvs/costs/25_01_2023_gasdem_megencost_sweep_w_hstore.csv", index_col=0)
+    mindf = pd.read_csv("results/csvs/costs/archive/25_01_2023_gasdem_megencost_sweep_w_hstore.csv", index_col=0)
 
     gasload = 10000
 
@@ -405,7 +451,7 @@ def find_net_income(path):
     else:
         experiment = "megen_cost"
 
-    presentation = 'February10pres'
+    presentation = 'February28pres_Michael'
 
     # If any of the values of the column are not 0, keep them. 
     # Gets rid of generators/links etc with no cost
@@ -458,10 +504,6 @@ def find_net_income(path):
 
     ax.set_title("Minimum gas cost sweeping " + experiment)
     
-    ax.axhline(340, label = '26-Aug-22 price (high)', color = "C0")
-    ax.axhline(144, label = "1-Jul-22 price", color = "C1")
-    ax.axhline (36, label = "1-Jul-21 price", color = "C2")
-    ax.axhline (10, label = "1-Jul-19 price", color = "C3")
 
 
 
@@ -484,7 +526,7 @@ def find_net_income(path):
     # plt.show()
     savepath = folderpath 
     plt.savefig(savepath + ".pdf")
-    plt.savefig(savepath + ".png", dpi = 500)
+    # plt.savefig(savepath + ".png", dpi = 500)
     plt.close()
 
 
@@ -679,12 +721,15 @@ def find_net_income_multiyear(path):
     plt.close()
 
 
+
+
+
 def plot_cost_any(path): #change back to (path, ax)
     '''
     9 Feb 2023
     The purpose of this function is to be able to plot cost_any plots side by side
     '''
-    presentation = 'February24pres'
+    presentation = 'February28pres_Michael'
     costdf = pd.read_csv(path, index_col = 0)
 
     val = 10000
@@ -707,7 +752,7 @@ def plot_cost_any(path): #change back to (path, ax)
     costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]#If any of the values of the column are not 0, keep them. Gets rid of generators/links etc with no cost
 
     #only positive--so no "income"
-    if experiment != "Full system":
+    if experiment != "Full system with solar":
         costdf = costdf.loc[:,  (costdf > 0).any(axis=0)]#If any of the values of the column are not negative, keep them. Gets rid of the "income"
 
     
@@ -716,13 +761,20 @@ def plot_cost_any(path): #change back to (path, ax)
         costdf = costdf.loc[costdf['electrolyzer capital cost'] == costdf['electrolyzer capital cost'].median()]
     elif 'year' in o:
         costdf = costdf.loc[costdf['year'] == 2019]
+    elif 'grid' in o:
+        costdf = costdf.loc[costdf['methanogen capital cost'] == 120]
+        costdf = costdf.sort_values(by = '')
+    else:
+        costdf = costdf.loc[costdf['Gas Load'] == 10000]
+        
+
     costdf = costdf.sort_values(by ="methanogen capital cost")
     costdf.index = costdf["methanogen capital cost"].round(1)
     costdf = costdf/val/8760*1000 #price per MWh
 
-    colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[4:]]
+    colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[3:]]
 
-    costdf[costdf.columns[4:]].plot( kind = "bar", stacked = True, color = colors, ax = ax)
+    costdf[costdf.columns[3:]].plot( kind = "bar", stacked = True, color = colors, ax = ax)
 
     #comment out these two lines
     ax.set_ylabel("LCOE (Dollars/MWh_energy)")
@@ -736,7 +788,8 @@ def plot_cost_any(path): #change back to (path, ax)
     ax.axhline (14, label = "2021 median", color = "C3")
     ax.legend()
 
-    #fig.savefig('Presentations/' + presentation + '/costperMWh_by_year_wind.pdf')
+
+    fig.savefig('Presentations/' + presentation + '/' + experiment + '.pdf')
     #plt.show()#delete
     # ax.get_legend().remove() #uncomment
 
@@ -995,71 +1048,53 @@ def plot_gridtoelec_dcurv(path):
     In the old format, the model name would be attached to the .csv once the path is split, so it might save 
     in gridsolar'''
     df = pd.read_csv(path)
-    o = path.split("_")
-    if "nosolar" in o:
-        model = "nosolar"
-    else:
-        model = "gridsolar"
+    # o = path.split("_")
+    # if "nosolar" in o:
+    #     model = "nosolar"
+    # else:
+    #     model = "gridsolar"
 
 
-    presentationdate = "January31pres"
+    presentationdate = "February24pres"
 
-    loads = df['load'].unique()
 
-    megen_costs = df['megen cost'].unique()
 
-    maxload = df['load'].max()
-
-    pairs =  list(itertools.product(loads, megen_costs))
-    minimum =  min(df['megen cost'])
-    maximum = max (df['megen cost'])
     # pairs = [x for x in pairs if x[1] == minimum or x[1] == maximum]
 
     fig, ax = plt.subplots()
-    ax.set_yscale("symlog", linthresh = 1)
-    cmap = plt.get_cmap('summer_r')
-    norm = LogNorm(vmin = 1/10000, vmax = 1) #This is the range of fractions for log
-
-    for pair in pairs:
-        a_load = pair[0]
-        fracload = a_load / 10000
-
-        a_cost = pair[1]
-        tempdf = df[(df["load"] == a_load) & (df["megen cost"] == a_cost)]
-        tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
-        tempdf.index = range(8760)
 
 
-        fax = ax.plot(tempdf['grid to electricity link ts'], color = cmap(norm(fracload)))
-
-    # tempdf = df[(df["load"] == 1) & (df["megen cost"] == max(df['megen cost']))]
-    # tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
-    # tempdf.index = range(8760)    
-    # ax.plot(tempdf['grid to electricity link ts'], label = '10x methanation cost')
+    tempdf = df
+    tempdf['grid to electricity link ts'] = tempdf['grid to electricity link ts'] /1000
+    tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
+    tempdf.index = range(8760)
 
 
-
-    # tempdf = df[(df["load"] == 1) & (df["megen cost"] == min(df['megen cost']))]
-    # tempdf = tempdf.sort_values(by = ["grid to electricity link ts"], ascending = False)
-    # tempdf.index = range(8760)
-    # ax.plot(tempdf['grid to electricity link ts'], label = '0.1 x methanation cost')
+    ax.plot(tempdf['grid to electricity link ts'])
+    ax.hlines([x*14.7 for x in [0.1, 0.5, 0.75, 1, 1.25, 1.5, 2] ], 0, 8760, colors = ['C1', 'C2', "C3", "C4", "C5", "C6", "C7"])
 
 
-    fig.set_size_inches(11, 7)
+    # fig.set_size_inches(11, 7)
     ax.set_xlabel("Hours in a year")
-    ax.set_ylabel("kW to solar system (+) and to grid (-)")
-    ax.set_title("Dcurves for link between grid and electricity for " + model )
-    cbar = fig.colorbar(plt.cm.ScalarMappable(norm = norm, cmap = cmap), label = "Average gas load (kWh)")
+    ax.set_ylabel("MW to solar system")
+    ax.set_title("Dcurves for link between grid and electricity for full model" )
 
-    tls = cbar.ax.get_yticks()
-    tls = [tl * 10000 for tl in tls ]
-    cbar.set_ticklabels(tls)
-    # ax.legend()
-    prespath = "Presentations/" + presentationdate + "/"  + model +  "/gridelec_dcurvs_oldcost"
+
+    prespath = "Presentations/" + presentationdate + "/gridelec_dcurv"
 
     plt.savefig(prespath + '.pdf')
-    plt.savefig(prespath + '.png', dpi = 500)
+    # plt.savefig(prespath + '.png', dpi = 500)
 
     plt.show()
 
 
+import os
+pathiter = (os.path.join(root, filename)
+    for root, _, filenames in os.walk('results/csvs/costs/archive')
+    for filename in filenames
+)
+
+for path in pathiter:
+    newname =  path.replace('nogrid', 'justsolar')
+    if newname != path:
+        os.rename(path,newname)

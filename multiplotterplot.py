@@ -10,7 +10,7 @@ import importlib
 import multiplotterfunc
 importlib.reload(multiplotterfunc)
 
-from multiplotterfunc import plot_cost_any, four_cost_plot, find_net_income_multiyear, find_net_income, plot_anysize_all, plot_anysize, compare_dcurves,  plot_costper, plot_costs, plot_costpergas, plot_gridtoelec_dcurv, plot_methlink_dcurv, plot_gasstore_dcurv
+from multiplotterfunc import  plot_cost_any, four_cost_plot, find_net_income_multiyear, find_net_income, plot_anysize_all, plot_anysize, compare_dcurves,  plot_costper, plot_costs, plot_costpergas, plot_gridtoelec_dcurv, plot_methlink_dcurv, plot_gasstore_dcurv
 
 #generators_dcurve, battery_dcurve, storage_dcurve, methane_link_dcurve, plot_linksize, plot_objective,
 
@@ -26,17 +26,7 @@ if __name__ == "__main__":
 
     allpath = "results/csvs/alldata/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore.csv"
     
-    
-    #plot_methlink_dcurv(allpath)
 
-    # plot_anysize can take "megen", 'H2', 
-
-    plot_cost_any('results/csvs/costs/21_02_2023_year_megen_sweep_justwind.csv')
-    # four_cost_plot()
-    # plot_anysize_all()
-    # compare_dcurves()
-    # plot_costper(costpath)
-    # plot_gridtoelec_dcurv(allpath)
-    
-    # plot_gasstore_dcurv()
+    find_net_income( 'results/csvs/costs/archive/25_01_2023_gasdem_megencost_sweep_w_hstore.csv')
+    #plot_cost_any('results/csvs/costs/21_02_2023_year_megen_sweep_justwind.csv')
 

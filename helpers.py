@@ -75,57 +75,58 @@ def annual_cost(tech):
 
 
 
-def extract_data(folder):
+def extract_data():
     '''This is a function that makes a pd Data Frame, and adds a row with relevant data for each
     Time series are ts. Single variables are repeated. This makes it easy to stack
     The resulting df will be 8760 hours * number of files long'''
-    path = folder + "/*"
+    # path = folder + "/*"
 
 
-    df = pd.DataFrame()
+    # df = pd.DataFrame()
 
-    megen_cost = annual_cost("methanation")
+    # megen_cost = annual_cost("methanation")
 
-    for file in glob.glob(path):
-        n = pypsa.Network()
-        n.import_from_netcdf(file)
-        tempdf = pd.DataFrame(index = n.snapshots)
-
-        
-        tempdf['load'] = n.loads_t.p["Gas Load"].max()/len(n.snapshots) #This is an independent variable
-        tempdf['megen cost'] = n.links.loc['methanogens', 'capital_cost'] #This is an independent varaible. Hm, but this is not the same as the 
-        tempdf['megen size'] = n.links.loc['methanogens', 'p_nom_opt'] 
-        tempdf['electrolyzer size'] = n.links.loc["H2 Electrolysis", "p_nom_opt"]
-        if "Solar PV" in n.generators.index:
-            tempdf['solar size'] = n.generators.p_nom_opt["Solar PV"]
-            tempdf['battery size'] = n.stores.e_nom_opt['battery']
-        if "Onshore wind" in n.generators.index:
-            tempdf['wind size'] = n.generators.p_nom_opt["Onshore wind"]
-            tempdf['battery size'] = n.stores.e_nom_opt['battery']
-        if "H2 store" in n.stores.index:
-            tempdf["H2 store size"] = n.stores.e_nom_opt['H2 store']
-            tempdf['H2 store ts'] = n.stores_t.e.loc[:, "H2 store"]
-
-
-        tempdf['objective'] = n.objective 
-
-        tempdf['electrolyzer ts'] = n.links_t.p0.loc[:, "H2 Electrolysis"]
-        tempdf['grid to electricity link ts'] = n.links_t.p0.loc[:, "High to low voltage"]
-        tempdf['methanogen link ts'] = n.links_t.p0.loc[:, "methanogens"]
-        tempdf['gas store ts'] = n.stores_t.e.loc[:, "gas store"]
-        tempdf["battery store ts"] = n.stores_t.e.loc[:, "battery"]#Note--we have experiments where we remove the solar, but not the battery. In this case, the battery just has 0s
-        tempdf['biogas generator ts'] = n.generators_t.p.loc[:, 'Biogas'] #We actually don't care about the solar generator because we know it is completely maxed
-
-
-
-
-        df = pd.concat([df, tempdf])
-
-    name = folder.split("/")
-    name = name [-1]
+    # for file in glob.glob(path):
+    file = 'results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_gridsolar/electrolyzer_37_megen_cost_20.nc'
+    n = pypsa.Network()
+    n.import_from_netcdf(file)
+    tempdf = pd.DataFrame(index = n.snapshots)
 
     
-    df.to_csv('results/csvs/alldata/' + name + ".csv")
+    tempdf['load'] = n.loads_t.p["Gas Load"].max()/len(n.snapshots) #This is an independent variable
+    tempdf['megen cost'] = n.links.loc['methanogens', 'capital_cost'] #This is an independent varaible. Hm, but this is not the same as the 
+    tempdf['megen size'] = n.links.loc['methanogens', 'p_nom_opt'] 
+    tempdf['electrolyzer size'] = n.links.loc["H2 Electrolysis", "p_nom_opt"]
+    if "Solar PV" in n.generators.index:
+        tempdf['solar size'] = n.generators.p_nom_opt["Solar PV"]
+        tempdf['battery size'] = n.stores.e_nom_opt['battery']
+    if "Onshore wind" in n.generators.index:
+        tempdf['wind size'] = n.generators.p_nom_opt["Onshore wind"]
+        tempdf['battery size'] = n.stores.e_nom_opt['battery']
+    if "H2 store" in n.stores.index:
+        tempdf["H2 store size"] = n.stores.e_nom_opt['H2 store']
+        tempdf['H2 store ts'] = n.stores_t.e.loc[:, "H2 store"]
+
+
+    tempdf['objective'] = n.objective 
+
+    tempdf['electrolyzer ts'] = n.links_t.p0.loc[:, "H2 Electrolysis"]
+    tempdf['grid to electricity link ts'] = n.links_t.p0.loc[:, "High to low voltage"]
+    tempdf['methanogen link ts'] = n.links_t.p0.loc[:, "methanogens"]
+    tempdf['gas store ts'] = n.stores_t.e.loc[:, "gas store"]
+    tempdf["battery store ts"] = n.stores_t.e.loc[:, "battery"]#Note--we have experiments where we remove the solar, but not the battery. In this case, the battery just has 0s
+    tempdf['biogas generator ts'] = n.generators_t.p.loc[:, 'Biogas'] #We actually don't care about the solar generator because we know it is completely maxed
+
+
+
+
+    # df = pd.concat([df, tempdf])
+
+    # name = folder.split("/")
+    # name = name [-1]
+
+    name = '17_02_2023_elctrlyzer_megen_sweep_gridsolar_onerun'
+    tempdf.to_csv('results/csvs/alldata/' + name + ".csv")
 
 def extract_summary(csvpath):
     '''This only deals with the time independent variables of each run'''
@@ -191,7 +192,7 @@ def get_costs(n, grid):
 
     
 
-    cost_series = pd.concat([year, gasload, megen_cap_cost, electrolyzer_cap_cost, links, generators, stores])
+    
 
     if grid == True:
         grid_cost, grid_income = get_gridcost(n)
@@ -206,9 +207,11 @@ def get_costs(n, grid):
         grid_max = pd.Series(grid_max)
         grid_max.index = ['grid link max size']
 
-        cost_series = pd.concat([cost_series, grid_cost, grid_income])
+        cost_series = pd.concat([year, gasload, grid_max, megen_cap_cost, electrolyzer_cap_cost, links, generators, stores, grid_cost, grid_income])
         
-
+    if grid != True:
+        cost_series = pd.concat([year, gasload, megen_cap_cost, electrolyzer_cap_cost, links, generators, stores])
+    
     cost_df = pd.DataFrame([cost_series])
     
     return cost_df
@@ -311,7 +314,7 @@ if __name__ == "__main__":
     # path = "results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_justsolar"
     # costs_to_csv(path, False)
 
-    # extract_data(path)
+    # extract_data()
 
     presdate = "February10pres"
     # make_pres_folders(presdate)
