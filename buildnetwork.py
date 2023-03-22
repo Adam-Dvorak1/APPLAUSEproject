@@ -53,7 +53,7 @@ def add_generators(network):
 
 
     network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
-        carrier = 'solar', capital_cost = annual_cost('solar-utility'), #Eur/kW/yr
+        carrier = 'solar', capital_cost = 0, #As of 21 March, we consider solar as a dispatch model, where it is set at 130000. So the model thinks it is free, though we add the costs later
         marginal_cost = 0, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
 
     network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True, 

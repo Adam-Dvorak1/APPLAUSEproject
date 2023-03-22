@@ -729,7 +729,7 @@ def plot_cost_any(path): #change back to (path, ax)
     9 Feb 2023
     The purpose of this function is to be able to plot cost_any plots side by side
     '''
-    presentation = 'February28pres_Michael'
+    presentation = 'March24pres'
     costdf = pd.read_csv(path, index_col = 0)
 
     val = 10000
@@ -755,9 +755,10 @@ def plot_cost_any(path): #change back to (path, ax)
     if experiment != "Full system with solar":
         costdf = costdf.loc[:,  (costdf > 0).any(axis=0)]#If any of the values of the column are not negative, keep them. Gets rid of the "income"
 
-    
+
     #costdf = costdf.loc[costdf["Gas Load"] == val]
-    if 'elctrlyzer' in o:
+    if 'electrolyzer' in o:
+
         costdf = costdf.loc[costdf['electrolyzer capital cost'] == costdf['electrolyzer capital cost'].median()]
     elif 'year' in o:
         costdf = costdf.loc[costdf['year'] == 2019]
@@ -767,14 +768,14 @@ def plot_cost_any(path): #change back to (path, ax)
     else:
         costdf = costdf.loc[costdf['Gas Load'] == 10000]
         
-
+    print(costdf)
     costdf = costdf.sort_values(by ="methanogen capital cost")
     costdf.index = costdf["methanogen capital cost"].round(1)
     costdf = costdf/val/8760*1000 #price per MWh
 
-    colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[3:]]
+    colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[5:]]
 
-    costdf[costdf.columns[3:]].plot( kind = "bar", stacked = True, color = colors, ax = ax)
+    costdf[costdf.columns[5:]].plot( kind = "bar", stacked = True, color = colors, ax = ax)
 
     #comment out these two lines
     ax.set_ylabel("LCOE (Dollars/MWh_energy)")
@@ -809,13 +810,13 @@ def four_cost_plot():
 
     
 
-    nogrid = 'results/csvs/costs/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore.csv'
-    nosolar = 'results/csvs/costs/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore.csv'
-    gridsolar = 'results/csvs/costs/25_01_2023_gasdem_megencost_sweep_w_hstore.csv'
-    plot_cost_any(nogrid, axs[0])
-    plot_cost_any(nosolar, axs[1])
+    justgrid = 'results/csvs/costs/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore.csv'
+    justsolar = 'results/csvs/costs/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore.csv'
+    gridsolar = 'results/csvs/costs/21_03_2023_electrolyzer_megen_sweep_gridsolar_dispatch.csv'
+    plot_cost_any(justsolar, axs[0])
+    plot_cost_any(justgrid, axs[1])
     plot_cost_any(gridsolar, axs[2])
-    find_net_income_pass(nosolar, axs[3])
+    find_net_income_pass(gridsolar, axs[3])
 
     for ax in axs:
         ax.tick_params(axis='both', which='major', labelsize=14)

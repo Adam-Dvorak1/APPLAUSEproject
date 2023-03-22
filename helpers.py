@@ -170,6 +170,11 @@ def get_costs(n, grid):
     links = links[links != 0]
     generators = n.generators.loc[:, "p_nom_opt"] * n.generators.loc[:, "capital_cost"]
     generators = generators[generators != 0]
+
+    if 'Solar PV' in n.generators: #test to see if it this works
+        solarcost = 130000 * annual_cost('solar-utility')
+        generators['Solar PV'] = solarcost
+
     stores = n.stores.loc[:, "e_nom_opt"] * n.stores.loc[:, "capital_cost"]
    
     
@@ -208,7 +213,9 @@ def get_costs(n, grid):
         grid_max.index = ['grid link max size']
 
         cost_series = pd.concat([year, gasload, grid_max, megen_cap_cost, electrolyzer_cap_cost, links, generators, stores, grid_cost, grid_income])
-        
+
+
+
     if grid != True:
         cost_series = pd.concat([year, gasload, megen_cap_cost, electrolyzer_cap_cost, links, generators, stores])
     
@@ -298,10 +305,10 @@ if __name__ == "__main__":
     generates a csv that is stored in results/csvs/costs. This is useful if you want to plot
     info involving LCOE or income. '''
 
-    path = "results/NetCDF/21_02_2023_grid_invert_sweep_gridsolar"
-    costs_to_csv(path, True)
-    path = "results/NetCDF/21_02_2023_grid_invert_sweep_gridwind"
-    costs_to_csv(path, True)
+    # path = "results/NetCDF/21_03_2023_electrolyzer_megen_sweep_gridsolar_dispatch"
+    # costs_to_csv(path, True)
+    path = "results/NetCDF/21_03_2023_electrolyzer_megen_sweep_justsolar_dispatch"
+    costs_to_csv(path, False)
     # path = "results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_gridsolar"
     # costs_to_csv(path, True)
     # path = "results/NetCDF/21_02_2023_elctrlyzer_megen_sweep_gridwind"

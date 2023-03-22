@@ -249,10 +249,10 @@ def remove_grid(network):
     network.remove("Generator", "Grid")
 
     #We also need to change the p_nom_max, as now solar needs to supply everything for the methane
-    if 'Solar PV' in network.generators.index:
-        network.generators.loc["Solar PV", "p_nom_max"] = np.inf
-    elif 'Onshore wind' in network.generators.index:
-        network.generators.loc['Onshore wind', 'p_nom_max'] = np.inf
+    # if 'Solar PV' in network.generators.index:
+    #     network.generators.loc["Solar PV", "p_nom_max"] = np.inf
+    # elif 'Onshore wind' in network.generators.index:
+    #     network.generators.loc['Onshore wind', 'p_nom_max'] = np.inf
 
     return network
 

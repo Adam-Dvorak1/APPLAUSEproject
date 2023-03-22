@@ -57,10 +57,10 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "grid_invert_sweep_gridwind" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "year_megen_sweep_gridsolar_dispatch" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
-        solar = False #whether using solar generator or not
-        wind = True
+        solar = True #whether using solar generator or not
+        wind = False
         grid = True#whether using grid generator or not
         
 
@@ -69,8 +69,8 @@ if __name__ == "__main__":
         # Modify the sweeping range in the sweeping dict in modifynetwork.py
         # Only do one of these at a time
         electrolyzer = False
-        year = False #Note, if you are doing a year run, both solar and grid must be True
-        gridinverter = True
+        year = True #Note, if you are doing a year run, both solar and grid must be True
+        gridinverter = False
 
 
         ##---<<EUR-USD conversion rate>>-------
