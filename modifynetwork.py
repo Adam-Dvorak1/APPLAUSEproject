@@ -2,7 +2,7 @@ import pandas as pd
 from helpers import annual_cost
 import numpy as np
 
-sweep_dict = {'electrolyzer': [x for x in np.logspace (-1, 1, 10)], "year": ['2017', '2018', '2019', '2020', '2021']}
+
 
 def change_gasload(network, multiplier):
     '''There are two loads, one for gas demand, and one ginormous grid demand.
@@ -76,7 +76,7 @@ def add_generators_sol_yrs(network, year):
 
 
     network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
-        carrier = 'solar', capital_cost = annual_cost('solar-utility'), #Eur/kW/yr
+        carrier = 'solar', capital_cost = 0, #Eur/kW/yr
         marginal_cost = 0, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
 
     network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True, 

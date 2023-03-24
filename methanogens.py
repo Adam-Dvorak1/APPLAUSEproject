@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "year_megen_sweep_gridsolar_dispatch" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "year_2020_test" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
         solar = True #whether using solar generator or not
         wind = False
@@ -84,10 +84,11 @@ if __name__ == "__main__":
         '''In addition to a megen cost sweep, the sweep can be electrolyzer, year, or gas_load'''
         if electrolyzer == True:
                sweeps = "electrolyzer"
-               sweeper = [1/4, 1/2, 2/3, 5/6, 1, 1.2, 1.5, 2, 4]
+               sweeper = [1/4, 1/2, 2/3, 5/6, 1, 1.2, 1.5, 2, 4] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
         elif year == True:
                sweeps = "year"
-               sweeper = ['2017', '2018', '2019', '2020']
+               sweeper = ['2020']
+               #sweeper = ['2017', '2018', '2019', '2020']
         elif gridinverter == True:
                sweeps = 'grid_inverter'
                sweeper = [0.1, 0.5, 0.75, 1, 1.25, 1.5, 2] #These will be multiplied by the average electricity demand required per hour, which is 14667 kW
@@ -99,7 +100,8 @@ if __name__ == "__main__":
         # It may be that it is basically never worth it. In fact, our first results show that it is actually better to just use
         # The solar generator to produce electricity rather than produce methane
 
-        megen_costs_list = [20, 50, 80, 100, 120, 150, 200, 300, 500] #Now, 9 costs
+        #megen_costs_list = [20, 50, 80, 100, 120, 150, 200, 300, 500] #Now, 9 costs
+        megen_costs_list = [20]
         methanogen_costs = [x/annual_cost('methanation') for x in megen_costs_list]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
 
 

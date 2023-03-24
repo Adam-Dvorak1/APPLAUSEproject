@@ -169,11 +169,12 @@ def get_costs(n, grid):
     links = n.links.loc[:, "p_nom_opt"] * n.links.loc[:, "capital_cost"]
     links = links[links != 0]
     generators = n.generators.loc[:, "p_nom_opt"] * n.generators.loc[:, "capital_cost"]
-    generators = generators[generators != 0]
-
-    if 'Solar PV' in n.generators: #test to see if it this works
+    if 'Solar PV' in generators: #test to see if it this works
         solarcost = 130000 * annual_cost('solar-utility')
         generators['Solar PV'] = solarcost
+    generators = generators[generators != 0]
+    
+
 
     stores = n.stores.loc[:, "e_nom_opt"] * n.stores.loc[:, "capital_cost"]
    
@@ -273,6 +274,21 @@ def make_pres_folders(prestitle):
         pathlib.Path(deeperpath + "/electrolysis").mkdir(parents=True, exist_ok=True)
 
 
+def add_costreq_column(df, gasload, sys_income):
+    '''
+    23 March 2023
+    
+    This function takes a df from a costs csvs and adds a 'cost requirement' column to it. 
+    It then returns the df '''
+
+    df['Net income'] = df[df.columns[5:]].sum(axis = 1) * -1
+
+    df['cost diff']= df['Net income']  - sys_income 
+
+    #Finding cost diff per MW per hour
+    df['cost diff'] = df['cost diff']/8760*1000/gasload * -1 #10000 kW or 10 MW
+
+    return df
 
 
 
@@ -305,18 +321,9 @@ if __name__ == "__main__":
     generates a csv that is stored in results/csvs/costs. This is useful if you want to plot
     info involving LCOE or income. '''
 
-    # path = "results/NetCDF/21_03_2023_electrolyzer_megen_sweep_gridsolar_dispatch"
-    # costs_to_csv(path, True)
-    path = "results/NetCDF/21_03_2023_electrolyzer_megen_sweep_justsolar_dispatch"
-    costs_to_csv(path, False)
-    # path = "results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_gridsolar"
-    # costs_to_csv(path, True)
-    # path = "results/NetCDF/21_02_2023_elctrlyzer_megen_sweep_gridwind"
-    # costs_to_csv(path, True)
-    # path = "results/NetCDF/21_02_2023_year_megen_sweep_justsolar"
-    # costs_to_csv(path, False)
-    # path = "results/NetCDF/21_02_2023_year_megen_sweep_justwind"
-    # costs_to_csv(path, False)
+    path = "results/NetCDF/23_03_2023_year_megen_sweep_gridsolar_dispatch"
+    costs_to_csv(path, True)
+
 
     # path = "results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_justsolar"
     # costs_to_csv(path, False)

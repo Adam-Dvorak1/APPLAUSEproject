@@ -105,21 +105,23 @@ def add_stores(network):
         e_cyclic = True, #NO FREE LUNCH must return back to original position by end of the year
         e_nom_extendable = True,
         e_nom_max = 240000, #Because Apple is planning a 240 MWh battery storage. This corresponds to 2 hr storage
-        capital_cost = annual_cost("battery storage")) #Eur/kWh/yr
+        capital_cost = 0.001 * annual_cost("battery storage")) #Eur/kWh/yr
     network.add("Link",
         "battery charger",
         bus0 = "local elec",
         bus1 = "battery",
         carrier = "battery charger",
-        efficiency =tech_data.query("technology == 'battery inverter' & parameter == 'efficiency'")['value'].values[0] ** 0.5, #Taking square root because 
+        efficiency = 1,
+        #efficiency =tech_data.query("technology == 'battery inverter' & parameter == 'efficiency'")['value'].values[0] ** 0.5, #Taking square root because 
         p_nom_extendable = True,
-        capital_cost = annual_cost("battery inverter") )
+        capital_cost = 0.001 * annual_cost("battery inverter") )
     network.add("Link",
         "battery discharger",
         bus0 = "battery",
         bus1 = "local elec",
         carrier = "battery discharger",
-        efficiency = tech_data.query("technology == 'battery inverter' & parameter == 'efficiency'")['value'].values[0] ** 0.5,
+        efficiency = 1,
+        #efficiency = tech_data.query("technology == 'battery inverter' & parameter == 'efficiency'")['value'].values[0] ** 0.5,
         p_nom_extendable = True,
         ) 
 

@@ -13,8 +13,11 @@ import math
 import glob
 import itertools
 import seaborn as sns
-
-from helpers import annual_cost
+import importlib
+import matplotlib.ticker as mtick
+import helpers
+importlib.reload(helpers)
+from helpers import annual_cost, add_costreq_column
 
 
 
@@ -536,17 +539,13 @@ def find_net_income_pass(path, ax):
 
     costdf = pd.read_csv(path, index_col = 0)
 
-    mindf = pd.read_csv("results/csvs/costs/25_01_2023_gasdem_megencost_sweep_w_hstore.csv", index_col=0)
+    mindf = pd.read_csv("results/csvs/costs/archive/25_01_2023_gasdem_megencost_sweep_w_hstore.csv", index_col=0)
 
     gasload = 10000
 
     o = path.split("_")
-    if 'year' in o:
-        experiment = "grid_year"
-    elif "electrolyzer" in o:
-        experiment = "electrolyzer_cost"
-    else:
-        experiment = "megen_cost"
+
+    experiment = "megen_cost"
 
     presentation = 'February10pres'
 
@@ -563,7 +562,8 @@ def find_net_income_pass(path, ax):
     if 'year' not in costdf.columns:
         costdf['Net income'] = costdf[costdf.columns[3:]].sum(axis = 1) * -1
     else:
-        costdf['Net income'] = costdf[costdf.columns[4:]].sum(axis = 1) * -1
+        # print( costdf[costdf.columns[4:]])
+        costdf['Net income'] = costdf[costdf.columns[5:]].sum(axis = 1) * -1
 
     mindf['Net income'] = mindf[mindf.columns[2:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well.
 
@@ -572,6 +572,10 @@ def find_net_income_pass(path, ax):
     sys_income = mindf.loc[(mindf['Gas Load'] == 1) & (mindf['methanogen capital cost'] == mindf['methanogen capital cost'].min())]['Net income'].values[0]
 
     # Making it orderly for my view
+
+
+
+
     costdf = costdf.sort_values(['Gas Load', 'methanogen capital cost'])
 
     # Now the 'cost diff' column is how much money is being lost--it is the cost of the case
@@ -589,12 +593,15 @@ def find_net_income_pass(path, ax):
 
     if experiment == "megen_cost":
         costdf.index = costdf["methanogen capital cost"].round(1)
-    elif experiment == "electrolyzer_cost":
-        costdf = costdf.loc[costdf['methanogen capital cost'] == 86.72922452359094]
-        costdf = costdf.sort_values(['Gas Load', 'electrolyzer capital cost'])
-        costdf.index = costdf['electrolyzer capital cost'].round(1)
+        costdf.index
 
+    alldf = costdf.copy()
+    if 'electrolyzer' in o:
+        costdf = costdf.loc[costdf['electrolyzer capital cost'] == costdf['electrolyzer capital cost'].median()]
+    ############################################
     costdf['cost diff'].plot(kind = "bar", ax = ax)
+
+
     # ax.set_ylabel ("Required gas cost (Eur/MWh)")
     ax.set_xlabel("")
     
@@ -603,10 +610,27 @@ def find_net_income_pass(path, ax):
 
     ax.set_title("Income Req", fontsize = 20)
     
-    ax.axhline(340, label = '26-Aug-22 price (high)', color = "C0")
-    ax.axhline(144, label = "1-Jul-22 price", color = "C1")
-    ax.axhline (36, label = "1-Jul-21 price", color = "C2")
-    ax.axhline (10, label = "1-Jul-19 price", color = "C3")
+    ax.axhline(118, label = "Highest price", color = "C1")
+    ax.axhline (25, label = "2022 median", color = "C2")
+    ax.axhline (14, label = "2021 median", color = "C3")
+
+    ticks = [tick for tick in ax.get_xticklabels()]
+
+    x_label_dict = dict([(x.get_text(), x.get_position()[0] ) for x in ticks])
+
+    print(x_label_dict)
+
+    ###########################################
+    for val in alldf['methanogen capital cost'].unique():
+
+        highincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == alldf['electrolyzer capital cost'].max())]["cost diff"].values[0]
+        lowincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == alldf['electrolyzer capital cost'].min())]["cost diff"].values[0]
+        x_coord = x_label_dict[str(val)]
+        print(x_coord)
+        ax.vlines(x  = x_coord, ymin = lowincome, ymax = highincome, color = 'k')
+    
+    # for each value in methanogen cost.unique()
+    # plot a vertical line from the income value at the minimum 
 
 
 
@@ -724,7 +748,7 @@ def find_net_income_multiyear(path):
 
 
 
-def plot_cost_any(path): #change back to (path, ax)
+def plot_cost_any(path, ax): #change back to (path, ax)
     '''
     9 Feb 2023
     The purpose of this function is to be able to plot cost_any plots side by side
@@ -747,7 +771,7 @@ def plot_cost_any(path): #change back to (path, ax)
     else:
         experiment = "Full system with solar"
 
-    fig, ax = plt.subplots() #remove
+
 
     costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]#If any of the values of the column are not 0, keep them. Gets rid of generators/links etc with no cost
 
@@ -768,7 +792,7 @@ def plot_cost_any(path): #change back to (path, ax)
     else:
         costdf = costdf.loc[costdf['Gas Load'] == 10000]
         
-    print(costdf)
+    # print(costdf)
     costdf = costdf.sort_values(by ="methanogen capital cost")
     costdf.index = costdf["methanogen capital cost"].round(1)
     costdf = costdf/val/8760*1000 #price per MWh
@@ -778,8 +802,8 @@ def plot_cost_any(path): #change back to (path, ax)
     costdf[costdf.columns[5:]].plot( kind = "bar", stacked = True, color = colors, ax = ax)
 
     #comment out these two lines
-    ax.set_ylabel("LCOE (Dollars/MWh_energy)")
-    ax.set_xlabel("Methanogen cost (Dollars/kWh)")
+    # ax.set_ylabel("LCOE (Dollars/MWh_energy)")
+    # ax.set_xlabel("Methanogen cost (Dollars/kWh)")
     
 
     ax.set_title( experiment, fontsize = 20)
@@ -787,31 +811,99 @@ def plot_cost_any(path): #change back to (path, ax)
     ax.axhline(118, label = "Highest price", color = "C1")
     ax.axhline (25, label = "2022 median", color = "C2")
     ax.axhline (14, label = "2021 median", color = "C3")
-    ax.legend()
+    ax.set_xlabel('')
+    # ax.legend()
 
 
-    fig.savefig('Presentations/' + presentation + '/' + experiment + '.pdf')
+    # fig.savefig('Presentations/' + presentation + '/' + experiment + '.pdf')
     #plt.show()#delete
-    # ax.get_legend().remove() #uncomment
+    ax.get_legend().remove() #uncomment
 
 
 
+def plot_grid_restriction():
+    '''23 March 2023
+    This function takes a run that analyzes the effect of grid restriction. Using the normal sabatier price, 
+    it plots on the x axis the variation in the grid restriction'''
+    presentation = 'March24pres'
+    path = 'results/csvs/costs/21_03_2023_grid_invert_megen_sweep_gridsolar_dispatch.csv'
+    costdf = pd.read_csv(path, index_col = 0)
+
+    val = 10000
+
+    o = path.replace('.', ' ').replace('_', ' ').split() #.split() splits by space
+
+    if 'justgrid' in o:
+        experiment = "Just Grid"
+    elif "justsolar" in o:
+        experiment = "Just Solar"
+    elif 'justwind' in o:
+        experiment = "Just Wind"
+    elif 'gridwind' in o:
+        experiment = 'Full system with wind'
+    else:
+        experiment = "Full system with solar"
 
 
+
+    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]#If any of the values of the column are not 0, keep them. Gets rid of generators/links etc with no cost
+
+    costdf = costdf.loc[costdf['methanogen capital cost'] == 120]
+    costdf = costdf.sort_values(by = 'grid link max size')
+    costdf.index = costdf['grid link max size'] /14667
+
+    # print(costdf)
+
+    cols = costdf.columns.to_list()
+    cols = cols [0:5] + [cols[-1]] + cols [5:-1] # bc solar, delete for data frames that already have solar in the right position
+ 
+    costdf = costdf[cols]
+
+
+    costdf = costdf/val/8760*1000 #price per MWh
+
+
+    colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[5:]]
+
+    fig, ax = plt.subplots()
+    costdf[costdf.columns[5:]].plot( kind = "bar", stacked = True, color = colors, ax = ax) #, ax = ax
+
+    for label in ax.get_xticklabels():
+        label.set_rotation(0)
+        
+        
+    ax.set_xlabel('Multiplier to average')
+
+    #comment out these two lines
+    # ax.set_ylabel("LCOE (Dollars/MWh_energy)")
+    # ax.set_xlabel("Methanogen cost (Dollars/kWh)")
+    ax.set_title( experiment, fontsize = 20)
+    # ax.axhline(340, label = '26-Aug-22 price (high)', color = "C0")
+    ax.axhline(118, label = "Highest price", color = "C1")
+    ax.axhline (25, label = "2022 median", color = "C2")
+    ax.axhline (14, label = "2021 median", color = "C3")
+  
+    # ax.legend()
+
+
+    fig.savefig('Presentations/' + presentation + '/' + experiment + 'gridrestriction.pdf')
+    plt.show()#delete
+    plt.close('all')
+    ax.get_legend().remove() #uncomment
 
 
 
 
 def four_cost_plot():
     
-    presentation = 'February10pres'
+    presentation = 'March24pres'
     fig, ax = plt.subplots(2,2,figsize=(10,9), sharex=True)
     axs = ax.flatten()
 
     
 
-    justgrid = 'results/csvs/costs/25_01_2023_gasdem_megencost_sweep_nogrid_w_hstore.csv'
-    justsolar = 'results/csvs/costs/25_01_2023_gasdem_megencost_sweep_nosolar_w_hstore.csv'
+    justgrid = 'results/csvs/costs/21_03_2023_electrolyzer_megen_sweep_justgrid_dispatch.csv'
+    justsolar = 'results/csvs/costs/21_03_2023_electrolyzer_megen_sweep_justsolar_dispatch.csv'
     gridsolar = 'results/csvs/costs/21_03_2023_electrolyzer_megen_sweep_gridsolar_dispatch.csv'
     plot_cost_any(justsolar, axs[0])
     plot_cost_any(justgrid, axs[1])
@@ -832,9 +924,99 @@ def four_cost_plot():
 
 
         
-    # fig.savefig('Presentations/' + presentation + '/megencosts_income.pdf')
+    fig.savefig('Presentations/' + presentation + '/megencosts_income.pdf')
     # fig.savefig('Presentations/' + presentation + '/megencosts_income.png', dpi = 500)
+    # plt.show()
+
+
+def compare_cost_bars():
+    '''23 March 2023
+    This function will take in various csvs to show the following variations
+    - in methanogen price (1/4 to 4x default)
+    - in electrolyzer price (1/4 to 4x default)
+    - in year (2017 to 2020)
+    - in grid restriction (1/10 to 2x average)
+    - in solar price (low NREL to high NREL)
+    
+    It takes in 3 csvs:
+    electrolyzer csv--for methanogen price, electrolyzer price, and solar variation price. Note, this is only true for a dispatch model, as we know exactly how much 
+    year csv-- for year
+    grid csv-- for grid
+    
+    It then finds the min and max required gas price according to each of the variation. 
+    
+    Finally, it plots the min and max on a mirrored vertical bar plot as a percent variation of the middle'''
+
+    methanogencost = 120
+    gasload = 10000
+
+    elecdf = pd.read_csv('results/csvs/costs/21_03_2023_electrolyzer_megen_sweep_gridsolar_dispatch.csv', index_col= 0)
+    yeardf = pd.read_csv('results/csvs/costs/23_03_2023_year_megen_sweep_gridsolar_dispatch.csv', index_col=0)
+    griddf = pd.read_csv('results/csvs/costs/21_03_2023_grid_invert_megen_sweep_gridsolar_dispatch.csv', index_col = 0)
+
+    mindf = pd.read_csv("results/csvs/costs/archive/25_01_2023_gasdem_megencost_sweep_w_hstore.csv", index_col=0)
+    mindf['Net income'] = mindf[mindf.columns[2:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well.
+    sys_income = mindf.loc[(mindf['Gas Load'] == 1) & (mindf['methanogen capital cost'] == mindf['methanogen capital cost'].min())]['Net income'].values[0]
+
+
+
+    elecdf = add_costreq_column(elecdf, gasload, sys_income)
+    yeardf = add_costreq_column(yeardf, gasload, sys_income)
+    print(elecdf.loc[elecdf['methanogen capital cost'] == 120])
+    griddf = add_costreq_column(griddf, gasload, sys_income)
+    print(yeardf.loc[yeardf['methanogen capital cost'] == 120])
+
+    basecostreq = elecdf.loc[(elecdf['methanogen capital cost'] == 120) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].median())]['cost diff'].values[0]
+
+    methanation_high = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].max()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].median())]['cost diff'].values[0]
+    methanation_high = methanation_high/basecostreq - 1
+    methanation_low = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].min()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].median())]['cost diff'].values[0]
+    methanation_low = methanation_low/basecostreq-1
+
+    electrolyzer_high = elecdf.loc[(elecdf['methanogen capital cost'] == 120) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].max())]['cost diff'].values[0]
+    electrolyzer_high = electrolyzer_high/basecostreq-1
+    electrolyzer_low = elecdf.loc[(elecdf['methanogen capital cost'] == 120) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].min())]['cost diff'].values[0]
+    electrolyzer_low = electrolyzer_low/basecostreq-1
+
+    meth_elec_high = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].max()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].max())]['cost diff'].values[0]
+    meth_elec_high = meth_elec_high/basecostreq - 1
+    meth_elec_low = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].min()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].min())]['cost diff'].values[0]
+    meth_elec_low = meth_elec_low/basecostreq - 1
+
+    year_high = yeardf.loc[(yeardf['methanogen capital cost'] == 120)]['cost diff'].max()
+    year_high = year_high/basecostreq-1
+    year_low = yeardf.loc[(yeardf['methanogen capital cost'] == 120)]['cost diff'].min()
+    year_low = year_low/basecostreq-1
+
+    # grid_high = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].max()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].max())]['cost diff'].values[0]
+    # meth_elec_high = meth_elec_high/basecostreq - 1
+    # meth_elec_low = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].min()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].min())]['cost diff'].values[0]
+    # meth_elec_low = meth_elec_low/basecostreq - 1
+
+    # meth_elec_high = meth_elec_high/basecostreq - 1
+
+
+
+    # year_high = 
+    fig, ax = plt.subplots()
+    factorlist = ['methanation cost', 'electrolyzer cost', 'meth and elec cost', 'year']
+    highs = [methanation_high, electrolyzer_high, meth_elec_high, year_high]
+    lows = [methanation_low, electrolyzer_low, meth_elec_low, year_low]
+
+
+    ax.barh(factorlist, highs, height= 0.1, color = 'C0')
+    ax.barh(factorlist, lows, height = 0.1, color = 'C1')
+    ax.invert_yaxis()
+    ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax = 1))
+    plt.tight_layout()
     plt.show()
+    plt.close('all')
+
+
+    #Finding the default price
+
+
+
 
 
 

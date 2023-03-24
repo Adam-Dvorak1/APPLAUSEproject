@@ -10,7 +10,7 @@ import importlib
 import multiplotterfunc
 importlib.reload(multiplotterfunc)
 
-from multiplotterfunc import  plot_cost_any, four_cost_plot, find_net_income_multiyear, find_net_income, plot_anysize_all, plot_anysize, compare_dcurves,  plot_costper, plot_gridtoelec_dcurv, plot_methlink_dcurv, plot_gasstore_dcurv
+from multiplotterfunc import  compare_cost_bars, plot_grid_restriction, plot_cost_any, four_cost_plot, find_net_income_multiyear, find_net_income, plot_anysize_all, plot_anysize, compare_dcurves,  plot_costper, plot_gridtoelec_dcurv, plot_methlink_dcurv, plot_gasstore_dcurv
 
 #generators_dcurve, battery_dcurve, storage_dcurve, methane_link_dcurve, plot_linksize, plot_objective,
 
@@ -27,6 +27,5 @@ if __name__ == "__main__":
     allpath = "results/csvs/alldata/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore.csv"
     
 
-    
-    plot_cost_any('results/csvs/costs/21_03_2023_electrolyzer_megen_sweep_justsolar_dispatch.csv')
+    compare_cost_bars()
 
