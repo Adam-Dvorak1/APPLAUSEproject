@@ -321,7 +321,7 @@ if __name__ == "__main__":
     generates a csv that is stored in results/csvs/costs. This is useful if you want to plot
     info involving LCOE or income. '''
 
-    path = "results/NetCDF/23_03_2023_year_megen_sweep_gridsolar_dispatch"
+    path = "results/NetCDF/24_03_2023_grid_invert_megen_median_gridsolar_dispatch_uppers"
     costs_to_csv(path, True)
 
 

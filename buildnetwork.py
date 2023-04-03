@@ -111,8 +111,8 @@ def add_stores(network):
         bus0 = "local elec",
         bus1 = "battery",
         carrier = "battery charger",
-        efficiency = 1,
-        #efficiency =tech_data.query("technology == 'battery inverter' & parameter == 'efficiency'")['value'].values[0] ** 0.5, #Taking square root because 
+        # efficiency = 1,
+        efficiency =tech_data.query("technology == 'battery inverter' & parameter == 'efficiency'")['value'].values[0] ** 0.5, #Taking square root because 
         p_nom_extendable = True,
         capital_cost = 0.001 * annual_cost("battery inverter") )
     network.add("Link",
@@ -120,10 +120,14 @@ def add_stores(network):
         bus0 = "battery",
         bus1 = "local elec",
         carrier = "battery discharger",
-        efficiency = 1,
-        #efficiency = tech_data.query("technology == 'battery inverter' & parameter == 'efficiency'")['value'].values[0] ** 0.5,
+        #efficiency = 1,
+        efficiency = tech_data.query("technology == 'battery inverter' & parameter == 'efficiency'")['value'].values[0] ** 0.5,
         p_nom_extendable = True,
         ) 
+
+
+
+
 
     ## ---------------------gas-----------------------------
     #We want a completely free gas storage, as its only purpose is to serve as flexibility for the load

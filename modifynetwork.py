@@ -86,7 +86,7 @@ def add_generators_sol_yrs(network, year):
 
     return network
 
-
+#add_generators_sol_yrs(n, '2018')
 
 def add_generators_wind_yrs(network, year):
 

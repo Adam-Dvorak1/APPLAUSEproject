@@ -27,5 +27,5 @@ if __name__ == "__main__":
     allpath = "results/csvs/alldata/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore.csv"
     
 
-    compare_cost_bars()
+    plot_grid_restriction()
 

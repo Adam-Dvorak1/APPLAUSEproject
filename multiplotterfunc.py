@@ -826,7 +826,7 @@ def plot_grid_restriction():
     This function takes a run that analyzes the effect of grid restriction. Using the normal sabatier price, 
     it plots on the x axis the variation in the grid restriction'''
     presentation = 'March24pres'
-    path = 'results/csvs/costs/21_03_2023_grid_invert_megen_sweep_gridsolar_dispatch.csv'
+    path = 'results/csvs/costs/24_03_2023_grid_invert_megen_median_gridsolar_dispatch_uppers.csv'
     costdf = pd.read_csv(path, index_col = 0)
 
     val = 10000
@@ -886,7 +886,7 @@ def plot_grid_restriction():
     # ax.legend()
 
 
-    fig.savefig('Presentations/' + presentation + '/' + experiment + 'gridrestriction.pdf')
+    #fig.savefig('Presentations/' + presentation + '/' + experiment + 'gridrestriction.pdf')
     plt.show()#delete
     plt.close('all')
     ax.get_legend().remove() #uncomment
@@ -946,7 +946,7 @@ def compare_cost_bars():
     It then finds the min and max required gas price according to each of the variation. 
     
     Finally, it plots the min and max on a mirrored vertical bar plot as a percent variation of the middle'''
-
+    presentation = "March24pres"
     methanogencost = 120
     gasload = 10000
 
@@ -964,7 +964,7 @@ def compare_cost_bars():
     yeardf = add_costreq_column(yeardf, gasload, sys_income)
     print(elecdf.loc[elecdf['methanogen capital cost'] == 120])
     griddf = add_costreq_column(griddf, gasload, sys_income)
-    print(yeardf.loc[yeardf['methanogen capital cost'] == 120])
+    print(yeardf.loc[yeardf['methanogen capital cost'] == 120].iloc[0, :])
 
     basecostreq = elecdf.loc[(elecdf['methanogen capital cost'] == 120) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].median())]['cost diff'].values[0]
 
@@ -988,10 +988,10 @@ def compare_cost_bars():
     year_low = yeardf.loc[(yeardf['methanogen capital cost'] == 120)]['cost diff'].min()
     year_low = year_low/basecostreq-1
 
-    # grid_high = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].max()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].max())]['cost diff'].values[0]
-    # meth_elec_high = meth_elec_high/basecostreq - 1
-    # meth_elec_low = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].min()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].min())]['cost diff'].values[0]
-    # meth_elec_low = meth_elec_low/basecostreq - 1
+    grid_high = griddf.loc[(griddf['methanogen capital cost'] == 120) & (griddf['grid link max size'] == griddf['grid link max size'].min())]['cost diff'].values[0]
+    grid_high  = grid_high /basecostreq - 1
+    grid_low  = griddf.loc[(griddf['methanogen capital cost'] == 120) & (griddf['grid link max size'] == griddf['grid link max size'].max())]['cost diff'].values[0]
+    grid_low  = grid_low /basecostreq - 1
 
     # meth_elec_high = meth_elec_high/basecostreq - 1
 
@@ -999,17 +999,17 @@ def compare_cost_bars():
 
     # year_high = 
     fig, ax = plt.subplots()
-    factorlist = ['methanation cost', 'electrolyzer cost', 'meth and elec cost', 'year']
-    highs = [methanation_high, electrolyzer_high, meth_elec_high, year_high]
+    factorlist = ['methanation cost', 'electrolyzer cost', 'meth and elec cost', 'year', 'grid size restriction']
+    highs = [methanation_high, electrolyzer_high, meth_elec_high, year_high, grid_high]
     lows = [methanation_low, electrolyzer_low, meth_elec_low, year_low]
 
 
     ax.barh(factorlist, highs, height= 0.1, color = 'C0')
-    ax.barh(factorlist, lows, height = 0.1, color = 'C1')
+    ax.barh(factorlist[:-1], lows, height = 0.1, color = 'C1')
     ax.invert_yaxis()
     ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax = 1))
     plt.tight_layout()
-    plt.show()
+    plt.savefig('Presentations/March24pres/compareChangeBars.pdf')
     plt.close('all')
 
 

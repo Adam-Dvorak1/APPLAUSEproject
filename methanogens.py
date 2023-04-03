@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "year_2020_test" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "grid_invert_megen_median_gridsolar_dispatch_uppers" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
         solar = True #whether using solar generator or not
         wind = False
@@ -69,8 +69,8 @@ if __name__ == "__main__":
         # Modify the sweeping range in the sweeping dict in modifynetwork.py
         # Only do one of these at a time
         electrolyzer = False
-        year = True #Note, if you are doing a year run, both solar and grid must be True
-        gridinverter = False
+        year = False#Note, if you are doing a year run, both solar and grid must be True
+        gridinverter = True
 
 
         ##---<<EUR-USD conversion rate>>-------
@@ -87,11 +87,10 @@ if __name__ == "__main__":
                sweeper = [1/4, 1/2, 2/3, 5/6, 1, 1.2, 1.5, 2, 4] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
         elif year == True:
                sweeps = "year"
-               sweeper = ['2020']
-               #sweeper = ['2017', '2018', '2019', '2020']
+               sweeper = ['2017', '2018', '2019', '2020']
         elif gridinverter == True:
                sweeps = 'grid_inverter'
-               sweeper = [0.1, 0.5, 0.75, 1, 1.25, 1.5, 2] #These will be multiplied by the average electricity demand required per hour, which is 14667 kW
+               sweeper = [2, 3, 4, 10] #These will be multiplied by the average electricity demand required per hour, which is 14667 kW
                #As in, the grid inverter size will be limited by x times the mean
 
        
@@ -101,7 +100,7 @@ if __name__ == "__main__":
         # The solar generator to produce electricity rather than produce methane
 
         #megen_costs_list = [20, 50, 80, 100, 120, 150, 200, 300, 500] #Now, 9 costs
-        megen_costs_list = [20]
+        megen_costs_list = [120]
         methanogen_costs = [x/annual_cost('methanation') for x in megen_costs_list]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
 
 
