@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "grid_invert_megen_median_gridsolar_dispatch_uppers" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "electrolyzer_megen_gridsolar_dispatch_zero_double_sweep" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
         solar = True #whether using solar generator or not
         wind = False
@@ -68,9 +68,9 @@ if __name__ == "__main__":
         ##---<<Secondary sweeping variables>>-----
         # Modify the sweeping range in the sweeping dict in modifynetwork.py
         # Only do one of these at a time
-        electrolyzer = False
+        electrolyzer = True
         year = False#Note, if you are doing a year run, both solar and grid must be True
-        gridinverter = True
+        gridinverter = False
 
 
         ##---<<EUR-USD conversion rate>>-------
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         '''In addition to a megen cost sweep, the sweep can be electrolyzer, year, or gas_load'''
         if electrolyzer == True:
                sweeps = "electrolyzer"
-               sweeper = [1/4, 1/2, 2/3, 5/6, 1, 1.2, 1.5, 2, 4] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
+               sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
         elif year == True:
                sweeps = "year"
                sweeper = ['2017', '2018', '2019', '2020']
@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
         #megen_costs_list = [20, 50, 80, 100, 120, 150, 200, 300, 500] #Now, 9 costs
         megen_costs_list = [120]
-        methanogen_costs = [x/annual_cost('methanation') for x in megen_costs_list]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
+        methanogen_costs = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
 
 
 

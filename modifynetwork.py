@@ -1,6 +1,7 @@
 import pandas as pd
 from helpers import annual_cost
 import numpy as np
+from buildnetwork import add_links
 
 
 
@@ -23,6 +24,18 @@ def change_gasload(network, multiplier):
 
     return network
 
+def remove_links(network):
+    '''
+    3 April 2023
+
+    I am really struggling trying to find the reason for why the solar is not working. Maybe it is the fact
+    that there is no link? So let's remove some links and add them again'''
+
+    network.mremove("Link", ['H2 Electrolysis', 'High to low voltage', 
+                             "Solar system to electricity", 'Biogas upgrading'])
+    
+    return network
+
 
 def add_generators_sol_yrs(network, year):
 
@@ -38,18 +51,23 @@ def add_generators_sol_yrs(network, year):
     
     It is almost a copy of add_generators in buildnetwork.py'''
     gridpresent = False #if the grid is not present already, then we don't want to add it back in
+    
     network.remove("Generator", "Biogas")
+    
     network.remove("Generator", "Solar PV")
+
+
     if 'Grid' in network.generators.index:
         network.remove("Generator", 'Grid')
+
         gridpresent = True
 
-    
+
     
     hours_in_year = pd.date_range(year + '-01-01T00:00:00', year + '-12-31T23:00:00', freq='H') #I changed the date rate from Z
     network.set_snapshots(hours_in_year)
 
-
+    #We are editing this to see whether it has to do with the csv
     df_cal_solar = pd.read_csv('data/final_solar_csvs/RealCalFlatsSolarCFs_' + year + '.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
     df_cal_solar.index = pd.to_datetime(df_cal_solar.index)
     df_cal_biogas = df_cal_solar['biogas'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #This is just assuming a constant generator, which I added to the original data from renewables.ninja
@@ -67,7 +85,8 @@ def add_generators_sol_yrs(network, year):
             gridgen = pd.DataFrame(index = range(8784))
 
         gridgen = gridgen.set_index(hours_in_year)
-        gridgen['grid'] = 1 #in kW, so 100GW
+        gridgen['grid'] = 1#in kW, so 100GW
+
 
         network.add("Generator", "Grid", bus = 'grid', p_nom = 100000000,#100 GW. The capacity is for free. However, we still pay marginal cost
             carrier = "grid", capital_cost = 0, marginal_cost = gridprice, p_max_pu = gridgen['grid'])#The datafile gives US cents/kWh. I wanted dollars (or euros) per kWh.     # This is using 2019 (UTC) data from CAISO, LCG consulting.Prices are in c/kWh
@@ -77,7 +96,7 @@ def add_generators_sol_yrs(network, year):
 
     network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
         carrier = 'solar', capital_cost = 0, #Eur/kW/yr
-        marginal_cost = 0, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
+        marginal_cost = 0, p_nom = 130000, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
 
     network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True, 
         carrier = 'biogas', capital_cost = 0,
@@ -86,7 +105,7 @@ def add_generators_sol_yrs(network, year):
 
     return network
 
-#add_generators_sol_yrs(n, '2018')
+
 
 def add_generators_wind_yrs(network, year):
 
@@ -105,6 +124,7 @@ def add_generators_wind_yrs(network, year):
     network.remove("Generator", "Biogas")
     network.remove("Generator", 'Onshore wind')
     if 'Grid' in network.generators.index:
+       
         network.remove("Generator", 'Grid')
         gridpresent = True
 
@@ -131,7 +151,7 @@ def add_generators_wind_yrs(network, year):
 
         gridgen = gridgen.set_index(hours_in_year)
         gridgen['grid'] = 1 #in kW, so 100GW
-
+       
         network.add("Generator", "Grid", bus = 'grid', p_nom = 100000000,#100 GW. The capacity is for free. However, we still pay marginal cost
             carrier = "grid", capital_cost = 0, marginal_cost = gridprice, p_max_pu = gridgen['grid'])#The datafile gives US cents/kWh. I wanted dollars (or euros) per kWh.     # This is using 2019 (UTC) data from CAISO, LCG consulting.Prices are in c/kWh
 
@@ -139,7 +159,7 @@ def add_generators_wind_yrs(network, year):
 
 
     network.add("Generator", "Onshore wind", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
-        carrier = 'wind', capital_cost = annual_cost('onwind'), #Eur/kW/yr
+        carrier = 'wind', capital_cost = 0, #Eur/kW/yr
         marginal_cost = 0, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
 
 
@@ -213,13 +233,14 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
         network.links.loc['H2 Electrolysis', 'capital_cost'] = annual_cost("electrolysis") * sweep_mult
     
     elif sweep == 'year':
-        
+
         if 'Solar PV' in network.generators.index:
             network = add_generators_sol_yrs(network, sweep_mult)
         if 'Onshore wind' in network.generators.index:
             network = add_generators_wind_yrs(network, sweep_mult)
        
         network = add_loads_yrs(network, sweep_mult)
+
 
     elif sweep == 'grid_inverter':
         network.links.loc['High to low voltage', 'p_nom_max'] = 14667 * sweep_mult
@@ -277,10 +298,7 @@ def to_netcdf(network, sweep, sweep_mult, megen_mult, path):
    # With all the talk of multipliers, in reality gas_mult is the average gas demand in kW, 
    #the megen_mult becomes modified
     
-
-    megen_mult = megen_mult * annual_cost("methanation") #This is the same calculated in change_loads_costs(). Redundant maybe, but I think it is pretty quick.
-
-    megen_mult = round(megen_mult) #The real cost is not rounded--this is just for documentation and plotting
+    #The real cost is not rounded--this is just for documentation and plotting
 
     if sweep == "electrolyzer":
         sweep_mult = sweep_mult * annual_cost('electrolysis')

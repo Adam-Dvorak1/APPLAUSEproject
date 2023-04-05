@@ -28,4 +28,6 @@ n = add_links(n)
 
 n = add_methanogen(n)
 
-to_netcdf(n, 'year', '2020', 1, 'results/NetCDF/23_03_2023_year_2018_test')
+
+
+to_netcdf(n, 'year', '2019', 1, 'results/NetCDF/23_03_2023_year_2018_test')
