@@ -44,7 +44,7 @@ costmult_dict = dict(zip(annualcosts, linkcost_mults))
 
 color_dict = {"battery": '#9467bd', "battery charger":'#1f77b4', "methanogens": '#2ca02c', "Solar PV": '#ff7f0e',
 "H2 Electrolysis": '#d62728', "grid elec total cost": '#7f7f7f', "grid elec total income": '#e377c2', "H2 store": '#c251ae', 
-"Onshore wind": '#ADD8E6'}
+"Onshore wind": '#ADD8E6', 'High to low voltage':'#260d29'}
 
 
 
@@ -535,7 +535,10 @@ def find_net_income(path):
 
 
 def find_net_income_pass(path, ax):
-    '''This function is the same as find_net_income() except it passes an ax on to another function'''
+    '''This function is the same as find_net_income() except it passes an ax on to another function
+    5 April 2023
+    
+    Earlier, we have modified this equation to make it so that '''
 
     costdf = pd.read_csv(path, index_col = 0)
 
@@ -563,7 +566,7 @@ def find_net_income_pass(path, ax):
         costdf['Net income'] = costdf[costdf.columns[3:]].sum(axis = 1) * -1
     else:
         # print( costdf[costdf.columns[4:]])
-        costdf['Net income'] = costdf[costdf.columns[5:]].sum(axis = 1) * -1
+        costdf['Net income'] = costdf[costdf.columns[5:]].sum(axis = 1) * -1 #From "Battery charger" and on
 
     mindf['Net income'] = mindf[mindf.columns[2:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well.
 
@@ -621,13 +624,13 @@ def find_net_income_pass(path, ax):
     print(x_label_dict)
 
     ###########################################
-    for val in alldf['methanogen capital cost'].unique():
+    # for val in alldf['methanogen capital cost'].unique():
 
-        highincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == alldf['electrolyzer capital cost'].max())]["cost diff"].values[0]
-        lowincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == alldf['electrolyzer capital cost'].min())]["cost diff"].values[0]
-        x_coord = x_label_dict[str(val)]
-        print(x_coord)
-        ax.vlines(x  = x_coord, ymin = lowincome, ymax = highincome, color = 'k')
+    #     highincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == alldf['electrolyzer capital cost'].max())]["cost diff"].values[0]
+    #     lowincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == alldf['electrolyzer capital cost'].min())]["cost diff"].values[0]
+    #     x_coord = x_label_dict[str(val)]
+    #     #print(x_coord)
+    #     ax.vlines(x  = x_coord, ymin = lowincome, ymax = highincome, color = 'k')
     
     # for each value in methanogen cost.unique()
     # plot a vertical line from the income value at the minimum 
@@ -812,12 +815,12 @@ def plot_cost_any(path, ax): #change back to (path, ax)
     ax.axhline (25, label = "2022 median", color = "C2")
     ax.axhline (14, label = "2021 median", color = "C3")
     ax.set_xlabel('')
-    # ax.legend()
+    #ax.legend()
 
 
     # fig.savefig('Presentations/' + presentation + '/' + experiment + '.pdf')
     #plt.show()#delete
-    ax.get_legend().remove() #uncomment
+    #ax.get_legend().remove() #uncomment
 
 
 
@@ -903,8 +906,8 @@ def four_cost_plot():
     
 
     justgrid = 'results/csvs/costs/21_03_2023_electrolyzer_megen_sweep_justgrid_dispatch.csv'
-    justsolar = 'results/csvs/costs/21_03_2023_electrolyzer_megen_sweep_justsolar_dispatch.csv'
-    gridsolar = 'results/csvs/costs/21_03_2023_electrolyzer_megen_sweep_gridsolar_dispatch.csv'
+    justsolar = 'results/csvs/costs/05_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv'
+    gridsolar = 'results/csvs/costs/05_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv'
     plot_cost_any(justsolar, axs[0])
     plot_cost_any(justgrid, axs[1])
     plot_cost_any(gridsolar, axs[2])
@@ -924,9 +927,9 @@ def four_cost_plot():
 
 
         
-    fig.savefig('Presentations/' + presentation + '/megencosts_income.pdf')
+    #fig.savefig('Presentations/' + presentation + '/megencosts_income.pdf')
     # fig.savefig('Presentations/' + presentation + '/megencosts_income.png', dpi = 500)
-    # plt.show()
+    plt.show()
 
 
 def compare_cost_bars():

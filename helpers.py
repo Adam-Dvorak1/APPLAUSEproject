@@ -170,7 +170,7 @@ def get_costs(n, grid):
     links = links[links != 0]
     generators = n.generators.loc[:, "p_nom_opt"] * n.generators.loc[:, "capital_cost"]
     if 'Solar PV' in generators: #test to see if it this works
-        solarcost = 130000 * annual_cost('solar-utility')
+        solarcost = 130000 * annual_cost('solar-utility') #We have 130 MW of solar electricity
         generators['Solar PV'] = solarcost
     generators = generators[generators != 0]
     
@@ -321,7 +321,7 @@ if __name__ == "__main__":
     generates a csv that is stored in results/csvs/costs. This is useful if you want to plot
     info involving LCOE or income. '''
 
-    path = "results/NetCDF/24_03_2023_grid_invert_megen_median_gridsolar_dispatch_uppers"
+    path = "results/NetCDF/05_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep"
     costs_to_csv(path, True)
 
 

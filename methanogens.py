@@ -57,8 +57,9 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "electrolyzer_megen_gridsolar_dispatch_zero_double_sweep" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "mindf_default_costs" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
+        # 5 April: Cost of grid connection added
         solar = True #whether using solar generator or not
         wind = False
         grid = True#whether using grid generator or not
@@ -84,7 +85,7 @@ if __name__ == "__main__":
         '''In addition to a megen cost sweep, the sweep can be electrolyzer, year, or gas_load'''
         if electrolyzer == True:
                sweeps = "electrolyzer"
-               sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
+               sweeper = [1] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
         elif year == True:
                sweeps = "year"
                sweeper = ['2017', '2018', '2019', '2020']
@@ -165,7 +166,7 @@ if __name__ == "__main__":
         f = list(itertools.product(ns, sweeps, sweeper, methanogen_costs, endpath))
 
 
-        with Pool(processes=4) as pool:
+        with Pool(processes=1) as pool:
                 pool.starmap(to_netcdf, f) #This also solves the network
 
 

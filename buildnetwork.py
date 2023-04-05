@@ -81,12 +81,12 @@ def add_loads(network):
     network.add("Load", #Why are there two loads here? Which is the name?
         "Gas Load", 
         bus="gas", 
-        p_set=gasdf["All_in_one_demand"])
+        p_set=gasdf["All_in_one_demand"]) #An average of 10 MW of demand, all at the end of the year
 
     network.add("Load", 
         "Grid Load", 
         bus="grid", 
-        p_set=gasdf["Constant_MW_methane"] * 300)#Assuming 3 GW of demand from the grid
+        p_set=gasdf["Constant_MW_methane"] * 3000)#Assuming 30 GW of demand from the grid
 
     return network
 
@@ -229,7 +229,7 @@ def add_links(network):
         bus1 = "electricity",
         p_nom_extendable = True,
         carrier = "electricity",
-        capital_cost = 0,
+        capital_cost = annual_cost('electricity grid connection'),#From the Danish Energy agency, let's assume that the inverter from the grid is between the 2020 and 2030 price of the solar inverter--0.025 MEur per MW, or 25 Eur per kW
         marginal_cost = 0, 
         efficiency = 1,
         p_min_pu = -1

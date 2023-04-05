@@ -19,13 +19,10 @@ if __name__ == "__main__":
     #path = 'results/csvs/costs/06_12_2022_gasdem_megencost_sweep.csv'
 
 
+    fig, ax = plt.subplots()
+    gridsolar = 'results/csvs/costs/05_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv'
 
-    costpath = 'results/csvs/costs/08_02_2023_gasdem_year_sweep_gridsolar_w_hstore.csv'
+    four_cost_plot()
 
     # plot_battsize()
-
-    allpath = "results/csvs/alldata/25_01_2023_gasdem_megencost_sweep_nogrid_wo_hstore.csv"
-    
-
-    plot_grid_restriction()
 
