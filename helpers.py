@@ -7,6 +7,7 @@ import glob
 import pathlib
 from datetime import datetime
 import pypsa
+import numpy as np
 
 
 #  Lisa: We are going to need multi-links for modelling the CO2 management.
@@ -218,7 +219,10 @@ def get_costs(n, grid):
 
 
     if grid != True:
-        cost_series = pd.concat([year, gasload, megen_cap_cost, electrolyzer_cap_cost, links, generators, stores])
+        grid_max = np.inf #We need this to make sure the justsolar csv has enough columns
+        grid_max = pd.Series(grid_max)
+        grid_max.index = ['grid link max size']
+        cost_series = pd.concat([year, gasload, grid_max, megen_cap_cost, electrolyzer_cap_cost, links, generators, stores])
     
     cost_df = pd.DataFrame([cost_series])
     
@@ -321,9 +325,13 @@ if __name__ == "__main__":
     generates a csv that is stored in results/csvs/costs. This is useful if you want to plot
     info involving LCOE or income. '''
 
-    path = "results/NetCDF/05_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep"
-    costs_to_csv(path, True)
+    # path = "results/NetCDF/05_04_2023_megen_justsolar_dispatch_zero_double_sweep"
 
+    # costs_to_csv(path, False)
+
+
+    path = "results/NetCDF/05_04_2023_megen_justsolar_dispatch_zero_double_sweep"
+    costs_to_csv(path, False)
 
     # path = "results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_justsolar"
     # costs_to_csv(path, False)

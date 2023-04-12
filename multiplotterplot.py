@@ -19,10 +19,11 @@ if __name__ == "__main__":
     #path = 'results/csvs/costs/06_12_2022_gasdem_megencost_sweep.csv'
 
 
-    fig, ax = plt.subplots()
-    gridsolar = 'results/csvs/costs/05_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv'
+    #fig, ax = plt.subplots()
+    #gridsolar = 'results/csvs/costs/05_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv'
 
     four_cost_plot()
+    #compare_cost_bars()
 
     # plot_battsize()
 
