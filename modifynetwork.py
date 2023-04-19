@@ -245,6 +245,8 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
     elif sweep == 'grid_inverter':
         network.links.loc['High to low voltage', 'p_nom_max'] = 14667 * sweep_mult
 
+    elif sweep == "gi_cost":
+        network.links.loc['High to low voltage', 'capital_cost'] = annual_cost('electricity grid connection') * sweep_mult
 
 
 

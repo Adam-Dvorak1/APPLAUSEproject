@@ -57,9 +57,9 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "electrolyzer_megen_gridsolar_dispatch_zero_double_sweep" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "2018_gridsolar_dispatch_zero_double_sweep" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
-        # 5 April: Cost of grid connection added
+        
         solar = True #whether using solar generator or not
         wind = False
         grid = True#whether using grid generator or not
@@ -69,9 +69,12 @@ if __name__ == "__main__":
         ##---<<Secondary sweeping variables>>-----
         # Modify the sweeping range in the sweeping dict in modifynetwork.py
         # Only do one of these at a time
-        electrolyzer = True
-        year = False#Note, if you are doing a year run, both solar and grid must be True
+        # 5 April: Cost of grid connection added
+        electrolyzer = False
+        year = True #Note, if you are doing a year run, both solar and grid must be True
         gridinverter = False
+        GIcost = False #GI stands for grid inverter
+        # solarcost = True # solarcost is not a real experiment because it is dispatch. If we really want to see the impact on the costs, then we just need to go into the costs csvs
 
 
         ##---<<EUR-USD conversion rate>>-------
@@ -89,11 +92,18 @@ if __name__ == "__main__":
         elif year == True:
                sweeps = "year"
                sweeper = ['2017', '2018', '2019', '2020']
+               sweeper = ['2018']
         elif gridinverter == True:
                sweeps = 'grid_inverter'
                sweeper = [2, 3, 4, 10] #These will be multiplied by the average electricity demand required per hour, which is 14667 kW
                #As in, the grid inverter size will be limited by x times the mean
-
+        elif GIcost == True:
+                sweeps = "gi_cost"
+                sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
+        # elif solarcost == True:
+        #         sweeps = 'solar_cost'
+        #         sweeper = ['low', 'high']
+                
        
 
         # We are doing huge sweeps to see the extremes--under what conditions is it worth it to produce methane from our methanogenesis? 
@@ -170,7 +180,7 @@ if __name__ == "__main__":
 
 
         #11 April 2023: Adding this from helpers.py to speed up, get csv right away
-        costs_to_csv(rel_path, grid)
+        costs_to_csv(rel_path, grid, sweeps[0])
 
 
         endtime = time.time()

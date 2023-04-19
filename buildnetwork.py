@@ -257,8 +257,8 @@ def add_links(network):
         p_nom_extendable = True,
         carrier = "biogas",
         capital_cost = 0, #annual_cost("biogas upgrading")/1000 * 2, 
-        efficiency = 0.4 * 0.9, #We are assuming that the process efficiency is 90%. Of which 40% goes to CO2
-        efficiency2 = 0.6 * 0.9 #The rest of the biogas turns into methane, at an efficiency of 0.9
+        efficiency = 0.4, #40% goes to CO2
+        efficiency2 = 0.6 #The rest of the biogas turns into methane
         )
 
     return network
@@ -285,7 +285,7 @@ def add_methanogen(network):
         bus3 = "CO2 compressed",
         carrier="methanation",
         marginal_cost=0,
-        capital_cost=annual_cost("methanation") * 3 ,   # annualised capital costs. it gets overridden in modifynetwork.py change_loads_costs() by  annual_cost("methanation") * megen_mult
+        capital_cost=annual_cost("methanation") ,   # annualised capital costs. it gets overridden in modifynetwork.py change_loads_costs() by  annual_cost("methanation") * megen_mult
         p_nom_extendable=True,
         efficiency=0.8 * 0.9785,    # how much CH4 is produced per H2 input. So 0.8 MW Ch4 produced per MW of H2
         efficiency2= 0.01, #I have no idea how many MW CO2 is emitted per MW of H2. 

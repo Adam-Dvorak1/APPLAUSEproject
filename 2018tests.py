@@ -30,4 +30,4 @@ n = add_methanogen(n)
 
 
 
-to_netcdf(n, 'year', '2019', 1, 'results/NetCDF/23_03_2023_year_2018_test')
+to_netcdf(n, 'year', '2018', 1, 'results/NetCDF/23_03_2023_year_2018_test')

@@ -88,16 +88,17 @@ def extract_data():
     # megen_cost = annual_cost("methanation")
 
     # for file in glob.glob(path):
-    file = 'results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_gridsolar/electrolyzer_37_megen_cost_20.nc'
+    file = 'results/NetCDF/11_04_2023_year_gridsolar_dispatch/year_2019_megen_cost_1.nc'
     n = pypsa.Network()
     n.import_from_netcdf(file)
     tempdf = pd.DataFrame(index = n.snapshots)
 
-    
-    tempdf['load'] = n.loads_t.p["Gas Load"].max()/len(n.snapshots) #This is an independent variable
+    tempdf['year'] = 2019
     tempdf['megen cost'] = n.links.loc['methanogens', 'capital_cost'] #This is an independent varaible. Hm, but this is not the same as the 
+    tempdf['electrolyzer cost'] = n.links.loc['H2 Electrolysis', 'capital_cost'] 
     tempdf['megen size'] = n.links.loc['methanogens', 'p_nom_opt'] 
     tempdf['electrolyzer size'] = n.links.loc["H2 Electrolysis", "p_nom_opt"]
+    
     if "Solar PV" in n.generators.index:
         tempdf['solar size'] = n.generators.p_nom_opt["Solar PV"]
         tempdf['battery size'] = n.stores.e_nom_opt['battery']
@@ -112,10 +113,12 @@ def extract_data():
     tempdf['objective'] = n.objective 
 
     tempdf['electrolyzer ts'] = n.links_t.p0.loc[:, "H2 Electrolysis"]
+    tempdf['solar ts'] = n.generators_t.p.loc[:, 'Solar PV']
     tempdf['grid to electricity link ts'] = n.links_t.p0.loc[:, "High to low voltage"]
     tempdf['methanogen link ts'] = n.links_t.p0.loc[:, "methanogens"]
     tempdf['gas store ts'] = n.stores_t.e.loc[:, "gas store"]
     tempdf["battery store ts"] = n.stores_t.e.loc[:, "battery"]#Note--we have experiments where we remove the solar, but not the battery. In this case, the battery just has 0s
+    tempdf['H2 store ts'] = n.stores_t.e.loc[:, 'H2 store']
     tempdf['biogas generator ts'] = n.generators_t.p.loc[:, 'Biogas'] #We actually don't care about the solar generator because we know it is completely maxed
 
 
@@ -126,7 +129,7 @@ def extract_data():
     # name = folder.split("/")
     # name = name [-1]
 
-    name = '17_02_2023_elctrlyzer_megen_sweep_gridsolar_onerun'
+    name = '11_04_2023_year_2019_gridsolar_dispatch_onerun'
     tempdf.to_csv('results/csvs/alldata/' + name + ".csv")
 
 def extract_summary(csvpath):
@@ -159,10 +162,15 @@ def get_gridcost(n):
     return total_costs, total_income
 
 
-def get_costs(n, grid):
+def get_costs(n, grid, twovar):
 
     '''This takes a network and tries to find all of the relevant costs
-    If grid = True, then the total electricity '''
+    If grid = True, then the total electricity 
+    12 April:
+    In an effort to not keep adding columns to the costs csv, we are going to switch out one of 
+    the columns every single time. This will be the secondary sweeping variable. 
+    
+    In addition, we will no longer keep track of everything else that we do not need'''
 
 
 
@@ -193,9 +201,14 @@ def get_costs(n, grid):
     megen_cap_cost = pd.Series(megen_cap_cost)
     megen_cap_cost.index = ["methanogen capital cost"]
 
-    electrolyzer_cap_cost = n.links.loc['H2 Electrolysis', 'capital_cost']
-    electrolyzer_cap_cost = pd.Series(electrolyzer_cap_cost)
-    electrolyzer_cap_cost.index = ['electrolyzer capital cost']
+    if twovar == 'gi_cost':
+        sweep2var = n.links.loc['High to low voltage', 'capital_cost']
+        sweep2var = pd.Series(sweep2var)
+        sweep2var.index = ['inverter capital cost']
+    else: #The default is to add an electrolyzer
+        sweep2var = n.links.loc['H2 Electrolysis', 'capital_cost']
+        sweep2var = pd.Series(sweep2var)
+        sweep2var.index = ['electrolyzer capital cost']
 
     
 
@@ -214,7 +227,7 @@ def get_costs(n, grid):
         grid_max = pd.Series(grid_max)
         grid_max.index = ['grid link max size']
 
-        cost_series = pd.concat([year, gasload, grid_max, megen_cap_cost, electrolyzer_cap_cost, links, generators, stores, grid_cost, grid_income])
+        cost_series = pd.concat([year, gasload, grid_max, megen_cap_cost, sweep2var, links, generators, stores, grid_cost, grid_income])
 
 
 
@@ -222,7 +235,7 @@ def get_costs(n, grid):
         grid_max = np.inf #We need this to make sure the justsolar csv has enough columns
         grid_max = pd.Series(grid_max)
         grid_max.index = ['grid link max size']
-        cost_series = pd.concat([year, gasload, grid_max, megen_cap_cost, electrolyzer_cap_cost, links, generators, stores])
+        cost_series = pd.concat([year, gasload, grid_max, megen_cap_cost, sweep2var, links, generators, stores])
     
     cost_df = pd.DataFrame([cost_series])
     
@@ -231,14 +244,14 @@ def get_costs(n, grid):
 
 
 
-def costs_to_csv(path, isgrid):
+def costs_to_csv(path, isgrid, twovar):
     searchpath = path + "/*"
     df = pd.DataFrame()
 
     for file in glob.glob(searchpath):
         n = pypsa.Network()
         n.import_from_netcdf(file)
-        cost_df = get_costs(n, isgrid) #True because we are looking for the marginal price of the grid sum, so we add a bit
+        cost_df = get_costs(n, isgrid, twovar) #True because we are looking for the marginal price of the grid sum, so we add a bit
 
 
         df = pd.concat([df, cost_df])
@@ -330,13 +343,18 @@ if __name__ == "__main__":
     # costs_to_csv(path, False)
 
 
-    path = "results/NetCDF/05_04_2023_megen_justsolar_dispatch_zero_double_sweep"
-    costs_to_csv(path, False)
+    # path = "results/NetCDF/05_04_2023_megen_justsolar_dispatch_zero_double_sweep"
+    # costs_to_csv(path, False)
 
+    rel_path = 'results/NetCDF/11_04_2023_year_gridsolar_dispatch'
+
+    #costs_to_csv(path, grid_pres, two_var)
+    #if two_var is 'gi_cost', then something is added in the csv
+    # costs_to_csv(rel_path, True, 'other')
     # path = "results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_justsolar"
     # costs_to_csv(path, False)
 
-    # extract_data()
+    extract_data()
 
     presdate = "February10pres"
     # make_pres_folders(presdate)

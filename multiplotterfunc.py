@@ -562,12 +562,8 @@ def find_net_income_pass(path, ax):
     # and income is negative. Then, multiply by -1 to get the positive balance if you made money 
     # This skips over Gas Load, methanogen capital cost, and electrolyzer capital cost. If 'year'
     # is in the columns, it also skips over that
-    if 'year' not in costdf.columns:
-        costdf['Net income'] = costdf[costdf.columns[3:]].sum(axis = 1) * -1
-    else:
-        # print( costdf[costdf.columns[4:]])
-        #print (costdf[costdf.columns[4:]])
-        costdf['Net income'] = costdf[costdf.columns[5:]].sum(axis = 1) * -1 #From "Battery charger" and on
+
+    costdf['Net income'] = costdf[costdf.columns[5:]].sum(axis = 1) * -1 #From "Battery charger" and on
 
     mindf['Net income'] = mindf[mindf.columns[5:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well. 
     # 11 April: Now we have changed the mindf because of the added grid cost
@@ -591,7 +587,7 @@ def find_net_income_pass(path, ax):
     #Finding cost diff per MW per hour
     costdf['cost diff'] = costdf['cost diff']/8760*1000/gasload * -1 #10000 kW or 10 MW
 
-    costdf = costdf.loc[costdf['Gas Load'] == gasload]
+
 
 
     mediancost = costdf['methanogen capital cost'].median()
@@ -855,11 +851,12 @@ def compare_cost_bars():
     methanogencost = 120
     gasload = 10000
 
-    elecdf = pd.read_csv('results/csvs/costs/05_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv', index_col= 0)
+    elecdf = pd.read_csv('results/csvs/costs/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv', index_col= 0)
     yeardf = pd.read_csv('results/csvs/costs/11_04_2023_year_gridsolar_dispatch.csv', index_col=0)
-    griddf = pd.read_csv('results/csvs/costs/21_03_2023_grid_invert_megen_sweep_gridsolar_dispatch.csv', index_col = 0)
+    gi_costdf = pd.read_csv('results/csvs/costs/12_04_2023_GIcost_gridsolar_dispatch_zero_double_sweep.csv', index_col = 0) #g
 
-    mindf = pd.read_csv("results/csvs/costs/05_04_2023_mindf_default_costs.csv", index_col=0)
+
+    mindf = pd.read_csv("results/csvs/costs/11_04_2023_mindf_default_costs.csv", index_col=0)
     mindf['Net income'] = mindf[mindf.columns[5:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well. 
     sys_income = mindf['Net income'].values[0]
 
@@ -868,8 +865,8 @@ def compare_cost_bars():
     print(elecdf['High to low voltage'])
     yeardf = add_costreq_column(yeardf, gasload, sys_income)
     #print(elecdf.loc[elecdf['methanogen capital cost'] == 120])
-    griddf = add_costreq_column(griddf, gasload, sys_income)
-    print(yeardf['High to low voltage'])
+    gi_costdf = add_costreq_column(gi_costdf, gasload, sys_income)
+
 
     basecostreq = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].median()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].median())]['cost diff'].values[0]
 
@@ -888,35 +885,51 @@ def compare_cost_bars():
     meth_elec_low = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].min()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].min())]['cost diff'].values[0]
     meth_elec_low = meth_elec_low/basecostreq - 1
 
+
+    val17 = yeardf.loc[yeardf['year'] == 2017]['cost diff'].values[0]
+    val17 = val17/basecostreq-1
+
+    val18 = yeardf.loc[yeardf['year'] == 2018]['cost diff'].values[0]
+    val18 = val18/basecostreq-1
+
+    val20 = yeardf.loc[yeardf['year'] == 2020]['cost diff'].values[0]
+    val20 = val20/basecostreq-1
+
+    # year_high = yeardf[yeardf['year'] != 2018]['cost diff'].max() #Because 2018 is weird #I think I fixed 2018
     year_high = yeardf['cost diff'].max()
     year_high = year_high/basecostreq-1
     year_low = yeardf['cost diff'].min()
     year_low = year_low/basecostreq-1
 
-    # grid_high = griddf.loc[(griddf['methanogen capital cost'] == 120) & (griddf['grid link max size'] == griddf['grid link max size'].min())]['cost diff'].values[0]
-    # grid_high  = grid_high /basecostreq - 1
-    # grid_low  = griddf.loc[(griddf['methanogen capital cost'] == 120) & (griddf['grid link max size'] == griddf['grid link max size'].max())]['cost diff'].values[0]
-    # grid_low  = grid_low /basecostreq - 1
-
+    gi_high = gi_costdf.loc[gi_costdf['inverter capital cost']== gi_costdf['inverter capital cost'].max()]['cost diff'].values[0]
+    gi_high = gi_high/basecostreq-1
+    gi_low = gi_costdf.loc[gi_costdf['inverter capital cost']== gi_costdf['inverter capital cost'].min()]['cost diff'].values[0]
+    gi_low = gi_high/basecostreq-1
     # meth_elec_high = meth_elec_high/basecostreq - 1
 
 
 
     # year_high = 
     fig, ax = plt.subplots()
-    factorlist = ['methanation cost', 'electrolyzer cost', 'meth and elec cost', 'year']
+    factorlist = ['methanation cost\n120 Eur/kW/yr[0-2x]', 'electrolyzer cost\n146 Eur/kW/yr[0-2x]', 'meth and elec cost\n both [0-2x]', 'inverter cost\n34 Eur/kW/yr[0-2x]', 'year\n2019 [2020, 2017]']
     # highs = [methanation_high, electrolyzer_high, meth_elec_high, year_high, grid_high]
     # lows = [methanation_low, electrolyzer_low, meth_elec_low, year_low]
-    highs = [methanation_high, electrolyzer_high, meth_elec_high, year_high]
-    lows = [methanation_low, electrolyzer_low, meth_elec_low, year_low]
+    highs = [methanation_high, electrolyzer_high, meth_elec_high, gi_high, year_high]
+    highs = [x * 100 for x in highs]
+    lows = [methanation_low, electrolyzer_low, meth_elec_low, gi_low, year_low]
+    lows = [x * 100 for x in lows]
 
+    highbars = ax.barh(factorlist, highs, height= 0.4, color = 'C0')
 
-    ax.barh(factorlist, highs, height= 0.1, color = 'C0')
-    ax.barh(factorlist, lows, height = 0.1, color = 'C1')
+    ax.bar_label(highbars, fmt = '%.0f%%', label_type='center', color = 'white')
+    lowbars = ax.barh(factorlist, lows, height = 0.4, color = 'C1')
+    ax.bar_label(lowbars, fmt = '%.0f%%', label_type='center')
     ax.invert_yaxis()
-    ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax = 1))
+    ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax = 100))
+    ax.spines[['right', 'top', 'left']].set_visible(False)
+    ax.set_xlabel ("Percent change in methanation cost requirement")
     plt.tight_layout()
-    #plt.savefig('Presentations/March24pres/compareChangeBars.pdf')
+    #plt.savefig('Presentations/April13pres_Michael/compareChangeBarsw2018.pdf')
     plt.show()
     plt.close('all')
 
@@ -924,10 +937,23 @@ def compare_cost_bars():
     #Finding the default price
 
 
+##################################################################
+########################TIME SERIES #########################
+##################################################################
+
+def plot_elec_ts():
+    df = pd.read_csv('results/csvs/alldata/11_04_2023_year_2019_gridsolar_dispatch_onerun.csv')
+
+    df[4024:4192].plot(x = 'snapshot', y = ['solar ts', 'grid to electricity link ts', 'battery store ts'])
+    # fig, ax = plt.subplots()
+    # ax.plot(df['grid to electricity link ts'][4020:4044])
+    # ax.plot(df[''])
+    plt.show()
+    plt.close()
 
 
-
-
+def plot_grid_prices():
+    df = pd.read_csv
 ##################################################################
 ######################## DURATION CURVES #########################
 ##################################################################
@@ -1189,3 +1215,4 @@ for path in pathiter:
     newname =  path.replace('nogrid', 'justsolar')
     if newname != path:
         os.rename(path,newname)
+# %%
