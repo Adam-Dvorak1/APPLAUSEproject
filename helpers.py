@@ -205,6 +205,13 @@ def get_costs(n, grid, twovar):
         sweep2var = n.links.loc['High to low voltage', 'capital_cost']
         sweep2var = pd.Series(sweep2var)
         sweep2var.index = ['inverter capital cost']
+    elif twovar == 'spain_electrolyzer':
+        solarcost = 130000 * annual_cost('solar-utility') * 452.76 / 920 #This is because the pypsa default for 2025 is half that of the NREL 'normal' cost. When we are looking at Spain, it is this way
+        generators['Solar PV'] = solarcost
+        sweep2var = n.links.loc['H2 Electrolysis', 'capital_cost']
+        sweep2var = pd.Series(sweep2var)
+        sweep2var.index = ['electrolyzer capital cost']
+
     else: #The default is to add an electrolyzer
         sweep2var = n.links.loc['H2 Electrolysis', 'capital_cost']
         sweep2var = pd.Series(sweep2var)

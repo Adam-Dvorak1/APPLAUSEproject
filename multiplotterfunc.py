@@ -639,7 +639,6 @@ def plot_cost_any(path, ax): #change back to (path, ax)
     9 Feb 2023
     The purpose of this function is to be able to plot cost_any plots side by side
     '''
-    presentation = 'March24pres'
     costdf = pd.read_csv(path, index_col = 0)
 
     val = 10000
@@ -654,6 +653,8 @@ def plot_cost_any(path, ax): #change back to (path, ax)
         experiment = "Just Wind"
     elif 'gridwind' in o:
         experiment = 'Full system with wind'
+    elif 'mindf' in o:
+        experiment = 'Full system with no gas'
     else:
         experiment = "Full system with solar"
 
@@ -662,13 +663,12 @@ def plot_cost_any(path, ax): #change back to (path, ax)
     costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]#If any of the values of the column are not 0, keep them. Gets rid of generators/links etc with no cost
 
     #only positive--so no "income"
-    if experiment != "Full system with solar":
-        costdf = costdf.loc[:,  (costdf > 0).any(axis=0)]#If any of the values of the column are not negative, keep them. Gets rid of the "income"
+    # if experiment != "Full system with solar":
+    #     costdf = costdf.loc[:,  (costdf > 0).any(axis=0)]#If any of the values of the column are not negative, keep them. Gets rid of the "income"
 
 
     #costdf = costdf.loc[costdf["Gas Load"] == val]
     if 'electrolyzer' in o:
-
         costdf = costdf.loc[costdf['electrolyzer capital cost'] == costdf['electrolyzer capital cost'].median()]
     elif 'year' in o:
         costdf = costdf.loc[costdf['year'] == 2019]
@@ -676,7 +676,7 @@ def plot_cost_any(path, ax): #change back to (path, ax)
         costdf = costdf.loc[costdf['methanogen capital cost'] == 120]
         costdf = costdf.sort_values(by = '')
     else:
-        costdf = costdf.loc[costdf['Gas Load'] == 10000]
+        costdf = costdf.loc[costdf['electrolyzer capital cost'] == costdf['electrolyzer capital cost'].median()]
         
     # print(costdf)
     mediancost = costdf['methanogen capital cost'].median()
@@ -785,7 +785,7 @@ def plot_grid_restriction():
 
 def four_cost_plot():
     
-    presentation = 'April13pres_Michael'
+    presentation = 'April21pres'
     fig, ax = plt.subplots(2,2,figsize=(10,9), sharex=True)
     axs = ax.flatten()
 
@@ -794,18 +794,27 @@ def four_cost_plot():
     justgrid = 'results/csvs/costs/05_04_2023_megen_justgrid_zero_double_sweep.csv'
     justsolar = 'results/csvs/costs/11_04_2023_megen_justsolar_dispatch_zero_double_sweep.csv'
     gridsolar = 'results/csvs/costs/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv'
+    mindf = 'results/csvs/costs/11_04_2023_mindf_default_costs.csv'
     plot_cost_any(justsolar, axs[0])
     plot_cost_any(justgrid, axs[1])
     plot_cost_any(gridsolar, axs[2])
-    find_net_income_pass(gridsolar, axs[3])
+    plot_cost_any(mindf, axs[3])
+
 
     for ax in axs:
         ax.tick_params(axis='both', which='major', labelsize=14)
         ax.tick_params(axis='x', rotation=45)
+        a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
+        # a = ax.get_xticks()
+        # a = [str(entry) + 'x' for entry in a]
+        ax.set_xticklabels(a)
 
-        ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=5))#for some reason this percent formatter takes the position of the 
+        #ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=5))#for some reason this percent formatter takes the position of the 
 
-
+    ymin, ymax = axs[0].get_ylim()
+    axs[1].set_ylim(bottom = ymin)
+    ymin, ymax = axs[2].get_ylim()
+    axs[3].set_ylim(ymin, ymax)
     
     fig.supylabel("Dollars per MWh gas", fontsize = 16)
     fig.supxlabel("Methanation cost relative to default", fontsize = 16)

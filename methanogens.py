@@ -20,6 +20,7 @@ import buildnetwork
 import modifynetwork
 importlib.reload(buildnetwork)
 importlib.reload(modifynetwork)
+
 from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_links, add_methanogen, add_sabatier
 from helpers import override_component_attrs, annual_cost, costs_to_csv
 from modifynetwork import change_gasload, to_netcdf, remove_grid, remove_solar, add_wind
@@ -57,12 +58,13 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "2018_gridsolar_dispatch_zero_double_sweep" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "Spain_mindf" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
         
         solar = True #whether using solar generator or not
         wind = False
         grid = True#whether using grid generator or not
+        
         
 
         
@@ -71,9 +73,11 @@ if __name__ == "__main__":
         # Only do one of these at a time
         # 5 April: Cost of grid connection added
         electrolyzer = False
-        year = True #Note, if you are doing a year run, both solar and grid must be True
+        year = False #Note, if you are doing a year run, both solar and grid must be True
         gridinverter = False
         GIcost = False #GI stands for grid inverter
+        Spain = True #Then we use a different time series
+        
         # solarcost = True # solarcost is not a real experiment because it is dispatch. If we really want to see the impact on the costs, then we just need to go into the costs csvs
 
 
@@ -100,6 +104,10 @@ if __name__ == "__main__":
         elif GIcost == True:
                 sweeps = "gi_cost"
                 sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
+        elif Spain == True:
+               sweeps = 'spain_electrolyzer'
+               sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
+               sweeper = [1]
         # elif solarcost == True:
         #         sweeps = 'solar_cost'
         #         sweeper = ['low', 'high']
@@ -110,8 +118,8 @@ if __name__ == "__main__":
         # It may be that it is basically never worth it. In fact, our first results show that it is actually better to just use
         # The solar generator to produce electricity rather than produce methane
 
-        #methanogen_costs = [1]
-        methanogen_costs = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
+        methanogen_costs = [1]
+        #methanogen_costs = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
 
 
 
@@ -175,12 +183,12 @@ if __name__ == "__main__":
         f = list(itertools.product(ns, sweeps, sweeper, methanogen_costs, endpath))
 
 
-        with Pool(processes=1) as pool:
+        with Pool(processes=4) as pool:
                 pool.starmap(to_netcdf, f) #This also solves the network
 
 
         #11 April 2023: Adding this from helpers.py to speed up, get csv right away
-        costs_to_csv(rel_path, grid, sweeps[0])
+        costs_to_csv(rel_path, grid, sweeps[0]) #The sweeps[0] corresponds to the 'twovar', or the secondary sweeping variable. If it is gi_cost, then it changes the way that the helper csv is used
 
 
         endtime = time.time()

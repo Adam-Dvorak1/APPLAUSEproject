@@ -22,8 +22,8 @@ if __name__ == "__main__":
     #fig, ax = plt.subplots()
     #gridsolar = 'results/csvs/costs/05_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv'
 
-    #four_cost_plot()
-    plot_elec_ts()
+    four_cost_plot()
+    # plot_elec_ts()
     #compare_cost_bars()
 
     # plot_battsize()

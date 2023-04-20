@@ -106,6 +106,68 @@ def add_generators_sol_yrs(network, year):
     return network
 
 
+def add_generators_sol_spain(network):
+
+    '''
+    21 February 2023
+    
+    We are adding functionality to do similar tests to 
+    The purpose of this function is to be able to do a sensitivity analysis based on the 
+    year of electricity/wind data at 'cal flats'. So, this is not present in the base case,
+    but it is present when modifying the network.
+    
+    It takes a string for year. 
+    
+    It is almost a copy of add_generators in buildnetwork.py'''
+    gridpresent = False #if the grid is not present already, then we don't want to add it back in
+    
+    network.remove("Generator", "Biogas")
+    network.remove("Generator", "Solar PV")
+
+    if 'Grid' in network.generators.index:
+        network.remove("Generator", 'Grid')
+
+        gridpresent = True
+
+
+    
+    hours_in_year = pd.date_range('2019-01-01T00:00:00', '2019-12-31T23:00:00', freq='H') #I changed the date rate from Z
+    network.set_snapshots(hours_in_year)
+
+    #We are editing this to see whether it has to do with the csv
+    df_cal_solar = pd.read_csv('data/Spain/RealSpainSolarCFs_2019.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
+    df_cal_solar.index = pd.to_datetime(df_cal_solar.index)
+    df_cal_biogas = df_cal_solar['biogas'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #This is just assuming a constant generator, which I added to the original data from renewables.ninja
+    df_cal_solar = df_cal_solar['solar'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series 
+
+    if gridpresent == True:
+        gridprice = pd.read_csv("data/Spain/2019UTCDayAheadPrice.csv", index_col = 0) #From http://www.energyonline.com/Data/GenericData.aspx?DataId=20, which is taken from CAISO. Units of /MWh
+        gridprice.index = pd.to_datetime(gridprice.index)
+        gridprice = gridprice['price'][[hour.strftime("%Y-%m-%d %H:%M:%S") for hour in network.snapshots]]
+        gridprice = gridprice/1000 #Before, I used to divide by 100. But I believe that I should have divided by 1000, because we want per kWh, and we had per MWh 
+
+        gridgen = pd.DataFrame(index = range (8760))
+
+        gridgen = gridgen.set_index(hours_in_year)
+        gridgen['grid'] = 1#in kW, so 100GW
+
+
+        network.add("Generator", "Grid", bus = 'grid', p_nom = 100000000,#100 GW. The capacity is for free. However, we still pay marginal cost
+            carrier = "grid", capital_cost = 0, marginal_cost = gridprice, p_max_pu = gridgen['grid'])#The datafile gives US cents/kWh. I wanted dollars (or euros) per kWh.     # This is using 2019 (UTC) data from CAISO, LCG consulting.Prices are in c/kWh
+
+    
+
+    network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
+        carrier = 'solar', capital_cost = 0, #Eur/kW/yr
+        marginal_cost = 0, p_nom = 130000, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
+
+    network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True, 
+        carrier = 'biogas', capital_cost = 0,
+        marginal_cost = 0, p_max_pu = df_cal_biogas) # In reality, there is a marginal cost for biogas. What is it? 
+
+
+    return network
+
 
 def add_generators_wind_yrs(network, year):
 
@@ -248,7 +310,9 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
     elif sweep == "gi_cost":
         network.links.loc['High to low voltage', 'capital_cost'] = annual_cost('electricity grid connection') * sweep_mult
 
-
+    elif sweep == 'spain_electrolyzer':
+        network = add_generators_sol_spain(network)
+        network.links.loc['H2 Electrolysis', 'capital_cost'] = annual_cost("electrolysis") * sweep_mult
 
         
 
