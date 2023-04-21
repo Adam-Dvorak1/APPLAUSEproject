@@ -17,7 +17,7 @@ import importlib
 import matplotlib.ticker as mtick
 import helpers
 importlib.reload(helpers)
-from helpers import annual_cost, add_costreq_column
+from helpers import annual_cost, add_costreq_column, extract_biogas_frac
 
 
 
@@ -430,115 +430,14 @@ def plot_costper_multiyr(path):
 
 
 
-def find_net_income(path):
-    '''This function will be able to tell you the amount of money made in the system. It takes the costs csv as income, 
-    and it requires the full system model.
-    
-    We need a base system to compare to, so we take a very low (1 kW demand) system, to determine the system behavior
-    if there was "no" gas demand. This is put into mindf.
-    
-    Note: whenever we add or subtract columns, we may need to adjust the columns here. If we want to plot csvs older than
-    6 February, we may need to adjust columns here.'''
-
-    costdf = pd.read_csv(path, index_col = 0)
-
-    mindf = pd.read_csv("results/csvs/costs/archive/25_01_2023_gasdem_megencost_sweep_w_hstore.csv", index_col=0)
-
-    gasload = 10000
-
-    o = path.split("_")
-    if 'year' in o:
-        experiment = "grid_year"
-    elif "electrolyzer" in o:
-        experiment = "electrolyzer_cost"
-    else:
-        experiment = "megen_cost"
-
-    presentation = 'February28pres_Michael'
-
-    # If any of the values of the column are not 0, keep them. 
-    # Gets rid of generators/links etc with no cost
-    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
-
-
-
-    # To find the net income, add up all of the total income and expenses. Costs are positive
-    # and income is negative. Then, multiply by -1 to get the positive balance if you made money 
-    # This skips over Gas Load, methanogen capital cost, and electrolyzer capital cost. If 'year'
-    # is in the columns, it also skips over that
-    if 'year' not in costdf.columns:
-        costdf['Net income'] = costdf[costdf.columns[3:]].sum(axis = 1) * -1
-    else:
-        costdf['Net income'] = costdf[costdf.columns[4:]].sum(axis = 1) * -1
-
-    mindf['Net income'] = mindf[mindf.columns[2:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well.
-
-    # How much can you expect to make with basically 0 gas load--ie, the solar system and the
-    # battery is financing itself for the grid
-    sys_income = mindf.loc[(mindf['Gas Load'] == 1) & (mindf['methanogen capital cost'] == mindf['methanogen capital cost'].min())]['Net income'].values[0]
-
-    # Making it orderly for my view
-    costdf = costdf.sort_values(['Gas Load', 'methanogen capital cost'])
-
-    # Now the 'cost diff' column is how much money is being lost--it is the cost of the case
-    # with the methanogen, minus the revenue of the case with no gas demand. This only makes
-    # sense for the case with high gas load
-    costdf['cost diff']= costdf['Net income'] - sys_income 
-   
-    #Finding cost diff per MW per hour
-    costdf['cost diff'] = costdf['cost diff']/8760*1000/gasload * -1 #10000 kW or 10 MW
-
-    costdf = costdf.loc[costdf['Gas Load'] == gasload]
-
-
-
-
-    if experiment == "megen_cost":
-        costdf.index = costdf["methanogen capital cost"].round(1)
-    elif experiment == "electrolyzer_cost":
-        costdf = costdf.loc[costdf['methanogen capital cost'] == 86.72922452359094]
-        costdf = costdf.sort_values(['Gas Load', 'electrolyzer capital cost'])
-        costdf.index = costdf['electrolyzer capital cost'].round(1)
-
-    ax = costdf['cost diff'].plot(kind = "bar")
-    ax.set_ylabel ("Required gas cost (Eur/MWh)")
-    ax.set_xlabel("Methanogen cost (Eur/kWh)")
-
-
-    ax.set_title("Minimum gas cost sweeping " + experiment)
-    
-
-
-
-    # box = ax.get_position()
-    # ax.set_position([box.x0, box.y0 + box.height * 0.1,
-    #             box.width, box.height * 0.9])
-
-    
-    handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[::-1], labels[::-1], loc='upper center', bbox_to_anchor=(0.5, -0.3), ncol = 2)
-
-
-
-    plt.subplots_adjust(bottom = 0.2)
-
-    plt.tight_layout()
-    
-    folderpath = "Presentations/"+ presentation + "/gas_cost_req_by_" + experiment
-
-    # plt.show()
-    savepath = folderpath 
-    plt.savefig(savepath + ".pdf")
-    # plt.savefig(savepath + ".png", dpi = 500)
-    plt.close()
-
-
-
-def find_net_income_pass(path, ax):
+def find_net_income_pass(path):
     '''This function is the same as find_net_income() except it passes an ax on to another function
     5 April 2023
     
-    Earlier, we have modified this equation to make it so that '''
+    Earlier, we have modified this equation to make it so that 
+    
+    20 April 2023
+    We are separating this plot from the four scenarios plot, so '''
 
     costdf = pd.read_csv(path, index_col = 0)
 
@@ -550,7 +449,7 @@ def find_net_income_pass(path, ax):
 
     experiment = "megen_cost"
 
-    presentation = 'February10pres'
+    presentation = 'April21pres'
 
     # If any of the values of the column are not 0, keep them. 
     # Gets rid of generators/links etc with no cost
@@ -601,6 +500,7 @@ def find_net_income_pass(path, ax):
     if 'electrolyzer' in o:
         costdf = costdf.loc[costdf['electrolyzer capital cost'] == costdf['electrolyzer capital cost'].median()]
     ############################################
+    fig, ax = plt.subplots()
     costdf['cost diff'].plot(kind = "bar", ax = ax)
 
 
@@ -610,7 +510,7 @@ def find_net_income_pass(path, ax):
 
 
 
-    ax.set_title("Income Req", fontsize = 20)
+    ax.set_title("Break-even gas price", fontsize = 20)
     
     ax.axhline(118, label = "Highest price", color = "C1")
     ax.axhline (25, label = "2022 median", color = "C2")
@@ -628,6 +528,16 @@ def find_net_income_pass(path, ax):
         ax.vlines(x  = x_coord, ymin = lowincome, ymax = highincome, color = 'k')
 
 
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    ax.tick_params(axis='x', rotation=45)
+    a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
+    ax.set_xticklabels(a)
+    ax.set_xlabel("Methanation cost relative to default", fontsize = 14)
+    ax.set_ylabel('Dollars per MWh gas', fontsize = 14)
+    fig.subplots_adjust(bottom=0.2)
+
+    fig.savefig('Presentations/' + presentation + '/breakeven_gas.pdf')
+    fig.savefig('Presentations/' + presentation + '/breakeven_gas.png', dpi = 500)
 
 
 
@@ -946,6 +856,38 @@ def compare_cost_bars():
     #Finding the default price
 
 
+def biogas_sensitivity():
+    '''20 April 2023
+    This function uses a csv that takes into account all of the different biomethane time series, sees 
+    what percent each of them is varying, and so forth
+    '''
+    df = pd.read_csv('results/csvs/specificdata/biogasfrac_11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv', index_col = 0)
+
+    #var = 'constant biogas'
+    #var = 'constant biogas +/-1%'
+    var = 'constant biogas +/-10%'
+
+    presentation = 'April21pres'
+    df['methanation cost'] = df['methanation cost'] / df['methanation cost'].median()
+    df['electrolyzer cost'] = df['electrolyzer cost']/ df['electrolyzer cost'].median()
+    df = df.round(2)
+
+
+    df = df.pivot(index = 'methanation cost', columns = 'electrolyzer cost', values= var)
+    df.sort_index(level = 0, ascending = False, inplace = True)
+
+    fig, ax = plt.subplots()
+    sns.heatmap(df, cmap = 'viridis', annot = True, ax = ax)
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    ax.tick_params(axis = 'y', rotation = 0)
+    ax.tick_params(axis='x', rotation=45)
+
+    fig.subplots_adjust(bottom = 0.15)
+
+    var = 'constant biogas err10'
+    plt.savefig('Presentations/' + presentation + '/frac' + var + '.pdf')
+
+
 ##################################################################
 ########################TIME SERIES #########################
 ##################################################################
@@ -963,6 +905,7 @@ def plot_elec_ts():
 
 def plot_grid_prices():
     df = pd.read_csv
+
 ##################################################################
 ######################## DURATION CURVES #########################
 ##################################################################

@@ -8,6 +8,7 @@ import pathlib
 from datetime import datetime
 import pypsa
 import numpy as np
+import itertools
 
 
 #  Lisa: We are going to need multi-links for modelling the CO2 management.
@@ -83,54 +84,56 @@ def extract_data():
     # path = folder + "/*"
 
 
-    # df = pd.DataFrame()
+    df = pd.DataFrame()
 
-    # megen_cost = annual_cost("methanation")
+    path = 'results/NetCDF/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep/*'
 
-    # for file in glob.glob(path):
-    file = 'results/NetCDF/11_04_2023_year_gridsolar_dispatch/year_2019_megen_cost_1.nc'
-    n = pypsa.Network()
-    n.import_from_netcdf(file)
-    tempdf = pd.DataFrame(index = n.snapshots)
+    for file in glob.glob(path):
+        # print('we are here')
+        n = pypsa.Network()
+        n.import_from_netcdf(file)
+        tempdf = pd.DataFrame(index = n.snapshots)
 
-    tempdf['year'] = 2019
-    tempdf['megen cost'] = n.links.loc['methanogens', 'capital_cost'] #This is an independent varaible. Hm, but this is not the same as the 
-    tempdf['electrolyzer cost'] = n.links.loc['H2 Electrolysis', 'capital_cost'] 
-    tempdf['megen size'] = n.links.loc['methanogens', 'p_nom_opt'] 
-    tempdf['electrolyzer size'] = n.links.loc["H2 Electrolysis", "p_nom_opt"]
-    
-    if "Solar PV" in n.generators.index:
-        tempdf['solar size'] = n.generators.p_nom_opt["Solar PV"]
-        tempdf['battery size'] = n.stores.e_nom_opt['battery']
-    if "Onshore wind" in n.generators.index:
-        tempdf['wind size'] = n.generators.p_nom_opt["Onshore wind"]
-        tempdf['battery size'] = n.stores.e_nom_opt['battery']
-    if "H2 store" in n.stores.index:
-        tempdf["H2 store size"] = n.stores.e_nom_opt['H2 store']
-        tempdf['H2 store ts'] = n.stores_t.e.loc[:, "H2 store"]
-
-
-    tempdf['objective'] = n.objective 
-
-    tempdf['electrolyzer ts'] = n.links_t.p0.loc[:, "H2 Electrolysis"]
-    tempdf['solar ts'] = n.generators_t.p.loc[:, 'Solar PV']
-    tempdf['grid to electricity link ts'] = n.links_t.p0.loc[:, "High to low voltage"]
-    tempdf['methanogen link ts'] = n.links_t.p0.loc[:, "methanogens"]
-    tempdf['gas store ts'] = n.stores_t.e.loc[:, "gas store"]
-    tempdf["battery store ts"] = n.stores_t.e.loc[:, "battery"]#Note--we have experiments where we remove the solar, but not the battery. In this case, the battery just has 0s
-    tempdf['H2 store ts'] = n.stores_t.e.loc[:, 'H2 store']
-    tempdf['biogas generator ts'] = n.generators_t.p.loc[:, 'Biogas'] #We actually don't care about the solar generator because we know it is completely maxed
+        # tempdf['year'] = 2019
+        tempdf['megen cost'] = n.links.loc['methanogens', 'capital_cost'] #This is an independent varaible. Hm, but this is not the same as the 
+        tempdf['electrolyzer cost'] = n.links.loc['H2 Electrolysis', 'capital_cost'] 
+        tempdf['megen size'] = n.links.loc['methanogens', 'p_nom_opt'] 
+        tempdf['electrolyzer size'] = n.links.loc["H2 Electrolysis", "p_nom_opt"]
+        
+        if "Solar PV" in n.generators.index:
+            tempdf['solar size'] = n.generators.p_nom_opt["Solar PV"]
+            tempdf['battery size'] = n.stores.e_nom_opt['battery']
+        if "Onshore wind" in n.generators.index:
+            tempdf['wind size'] = n.generators.p_nom_opt["Onshore wind"]
+            tempdf['battery size'] = n.stores.e_nom_opt['battery']
+        if "H2 store" in n.stores.index:
+            tempdf["H2 store size"] = n.stores.e_nom_opt['H2 store']
+            tempdf['H2 store ts'] = n.stores_t.e.loc[:, "H2 store"]
 
 
+        tempdf['objective'] = n.objective 
+
+        tempdf['electrolyzer ts'] = n.links_t.p0.loc[:, "H2 Electrolysis"]
+        tempdf['solar ts'] = n.generators_t.p.loc[:, 'Solar PV']
+        tempdf['grid to electricity link ts'] = n.links_t.p0.loc[:, "High to low voltage"]
+        tempdf['methanogen link ts'] = n.links_t.p0.loc[:, "methanogens"]
+        tempdf['gas store ts'] = n.stores_t.e.loc[:, "gas store"]
+        tempdf["battery store ts"] = n.stores_t.e.loc[:, "battery"]#Note--we have experiments where we remove the solar, but not the battery. In this case, the battery just has 0s
+        tempdf['H2 store ts'] = n.stores_t.e.loc[:, 'H2 store']
+        tempdf['biogas generator ts'] = n.generators_t.p.loc[:, 'Biogas'] #We actually don't care about the solar generator because we know it is completely maxed
+        
+        # print(tempdf)
+        df = pd.concat([df, tempdf])
+
+        # print(df)
 
 
-    # df = pd.concat([df, tempdf])
 
     # name = folder.split("/")
     # name = name [-1]
 
-    name = '11_04_2023_year_2019_gridsolar_dispatch_onerun'
-    tempdf.to_csv('results/csvs/alldata/' + name + ".csv")
+    name = '11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep'
+    df.to_csv('results/csvs/alldata/' + name + ".csv")
 
 def extract_summary(csvpath):
     '''This only deals with the time independent variables of each run'''
@@ -315,6 +318,58 @@ def add_costreq_column(df, gasload, sys_income):
     return df
 
 
+def extract_biogas_frac():
+    df = pd.read_csv('results/csvs/alldata/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv')
+    megen_costs = df['megen cost'].unique()
+    electrolyzer_costs = df['electrolyzer cost'].unique()
+    pairs =  list(itertools.product(megen_costs, electrolyzer_costs))
+
+    df = df[['megen cost', 'electrolyzer cost', 'biogas generator ts']]
+    newdf = pd.DataFrame()
+
+
+    for pair in pairs:
+        
+
+        tempdf = df[(df["megen cost"] == pair[0]) & (df['electrolyzer cost'] == pair[1])]
+        realdf = tempdf.copy()
+        tempdf = tempdf.loc[tempdf['biogas generator ts'] != 0] #This is because sometimes the mode is zero
+
+
+        modedf = tempdf[(tempdf['biogas generator ts'] > tempdf['biogas generator ts'].mode().values[0] * 0.9) & (tempdf['biogas generator ts'] < tempdf['biogas generator ts'].mode().values[0] * 1.1)]
+
+        frac_10_percent = len(modedf)/len(realdf)
+
+        modedf = tempdf[(tempdf['biogas generator ts'] > tempdf['biogas generator ts'].mode().values[0] * 0.99) & (tempdf['biogas generator ts'] < tempdf['biogas generator ts'].mode().values[0] * 1.01)]
+
+        frac_1_percent  = len(modedf)/len(realdf)
+        
+        modedf = tempdf[tempdf['biogas generator ts'] == tempdf['biogas generator ts'].mode().values[0]]
+
+        biogasfrac = len(modedf)/len(realdf)
+
+        themode = tempdf['biogas generator ts'].mode().values[0]
+
+
+
+
+        s = pd.Series(np.array([pair[0], pair[1], frac_10_percent, frac_1_percent, biogasfrac, themode]))
+
+        newdf = pd.concat([newdf, s], axis = 1)
+
+
+    
+
+
+    newdf = newdf.T
+
+
+    newdf = newdf.rename(columns = {0: 'methanation cost', 1: 'electrolyzer cost', 2: 'constant biogas +/-10%', 3:'constant biogas +/-1%', 4: 'constant biogas', 5: 'mode'})
+    newdf.to_csv('results/csvs/specificdata/biogasfrac_11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv')
+
+
+        
+
 
             
 
@@ -361,7 +416,7 @@ if __name__ == "__main__":
     # path = "results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_justsolar"
     # costs_to_csv(path, False)
 
-    extract_data()
+    extract_biogas_frac()
 
     presdate = "February10pres"
     # make_pres_folders(presdate)
