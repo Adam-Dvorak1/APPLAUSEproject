@@ -58,12 +58,12 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "Spain_mindf" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "Spain_justsolar_megen_sweep" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
         
         solar = True #whether using solar generator or not
         wind = False
-        grid = True#whether using grid generator or not
+        grid = False#whether using grid generator or not
         
         
 
@@ -118,8 +118,8 @@ if __name__ == "__main__":
         # It may be that it is basically never worth it. In fact, our first results show that it is actually better to just use
         # The solar generator to produce electricity rather than produce methane
 
-        methanogen_costs = [1]
-        #methanogen_costs = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
+        # methanogen_costs = [1]
+        methanogen_costs = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
 
 
 

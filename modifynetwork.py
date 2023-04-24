@@ -283,6 +283,33 @@ def add_loads_yrs(network, year):
     return network
 
 
+'''These two functions are for an experiment on 21 November, to see what happens to the grid
+and the solar if the other is removed. That being said, the solar will need to be expanded'''
+
+
+
+def remove_grid(network):
+
+    network.remove("Load", "Grid Load")
+    network.remove("Generator", "Grid")
+
+    #We also need to change the p_nom_max, as now solar needs to supply everything for the methane
+    # if 'Solar PV' in network.generators.index:
+    #     network.generators.loc["Solar PV", "p_nom_max"] = np.inf
+    # elif 'Onshore wind' in network.generators.index:
+    #     network.generators.loc['Onshore wind', 'p_nom_max'] = np.inf
+
+    return network
+
+
+def remove_solar(network):
+
+
+    network.remove("Generator", "Solar PV")
+
+
+    return network
+
 def change_loads_costs(network, sweep, sweep_mult, megen_mult):
     '''This function used to change the gasload, in addition to the methanogen cost. 
     Now, it still changes the methanogen cost, but it also can sweep the electrolyzer cost'''
@@ -314,34 +341,12 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
         network = add_generators_sol_spain(network)
         network.links.loc['H2 Electrolysis', 'capital_cost'] = annual_cost("electrolysis") * sweep_mult
 
+
         
 
     return network
 
 
-'''These two functions are for an experiment on 21 November, to see what happens to the grid
-and the solar if the other is removed. That being said, the solar will need to be expanded'''
-
-def remove_solar(network):
-
-
-    network.remove("Generator", "Solar PV")
-
-
-    return network
-
-def remove_grid(network):
-
-    network.remove("Load", "Grid Load")
-    network.remove("Generator", "Grid")
-
-    #We also need to change the p_nom_max, as now solar needs to supply everything for the methane
-    # if 'Solar PV' in network.generators.index:
-    #     network.generators.loc["Solar PV", "p_nom_max"] = np.inf
-    # elif 'Onshore wind' in network.generators.index:
-    #     network.generators.loc['Onshore wind', 'p_nom_max'] = np.inf
-
-    return network
 
 
 

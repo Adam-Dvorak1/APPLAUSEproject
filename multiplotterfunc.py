@@ -464,6 +464,7 @@ def find_net_income_pass(path):
 
     costdf['Net income'] = costdf[costdf.columns[5:]].sum(axis = 1) * -1 #From "Battery charger" and on
 
+    print(mindf.columns[4:])
     mindf['Net income'] = mindf[mindf.columns[5:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well. 
     # 11 April: Now we have changed the mindf because of the added grid cost
 
@@ -536,10 +537,122 @@ def find_net_income_pass(path):
     ax.set_ylabel('Dollars per MWh gas', fontsize = 14)
     fig.subplots_adjust(bottom=0.2)
 
-    fig.savefig('Presentations/' + presentation + '/breakeven_gas.pdf')
-    fig.savefig('Presentations/' + presentation + '/breakeven_gas.png', dpi = 500)
+    # fig.savefig('Presentations/' + presentation + '/breakeven_gas.pdf')
+    # fig.savefig('Presentations/' + presentation + '/breakeven_gas.png', dpi = 500)
 
 
+def find_net_income_pass_Spain(path):
+    '''This function is the same as find_net_income() except it passes an ax on to another function
+    5 April 2023
+    
+    Earlier, we have modified this equation to make it so that 
+    
+    20 April 2023
+    We are separating this plot from the four scenarios plot, so 
+    21 April, 2023
+    This is being modified for the spain dfs'''
+
+    costdf = pd.read_csv(path, index_col = 0)
+
+    mindf = pd.read_csv("results/csvs/costs/19_04_2023_Spain_mindf.csv", index_col=0)
+
+    gasload = 10000
+
+    o = path.split("_")
+
+    experiment = "megen_cost"
+
+    presentation = 'April21pres'
+
+    # If any of the values of the column are not 0, keep them. 
+    # Gets rid of generators/links etc with no cost
+    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
+
+
+
+    # To find the net income, add up all of the total income and expenses. Costs are positive
+    # and income is negative. Then, multiply by -1 to get the positive balance if you made money 
+    # This skips over Gas Load, methanogen capital cost, and electrolyzer capital cost. If 'year'
+    # is in the columns, it also skips over that
+
+    costdf['Net income'] = costdf[costdf.columns[5:]].sum(axis = 1) * -1 #From "Battery charger" and on
+
+    mindf['Net income'] = mindf[mindf.columns[4:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well. 
+    # 11 April: Now we have changed the mindf because of the added grid cost
+
+    # How much can you expect to make with 0 gas load--ie, the solar system and the
+    # battery is financing itself for the grid
+    sys_income = mindf['Net income'].values[0]
+
+    # Making it orderly for my view
+
+
+
+
+    costdf = costdf.sort_values(['Gas Load', 'methanogen capital cost'])
+
+    # Now the 'cost diff' column is how much money is being lost--it is the cost of the case
+    # with the methanogen, minus the revenue of the case with no gas demand. This only makes
+    # sense for the case with high gas load
+    costdf['cost diff']= costdf['Net income'] - sys_income 
+   
+    #Finding cost diff per MW per hour
+    costdf['cost diff'] = costdf['cost diff']/8760*1000/gasload * -1 #10000 kW or 10 MW
+
+
+
+
+    mediancost = costdf['methanogen capital cost'].median()
+
+    if experiment == "megen_cost":
+        costdf['methanogen capital cost'] = costdf['methanogen capital cost']/mediancost
+        costdf.index = costdf["methanogen capital cost"].round(1)
+        costdf.index
+
+    alldf = costdf.copy()
+    if 'electrolyzer' in o:
+        costdf = costdf.loc[costdf['electrolyzer capital cost'] == costdf['electrolyzer capital cost'].median()]
+    ############################################
+    fig, ax = plt.subplots()
+    costdf['cost diff'].plot(kind = "bar", ax = ax)
+
+
+    # ax.set_ylabel ("Required gas cost (Eur/MWh)")
+    ax.set_xlabel("")
+    
+
+
+
+    ax.set_title("Break-even gas price--Spain", fontsize = 20)
+    
+    #ax.axhline(362, label = "Highest price", color = "C1")
+    ax.axhline (60, label = "2022 July 1", color = "C2")
+    ax.axhline (10, label = "2021 July 1", color = "C3")
+
+    ticks = [tick for tick in ax.get_xticklabels()]
+
+    x_label_dict = dict([(x.get_text(), x.get_position()[0] ) for x in ticks])
+
+    for val in alldf['methanogen capital cost'].unique():
+        highincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == alldf['electrolyzer capital cost'].max())]["cost diff"].values[0]
+        lowincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == alldf['electrolyzer capital cost'].min())]["cost diff"].values[0]
+        val = round(val, 1)
+        x_coord = x_label_dict[str(val)]
+        ax.vlines(x  = x_coord, ymin = lowincome, ymax = highincome, color = 'k')
+
+
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    ax.tick_params(axis='x', rotation=45)
+    a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
+    ax.set_xticklabels(a)
+    ax.set_xlabel("Methanation cost relative to default", fontsize = 14)
+    ax.set_ylabel('Dollars per MWh gas', fontsize = 14)
+    fig.subplots_adjust(bottom=0.2)
+    fig.legend()
+
+    fig.savefig('Presentations/' + presentation + '/breakeven_gas_Spain.pdf')
+    fig.savefig('Presentations/' + presentation + '/breakeven_gas_Spain.png', dpi = 500)
+    # plt.show()
 
 
 
@@ -597,8 +710,15 @@ def plot_cost_any(path, ax): #change back to (path, ax)
     costdf.index = costdf["methanogen capital cost"].round(1)
     costdf = costdf/val/8760*1000 #price per MWh
 
-    colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[5:]]
-    costdf[costdf.columns[5:]].plot( kind = "bar", stacked = True, color = colors, ax = ax)
+    
+
+    if 'mindf' in o:# 21 April not entirely sure why costdf for min has one less column but cest la vie
+        colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[4:]]
+        costdf[costdf.columns[4:]].plot( kind = "bar", stacked = True, color = colors, ax = ax)
+    else:
+        colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[5:]]
+        costdf[costdf.columns[5:]].plot( kind = "bar", stacked = True, color = colors, ax = ax)
+
 
     #comment out these two lines
     # ax.set_ylabel("LCOE (Dollars/MWh_energy)")
@@ -739,6 +859,58 @@ def four_cost_plot():
         
     fig.savefig('Presentations/' + presentation + '/megencosts_income.pdf')
     fig.savefig('Presentations/' + presentation + '/megencosts_income.png', dpi = 500)
+    # plt.show()
+
+
+def four_cost_plot_Spain():
+    
+    presentation = 'April21pres'
+    fig, ax = plt.subplots(2,2,figsize=(10,9), sharex=True)
+    axs = ax.flatten()
+
+    
+
+    justgrid = 'results/csvs/costs/21_04_2023_Spain_justgrid_megen_sweep.csv'
+    justsolar = 'results/csvs/costs/21_04_2023_Spain_justsolar_megen_sweep.csv'
+    gridsolar = 'results/csvs/costs/19_04_2023_Spain_electrolyzer_gridsolar_dispatch_zero_double_sweep.csv'
+    mindf = 'results/csvs/costs/19_04_2023_Spain_mindf.csv'
+    plot_cost_any(justsolar, axs[0])
+    plot_cost_any(justgrid, axs[1])
+    plot_cost_any(gridsolar, axs[2])
+    plot_cost_any(mindf, axs[3])
+
+
+    for ax in axs:
+        ax.tick_params(axis='both', which='major', labelsize=14)
+        ax.tick_params(axis='x', rotation=45)
+        a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
+        # a = ax.get_xticks()
+        # a = [str(entry) + 'x' for entry in a]
+        ax.set_xticklabels(a)
+
+        #ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=5))#for some reason this percent formatter takes the position of the 
+
+    ymin, ymax = axs[0].get_ylim()
+    axs[1].set_ylim(bottom = ymin)
+    ymin, ymax = axs[2].get_ylim()
+    axs[3].set_ylim(top = ymax)
+    ymin, ymax = axs[3].get_ylim()
+    axs[2].set_ylim(bottom = ymin)
+
+    
+    fig.supylabel("Dollars per MWh gas", fontsize = 16)
+    fig.supxlabel("Methanation cost relative to default", fontsize = 16)
+    
+
+    handles, labels = axs[2].get_legend_handles_labels()
+    fig.legend(handles, labels, ncol = 3, loc = 'upper center', fontsize = 12)
+    fig.subplots_adjust(top = 0.84, bottom = 0.15)
+
+
+
+        
+    fig.savefig('Presentations/' + presentation + '/Spainmegencosts_income.pdf')
+    fig.savefig('Presentations/' + presentation + '/Spainmegencosts_income.png', dpi = 500)
     # plt.show()
 
 
@@ -894,14 +1066,13 @@ def biogas_sensitivity():
 
 def plot_elec_ts():
     df = pd.read_csv('results/csvs/alldata/11_04_2023_year_2019_gridsolar_dispatch_onerun.csv')
-
-    df[4024:4192].plot(x = 'snapshot', y = ['solar ts', 'grid to electricity link ts', 'battery store ts'])
+    fig, ax = plt.subplots()
+    df[24:192].plot(x = 'snapshot', y = ['solar ts', 'grid to electricity link ts', 'battery store ts'], ax = ax)
+    fig.legend()
     # fig, ax = plt.subplots()
     # ax.plot(df['grid to electricity link ts'][4020:4044])
     # ax.plot(df[''])
-    plt.show()
-    plt.close()
-
+    plt.savefig("Presentations/April21pres/electimeseriesJan.pdf")
 
 def plot_grid_prices():
     df = pd.read_csv
