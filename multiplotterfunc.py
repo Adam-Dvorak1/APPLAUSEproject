@@ -953,7 +953,7 @@ def compare_cost_bars():
 
 
     elecdf = add_costreq_column(elecdf, gasload, sys_income)
-    print(elecdf['High to low voltage'])
+    
     yeardf = add_costreq_column(yeardf, gasload, sys_income)
     #print(elecdf.loc[elecdf['methanogen capital cost'] == 120])
     gi_costdf = add_costreq_column(gi_costdf, gasload, sys_income)
@@ -961,6 +961,7 @@ def compare_cost_bars():
 
     basecostreq = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].median()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].median())]['cost diff'].values[0]
 
+    print(basecostreq)
     methanation_high = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].max()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].median())]['cost diff'].values[0]
     methanation_high = methanation_high/basecostreq - 1
     methanation_low = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].min()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].median())]['cost diff'].values[0]
@@ -975,6 +976,8 @@ def compare_cost_bars():
     meth_elec_high = meth_elec_high/basecostreq - 1
     meth_elec_low = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].min()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].min())]['cost diff'].values[0]
     meth_elec_low = meth_elec_low/basecostreq - 1
+
+    
 
 
     val17 = yeardf.loc[yeardf['year'] == 2017]['cost diff'].values[0]
@@ -992,10 +995,11 @@ def compare_cost_bars():
     year_low = yeardf['cost diff'].min()
     year_low = year_low/basecostreq-1
 
+
     gi_high = gi_costdf.loc[gi_costdf['inverter capital cost']== gi_costdf['inverter capital cost'].max()]['cost diff'].values[0]
     gi_high = gi_high/basecostreq-1
     gi_low = gi_costdf.loc[gi_costdf['inverter capital cost']== gi_costdf['inverter capital cost'].min()]['cost diff'].values[0]
-    gi_low = gi_high/basecostreq-1
+    gi_low = gi_low/basecostreq-1
     # meth_elec_high = meth_elec_high/basecostreq - 1
 
 
@@ -1020,26 +1024,74 @@ def compare_cost_bars():
     ax.spines[['right', 'top', 'left']].set_visible(False)
     ax.set_xlabel ("Percent change in methanation cost requirement")
     plt.tight_layout()
-    #plt.savefig('Presentations/April13pres_Michael/compareChangeBarsw2018.pdf')
-    plt.show()
-    plt.close('all')
+    plt.savefig('paper/Figures/RealFigures/compareChangeBars.pdf')
+    # plt.show()
+    # plt.close('all')
 
 
     #Finding the default price
 
+##################################################################
+########################### HEAT MAPS ############################
+##################################################################
 
-def biogas_sensitivity():
+
+def capacity():
+    '''
+    26 April 2023
+    
+    This function is similar to cf_sensitivity, except that it makes a heatmap based on the size of
+    the battery or H2 store
+    
+    colormaps: magma, viridis'''
+    df = pd.read_csv('results/csvs/sumdata/summary_11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv', index_col=0)
+
+    df['methanation cost'] = df['megen cost']
+    df['methanation cost'] = df['methanation cost'] / df['methanation cost'].median()
+    df['electrolyzer cost'] = df['electrolyzer cost']/ df['electrolyzer cost'].median()
+
+    df = df.round(2)
+
+    presentation = 'Maypres'
+
+    var = 'battery size'
+    df = df.pivot(index = 'methanation cost', columns = 'electrolyzer cost', values= var)
+    print(df)
+    df.sort_index(level = 0, ascending = False, inplace = True)
+
+    fig, ax= plt.subplots()
+    sns.heatmap(df, cmap = 'magma', ax = ax)
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    ax.tick_params(axis = 'y', rotation = 0)
+    ax.tick_params(axis='x', rotation=45)
+
+    fig.subplots_adjust(bottom = 0.15)
+    ax.set_title(var + ' (kWh)')
+
+    plt.show()
+    plt.close('all')
+    # plt.savefig('Presentations/' + presentation + '/'+ var + '.pdf')
+
+
+
+def cf_sensitivity():
     '''20 April 2023
     This function uses a csv that takes into account all of the different biomethane time series, sees 
     what percent each of them is varying, and so forth
     '''
-    df = pd.read_csv('results/csvs/specificdata/biogasfrac_11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv', index_col = 0)
+    df = pd.read_csv('results/csvs/cfdata/allcfs_11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv', index_col = 0)
 
     #var = 'constant biogas'
     #var = 'constant biogas +/-1%'
     var = 'constant biogas +/-10%'
+    var = 'biogas capacity factor'
+    # var = 'grid capacity factor'
+    # var = 'local to grid capacity factor'
+    # var = 'grid to local capacity factor'
+    # var = 'electrolyzer capacity factor'
+    # var = 'methanation capacity factor'
 
-    presentation = 'April21pres'
+    presentation = 'Maypres'
     df['methanation cost'] = df['methanation cost'] / df['methanation cost'].median()
     df['electrolyzer cost'] = df['electrolyzer cost']/ df['electrolyzer cost'].median()
     df = df.round(2)
@@ -1055,9 +1107,11 @@ def biogas_sensitivity():
     ax.tick_params(axis='x', rotation=45)
 
     fig.subplots_adjust(bottom = 0.15)
+    ax.set_title(var)
 
-    var = 'constant biogas err10'
-    plt.savefig('Presentations/' + presentation + '/frac' + var + '.pdf')
+    # plt.show()
+    #var = 'constant biogas err10'
+    plt.savefig('Presentations/' + presentation + '/'+ var + '.pdf')
 
 
 ##################################################################

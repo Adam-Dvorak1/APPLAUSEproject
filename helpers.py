@@ -137,11 +137,12 @@ def extract_data():
 
 def extract_summary(csvpath):
     '''This only deals with the time independent variables of each run'''
-    df = pd.read_csv(csvpath)
+    df = pd.read_csv(csvpath, index_col=0)
     df2 = df[[column for column in df.columns if "ts" not in column]]
     df2 = df2[[column for column in df2.columns if "snapshot" not in column]]
-    df3 = df2.drop_duplicates(["load", "megen cost"])#This yields every unique combination of load and megen cost
+    df3 = df2.drop_duplicates(["electrolyzer cost", "megen cost"])#This yields every unique combination of load and megen cost
     
+    # df3 = df3.reset_index()
     name = csvpath.split("/")
     name = name[-1]
 
@@ -318,13 +319,27 @@ def add_costreq_column(df, gasload, sys_income):
     return df
 
 
-def extract_biogas_frac():
+def extract_capacity_factor():
+    '''
+    25 April 2023
+    
+    In this function, we try to extract the following capacity factors:
+    - Biogas
+    - Grid connection
+    - Electrolyzer
+    - Methanation 
+    
+    We may also decide to separate out the two capacity factors of positive grid and negative grid
+    
+    Note: as it stands, it is only accurate for non leap years (need to change to len instead of multiplying by 8760)'''
+
+
     df = pd.read_csv('results/csvs/alldata/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv')
     megen_costs = df['megen cost'].unique()
     electrolyzer_costs = df['electrolyzer cost'].unique()
     pairs =  list(itertools.product(megen_costs, electrolyzer_costs))
 
-    df = df[['megen cost', 'electrolyzer cost', 'biogas generator ts']]
+    df = df[['megen cost', 'electrolyzer cost', 'biogas generator ts', 'grid to electricity link ts', 'methanogen link ts', 'electrolyzer ts']]
     newdf = pd.DataFrame()
 
 
@@ -333,27 +348,52 @@ def extract_biogas_frac():
 
         tempdf = df[(df["megen cost"] == pair[0]) & (df['electrolyzer cost'] == pair[1])]
         realdf = tempdf.copy()
-        tempdf = tempdf.loc[tempdf['biogas generator ts'] != 0] #This is because sometimes the mode is zero
+        tempdf = tempdf.loc[tempdf['biogas generator ts'] != 0] #This is because sometimes the mode is zero for biogas
 
 
+        #Biogas % of time running within 10% of peak
         modedf = tempdf[(tempdf['biogas generator ts'] > tempdf['biogas generator ts'].mode().values[0] * 0.9) & (tempdf['biogas generator ts'] < tempdf['biogas generator ts'].mode().values[0] * 1.1)]
-
         frac_10_percent = len(modedf)/len(realdf)
 
-        modedf = tempdf[(tempdf['biogas generator ts'] > tempdf['biogas generator ts'].mode().values[0] * 0.99) & (tempdf['biogas generator ts'] < tempdf['biogas generator ts'].mode().values[0] * 1.01)]
-
-        frac_1_percent  = len(modedf)/len(realdf)
+        #Biogas % of time running within 1% of peak. We found that this is almost the same as the +/- 10%
+        # modedf = tempdf[(tempdf['biogas generator ts'] > tempdf['biogas generator ts'].mode().values[0] * 0.99) & (tempdf['biogas generator ts'] < tempdf['biogas generator ts'].mode().values[0] * 1.01)]
+        # frac_1_percent  = len(modedf)/len(realdf)
         
+        #Biogas % of time running at peak
         modedf = tempdf[tempdf['biogas generator ts'] == tempdf['biogas generator ts'].mode().values[0]]
-
         biogasfrac = len(modedf)/len(realdf)
 
-        themode = tempdf['biogas generator ts'].mode().values[0]
+
+        #Biogas generator capacity factor
+        biocf = realdf['biogas generator ts'].sum() / (realdf['biogas generator ts'].max() * 8760)
+
+    
+        #Grid generator capacity factor
+        gridcf = realdf['grid to electricity link ts'].abs().sum()/(realdf['grid to electricity link ts'].abs().max() * 8760)
+
+
+        #Grid generator only low to high voltage(solar to grid)
+        loc_to_gridcf = abs(realdf[realdf['grid to electricity link ts'] < 0]['grid to electricity link ts'].sum()/(realdf['grid to electricity link ts'].abs().max() * 8760))
+        
+        #Grid generator only high to low voltage (grid to local)
+        grid_to_loccf = realdf[realdf['grid to electricity link ts'] > 0]['grid to electricity link ts'].sum()/(realdf['grid to electricity link ts'].abs().max() * 8760)
+        
+
+        #electrolyzer capacity factor
+        electrolyzercf = realdf['electrolyzer ts'].sum()/(realdf['electrolyzer ts'].max() * 8760)
+
+        #methanation capacity factor
+        methanationcf = realdf['methanogen link ts'].sum()/(realdf['methanogen link ts'].max() * 8760)
+
+        
 
 
 
 
-        s = pd.Series(np.array([pair[0], pair[1], frac_10_percent, frac_1_percent, biogasfrac, themode]))
+
+
+
+        s = pd.Series(np.array([pair[0], pair[1], frac_10_percent, biogasfrac, biocf, gridcf, loc_to_gridcf, grid_to_loccf, electrolyzercf, methanationcf]))
 
         newdf = pd.concat([newdf, s], axis = 1)
 
@@ -364,8 +404,8 @@ def extract_biogas_frac():
     newdf = newdf.T
 
 
-    newdf = newdf.rename(columns = {0: 'methanation cost', 1: 'electrolyzer cost', 2: 'constant biogas +/-10%', 3:'constant biogas +/-1%', 4: 'constant biogas', 5: 'mode'})
-    newdf.to_csv('results/csvs/specificdata/biogasfrac_11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv')
+    newdf = newdf.rename(columns = {0: 'methanation cost', 1: 'electrolyzer cost', 2: 'constant biogas +/-10%', 3: 'constant biogas', 4: 'biogas capacity factor', 5: 'grid capacity factor', 6: 'local to grid capacity factor', 7: 'grid to local capacity factor', 8: 'electrolyzer capacity factor', 9: 'methanation capacity factor'})
+    newdf.to_csv('results/csvs/cfdata/allcfs_11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv')
 
 
         
@@ -416,9 +456,11 @@ if __name__ == "__main__":
     # path = "results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_justsolar"
     # costs_to_csv(path, False)
 
-    extract_biogas_frac()
+    # extract_capacity_factor()
 
     presdate = "February10pres"
+
+    extract_summary('results/csvs/alldata/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv')
     # make_pres_folders(presdate)
 
 
