@@ -1036,31 +1036,32 @@ def compare_cost_bars():
 ##################################################################
 
 
-def capacity():
+def capacity(sumcsvpath, twovar):
     '''
     26 April 2023
     
     This function is similar to cf_sensitivity, except that it makes a heatmap based on the size of
-    the battery or H2 store
+    the 'battery size' or 'H2 store size. It takes a summary csv. Twovar can either be 'electrolyzer cost' or 'grid connection cost'
     
     colormaps: magma, viridis'''
-    df = pd.read_csv('results/csvs/sumdata/summary_11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv', index_col=0)
+    df = pd.read_csv(sumcsvpath, index_col=0)
 
     df['methanation cost'] = df['megen cost']
     df['methanation cost'] = df['methanation cost'] / df['methanation cost'].median()
-    df['electrolyzer cost'] = df['electrolyzer cost']/ df['electrolyzer cost'].median()
+    df[twovar] = df[twovar]/ df[twovar].median()
 
     df = df.round(2)
 
     presentation = 'Maypres'
 
-    var = 'battery size'
-    df = df.pivot(index = 'methanation cost', columns = 'electrolyzer cost', values= var)
+    var = "battery size"
+    # var = 'H2 store size'
+    df = df.pivot(index = 'methanation cost', columns = twovar, values= var)
     print(df)
     df.sort_index(level = 0, ascending = False, inplace = True)
 
     fig, ax= plt.subplots()
-    sns.heatmap(df, cmap = 'magma', ax = ax)
+    sns.heatmap(df, cmap = 'viridis', ax = ax)
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax.tick_params(axis = 'y', rotation = 0)
     ax.tick_params(axis='x', rotation=45)
@@ -1068,9 +1069,9 @@ def capacity():
     fig.subplots_adjust(bottom = 0.15)
     ax.set_title(var + ' (kWh)')
 
-    plt.show()
-    plt.close('all')
-    # plt.savefig('Presentations/' + presentation + '/'+ var + '.pdf')
+    # plt.show()
+    # plt.close('all')
+    plt.savefig('Presentations/' + presentation + '/_'+ twovar + "_" + var + '.pdf')
 
 
 
@@ -1078,26 +1079,30 @@ def cf_sensitivity():
     '''20 April 2023
     This function uses a csv that takes into account all of the different biomethane time series, sees 
     what percent each of them is varying, and so forth
+    
+    Twovar can be 'electrolyzer cost' or 'grid connection cost
     '''
-    df = pd.read_csv('results/csvs/cfdata/allcfs_11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv', index_col = 0)
+    df = pd.read_csv('results/csvs/cfdata/allcfs_12_04_2023_GIcost_gridsolar_dispatch_zero_double_sweep.csv', index_col = 0)
 
     #var = 'constant biogas'
     #var = 'constant biogas +/-1%'
-    var = 'constant biogas +/-10%'
-    var = 'biogas capacity factor'
-    # var = 'grid capacity factor'
+    # var = 'constant biogas +/-10%'
+    # var = 'biogas capacity factor'
+    var = 'grid capacity factor'
     # var = 'local to grid capacity factor'
     # var = 'grid to local capacity factor'
     # var = 'electrolyzer capacity factor'
     # var = 'methanation capacity factor'
 
+
+    twovar = 'grid connection cost'
     presentation = 'Maypres'
     df['methanation cost'] = df['methanation cost'] / df['methanation cost'].median()
-    df['electrolyzer cost'] = df['electrolyzer cost']/ df['electrolyzer cost'].median()
+    df[twovar] = df[twovar]/ df[twovar].median()
     df = df.round(2)
 
 
-    df = df.pivot(index = 'methanation cost', columns = 'electrolyzer cost', values= var)
+    df = df.pivot(index = 'methanation cost', columns = twovar, values= var)
     df.sort_index(level = 0, ascending = False, inplace = True)
 
     fig, ax = plt.subplots()
@@ -1110,8 +1115,9 @@ def cf_sensitivity():
     ax.set_title(var)
 
     # plt.show()
+    # plt.close('all')
     #var = 'constant biogas err10'
-    plt.savefig('Presentations/' + presentation + '/'+ var + '.pdf')
+    plt.savefig('Presentations/' + presentation + '/_'+ twovar + "_" + var + '.pdf')
 
 
 ##################################################################

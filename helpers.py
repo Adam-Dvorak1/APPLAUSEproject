@@ -9,6 +9,7 @@ from datetime import datetime
 import pypsa
 import numpy as np
 import itertools
+from playsound import playsound
 
 
 #  Lisa: We are going to need multi-links for modelling the CO2 management.
@@ -77,16 +78,15 @@ def annual_cost(tech):
 
 
 
-def extract_data():
+def extract_data(folder):
     '''This is a function that makes a pd Data Frame, and adds a row with relevant data for each
     Time series are ts. Single variables are repeated. This makes it easy to stack
     The resulting df will be 8760 hours * number of files long'''
-    # path = folder + "/*"
+    path = folder + "/*"
 
-
+    print ('We are taking in netcdfs from the run ' + folder)
     df = pd.DataFrame()
 
-    path = 'results/NetCDF/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep/*'
 
     for file in glob.glob(path):
         # print('we are here')
@@ -99,6 +99,7 @@ def extract_data():
         tempdf['electrolyzer cost'] = n.links.loc['H2 Electrolysis', 'capital_cost'] 
         tempdf['megen size'] = n.links.loc['methanogens', 'p_nom_opt'] 
         tempdf['electrolyzer size'] = n.links.loc["H2 Electrolysis", "p_nom_opt"]
+        tempdf['grid connection cost'] = n.links.loc['High to low voltage', 'capital_cost']
         
         if "Solar PV" in n.generators.index:
             tempdf['solar size'] = n.generators.p_nom_opt["Solar PV"]
@@ -129,18 +130,30 @@ def extract_data():
 
 
 
-    # name = folder.split("/")
-    # name = name [-1]
+    name = folder.split("/")
+    name = name [-1]
 
-    name = '11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep'
-    df.to_csv('results/csvs/alldata/' + name + ".csv")
+    # name = '11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep'
 
-def extract_summary(csvpath):
-    '''This only deals with the time independent variables of each run'''
+    csvpath = 'results/csvs/alldata/' + name + ".csv"
+
+    print('There is now a new allcsv, which is stored in the name ' + '`' + csvpath + '`')
+    df.to_csv(csvpath)
+
+    return csvpath
+
+
+
+def extract_summary(csvpath, twovar):
+    '''This only deals with the time independent variables of each run
+    twovar can be either 'electrolyzer cost' or 'grid connection cost'
+    '''
+
+    
     df = pd.read_csv(csvpath, index_col=0)
     df2 = df[[column for column in df.columns if "ts" not in column]]
     df2 = df2[[column for column in df2.columns if "snapshot" not in column]]
-    df3 = df2.drop_duplicates(["electrolyzer cost", "megen cost"])#This yields every unique combination of load and megen cost
+    df3 = df2.drop_duplicates([twovar, "megen cost"])#This yields every unique combination of load and megen cost
     
     # df3 = df3.reset_index()
     name = csvpath.split("/")
@@ -319,7 +332,7 @@ def add_costreq_column(df, gasload, sys_income):
     return df
 
 
-def extract_capacity_factor():
+def extract_capacity_factor(csvpath, twovar):
     '''
     25 April 2023
     
@@ -331,22 +344,27 @@ def extract_capacity_factor():
     
     We may also decide to separate out the two capacity factors of positive grid and negative grid
     
-    Note: as it stands, it is only accurate for non leap years (need to change to len instead of multiplying by 8760)'''
+    Note: as it stands, it is only accurate for non leap years (need to change to len instead of multiplying by 8760)
+    
+    This takes in an allcsv made from extract_data()
+    
+    twovar can be 'electrolyzer cost', 'grid connection cost' '''
 
+    twovar = 'grid connection cost'
 
-    df = pd.read_csv('results/csvs/alldata/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv')
+    df = pd.read_csv(csvpath)
     megen_costs = df['megen cost'].unique()
-    electrolyzer_costs = df['electrolyzer cost'].unique()
+    electrolyzer_costs = df[twovar].unique()
     pairs =  list(itertools.product(megen_costs, electrolyzer_costs))
 
-    df = df[['megen cost', 'electrolyzer cost', 'biogas generator ts', 'grid to electricity link ts', 'methanogen link ts', 'electrolyzer ts']]
+    df = df[['megen cost', twovar, 'biogas generator ts', 'grid to electricity link ts', 'methanogen link ts', 'electrolyzer ts']]
     newdf = pd.DataFrame()
 
 
     for pair in pairs:
         
 
-        tempdf = df[(df["megen cost"] == pair[0]) & (df['electrolyzer cost'] == pair[1])]
+        tempdf = df[(df["megen cost"] == pair[0]) & (df[twovar] == pair[1])]
         realdf = tempdf.copy()
         tempdf = tempdf.loc[tempdf['biogas generator ts'] != 0] #This is because sometimes the mode is zero for biogas
 
@@ -403,9 +421,11 @@ def extract_capacity_factor():
 
     newdf = newdf.T
 
+    name = csvpath.split("/")
+    name = name[-1]
 
-    newdf = newdf.rename(columns = {0: 'methanation cost', 1: 'electrolyzer cost', 2: 'constant biogas +/-10%', 3: 'constant biogas', 4: 'biogas capacity factor', 5: 'grid capacity factor', 6: 'local to grid capacity factor', 7: 'grid to local capacity factor', 8: 'electrolyzer capacity factor', 9: 'methanation capacity factor'})
-    newdf.to_csv('results/csvs/cfdata/allcfs_11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv')
+    newdf = newdf.rename(columns = {0: 'methanation cost', 1: twovar, 2: 'constant biogas +/-10%', 3: 'constant biogas', 4: 'biogas capacity factor', 5: 'grid capacity factor', 6: 'local to grid capacity factor', 7: 'grid to local capacity factor', 8: 'electrolyzer capacity factor', 9: 'methanation capacity factor'})
+    newdf.to_csv('results/csvs/cfdata/allcfs_' + name)
 
 
         
@@ -457,15 +477,20 @@ if __name__ == "__main__":
     # costs_to_csv(path, False)
 
     # extract_capacity_factor()
-
+    # extract_data()
     presdate = "February10pres"
-
-    extract_summary('results/csvs/alldata/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv')
+    # allcsvpath = ''
+    twovar = 'electrolyzer cost' #can be 'electrolyzer cost' or 'grid connection cost'
+    # extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
+    netcdfpath = 'results/NetCDF/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep'
+    allcsvpath = extract_data(netcdfpath)
+    extract_capacity_factor(allcsvpath, twovar = twovar) #twovar can be 'electrolyzer cost' or 'grid connection cost
+    extract_summary(allcsvpath, twovar = twovar)
+    # extract_summary('results/csvs/alldata/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv')
     # make_pres_folders(presdate)
+    # playsound('misc/beep-07a.mp3')
 
 
     # extract_summary(csvpath) 
-
-
 
 

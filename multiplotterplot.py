@@ -21,8 +21,8 @@ if __name__ == "__main__":
 
     #fig, ax = plt.subplots()
     gridsolar = 'results/csvs/costs/19_04_2023_Spain_electrolyzer_gridsolar_dispatch_zero_double_sweep.csv'
-    # cf_sensitivity()
-    capacity()
+    capacity(sumcsvpath = 'results/csvs/sumdata/summary_12_04_2023_GIcost_gridsolar_dispatch_zero_double_sweep.csv', twovar = 'grid connection cost')
+    # capacity()
     # four_cost_plot_Spain()
     # find_net_income_pass(gridsolar)
     # plot_elec_ts()
