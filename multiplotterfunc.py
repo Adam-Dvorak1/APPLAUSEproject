@@ -861,6 +861,56 @@ def four_cost_plot():
     fig.savefig('Presentations/' + presentation + '/megencosts_income.png', dpi = 500)
     # plt.show()
 
+def four_cost_plot_pres():
+    
+    presentation = 'May3pres CORC'
+    fig, ax = plt.subplots(2,2,figsize=(10,9), sharex=True)
+    axs = ax.flatten()
+
+    
+
+    justgrid = 'results/csvs/costs/05_04_2023_megen_justgrid_zero_double_sweep.csv'
+    justsolar = 'results/csvs/costs/11_04_2023_megen_justsolar_dispatch_zero_double_sweep.csv'
+    gridsolar = 'results/csvs/costs/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv'
+    mindf = 'results/csvs/costs/11_04_2023_mindf_default_costs.csv'
+    plot_cost_any(justsolar, axs[0])
+    plot_cost_any(justgrid, axs[1])
+    plot_cost_any(gridsolar, axs[2])
+    plot_cost_any(mindf, axs[3])
+
+
+    for ax in axs:
+        ax.tick_params(axis='both', which='major', labelsize=14)
+        ax.tick_params(axis='x', rotation=45)
+        a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
+        # a = ax.get_xticks()
+        # a = [str(entry) + 'x' for entry in a]
+        ax.set_xticklabels(a)
+
+        #ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=5))#for some reason this percent formatter takes the position of the 
+
+    ymin, ymax = axs[0].get_ylim()
+    axs[1].set_ylim(bottom = ymin)
+    ymin, ymax = axs[2].get_ylim()
+    axs[3].set_ylim(ymin, ymax)
+    
+    fig.supylabel("Dollars per MWh gas", fontsize = 16)
+    fig.supxlabel("Methanation cost relative to default", fontsize = 16)
+    
+
+    handles, labels = axs[2].get_legend_handles_labels()
+    fig.legend(handles, labels, ncol = 3, loc = 'upper center', fontsize = 12)
+    fig.subplots_adjust(top = 0.84, bottom = 0.15)
+
+
+
+        
+    fig.savefig('Presentations/' + presentation + '/megencosts_income.pdf')
+    fig.savefig('Presentations/' + presentation + '/megencosts_income.png', dpi = 500)
+    # plt.show()
+
+
+
 
 def four_cost_plot_Spain():
     

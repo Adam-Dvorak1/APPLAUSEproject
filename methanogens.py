@@ -58,24 +58,24 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "GIcost_gridsolar_dispatch" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "megen_justsolar_dispatch_zero_double_sweep" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
         
         solar = True #whether using solar generator or not
         wind = False
-        grid = True#whether using grid generator or not
+        grid = False#whether using grid generator or not
         
         
 
         
         ##---<<Secondary sweeping variables>>-----
         # Modify the sweeping range in the sweeping dict in modifynetwork.py
-        # Only do one of these at a time
+        # Only do one of these at a time. You must do one.
         # 5 April: Cost of grid connection added
-        electrolyzer = False
+        electrolyzer = True
         year = False #Note, if you are doing a year run, both solar and grid must be True
         gridinverter = False #This has to do with restricting the size of the grid inverter
-        GIcost = True #GI stands for grid inverter
+        GIcost = False #GI stands for grid inverter
         Spain = False #Then we use a different time series
         
         # solarcost = True # solarcost is not a real experiment because it is dispatch. If we really want to see the impact on the costs, then we just need to go into the costs csvs
@@ -92,7 +92,8 @@ if __name__ == "__main__":
         '''In addition to a megen cost sweep, the sweep can be electrolyzer, year, or gas_load'''
         if electrolyzer == True:
                sweeps = "electrolyzer"
-               sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
+               sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
+               sweeper = [1] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
         elif year == True:
                sweeps = "year"
                sweeper = ['2017', '2018', '2019', '2020']
