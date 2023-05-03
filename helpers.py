@@ -9,7 +9,6 @@ from datetime import datetime
 import pypsa
 import numpy as np
 import itertools
-from playsound import playsound
 
 
 #  Lisa: We are going to need multi-links for modelling the CO2 management.
@@ -429,11 +428,14 @@ def extract_capacity_factor(csvpath, twovar):
 
 
         
-
+def mod_solar_cost():
+    '''
+    3 May 2023
+    '''
 
             
 
-#%%
+
 
 
 #%%

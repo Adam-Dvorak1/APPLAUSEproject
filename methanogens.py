@@ -93,7 +93,7 @@ if __name__ == "__main__":
         if electrolyzer == True:
                sweeps = "electrolyzer"
                sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
-               sweeper = [1] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
+               #sweeper = [1] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
         elif year == True:
                sweeps = "year"
                sweeper = ['2017', '2018', '2019', '2020']
@@ -122,7 +122,7 @@ if __name__ == "__main__":
         # The solar generator to produce electricity rather than produce methane
 
         # methanogen_costs = [1]
-        methanogen_costs = [0. , 0.2, 0.4, 0.6, 0.8,  1.2, 1.4, 1.6, 1.8, 2]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
+        methanogen_costs = [0. , 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
 
 
 
@@ -192,9 +192,9 @@ if __name__ == "__main__":
 
         #11 April 2023: Adding this from helpers.py to speed up, get csv right away
         costs_to_csv(rel_path, grid, sweeps[0]) #The sweeps[0] corresponds to the 'twovar', or the secondary sweeping variable. If it is gi_cost, then it changes the way that the helper csv is used
-        allcsvpath = extract_data(rel_path) #This extracts time series data and other important data
-        extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
-        extract_capacity_factor(allcsvpath)
+        # allcsvpath = extract_data(rel_path) #This extracts time series data and other important data
+        # extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
+        # extract_capacity_factor(allcsvpath)
 
         endtime = time.time()
         print(endtime-startime)
