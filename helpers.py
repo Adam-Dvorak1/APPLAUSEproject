@@ -428,11 +428,30 @@ def extract_capacity_factor(csvpath, twovar):
 
 
         
-def mod_solar_cost():
+def mod_solar_cost(df, hilo):
     '''
     3 May 2023
+
+    Since the solar is dispatch, it is a pretty simple thing to modify the costs. This takes in a df that
+    has loaded a cost csv and returns df the modified price of solar 
+
+    There is an NREL 'high' and an NREL 'low' cost
+
+    Since the costs are already loaded in, we don't need to go through the annualized costs and stuff
+    
+    Apart from the df, it takes a string for hilo, either 'high' or 'low'
     '''
 
+    df = df
+
+    if hilo == 'high':
+        df['Solar PV'] = annual_cost('solar-utility') * 130000 * 1157/982
+    elif hilo == 'low':
+        df['Solar PV'] = annual_cost('solar-utility') * 130000 * 922/982
+    else:
+        print('Please use either "high" or "low" for the hilo string')
+
+    return df
             
 
 

@@ -17,7 +17,7 @@ import importlib
 import matplotlib.ticker as mtick
 import helpers
 importlib.reload(helpers)
-from helpers import annual_cost, add_costreq_column, extract_biogas_frac
+from helpers import annual_cost, add_costreq_column, mod_solar_cost
 
 
 
@@ -788,17 +788,24 @@ def compare_cost_bars():
     yeardf = pd.read_csv('results/csvs/costs/11_04_2023_year_gridsolar_dispatch.csv', index_col=0)
     gi_costdf = pd.read_csv('results/csvs/costs/12_04_2023_GIcost_gridsolar_dispatch_zero_double_sweep.csv', index_col = 0) #g
 
+    elecdf_hisolvals = elecdf.copy()
+    elecdf_losolvals = elecdf.copy()
+
+
+    elecdf_hisolvals = mod_solar_cost(elecdf_hisolvals, 'high')
+    elecdf_losolvals = mod_solar_cost(elecdf_losolvals, 'low')
 
     mindf = pd.read_csv("results/csvs/costs/11_04_2023_mindf_default_costs.csv", index_col=0)
     mindf['Net income'] = mindf[mindf.columns[5:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well. 
     sys_income = mindf['Net income'].values[0]
 
-
     elecdf = add_costreq_column(elecdf, gasload, sys_income)
-    
+    elecdf_hisolvals = add_costreq_column(elecdf_hisolvals, gasload, sys_income)
+    elecdf_losolvals = add_costreq_column(elecdf_losolvals, gasload, sys_income)
     yeardf = add_costreq_column(yeardf, gasload, sys_income)
     #print(elecdf.loc[elecdf['methanogen capital cost'] == 120])
     gi_costdf = add_costreq_column(gi_costdf, gasload, sys_income)
+
 
     
     basecostreq = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].median()) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].median())]['cost diff'].values[0]
@@ -825,12 +832,17 @@ def compare_cost_bars():
     electrolyzer_low = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].median()) & (elecdf['electrolyzer capital cost'] == eleclow)]['cost diff'].values[0]
     electrolyzer_low = electrolyzer_low/basecostreq-1
 
+
     meth_elec_high = elecdf.loc[(elecdf['methanogen capital cost'] == megenhi) & (elecdf['electrolyzer capital cost'] == elechi)]['cost diff'].values[0]
     meth_elec_high = meth_elec_high/basecostreq - 1
     meth_elec_low = elecdf.loc[(elecdf['methanogen capital cost'] == megenlow) & (elecdf['electrolyzer capital cost'] == eleclow)]['cost diff'].values[0]
     meth_elec_low = meth_elec_low/basecostreq - 1
 
-    
+    solarhigh = elecdf_hisolvals.loc[(elecdf_hisolvals['methanogen capital cost'] == elecdf_hisolvals['methanogen capital cost'].median()) & (elecdf_hisolvals['electrolyzer capital cost'] == elecdf_hisolvals['electrolyzer capital cost'].median())]['cost diff'].values[0]
+    solarhigh = solarhigh/basecostreq - 1
+    solarlow = elecdf_losolvals.loc[(elecdf_losolvals['methanogen capital cost'] == elecdf_losolvals['methanogen capital cost'].median()) & (elecdf_losolvals['electrolyzer capital cost'] == elecdf_losolvals['electrolyzer capital cost'].median())]['cost diff'].values[0]
+    solarlow = solarlow/basecostreq - 1    
+
 
 
     val17 = yeardf.loc[yeardf['year'] == 2017]['cost diff'].values[0]
@@ -864,12 +876,12 @@ def compare_cost_bars():
 
     # year_high = 
     fig, ax = plt.subplots()
-    factorlist = ['methanation cost\n120 Eur/kW/yr[+/- 40%]', 'electrolyzer cost\n146 Eur/kW/yr[+/- 40%]', 'meth and elec cost\n both [+/- 40%]', 'inverter cost\n34 Eur/kW/yr[+/- 40%]', 'year\n2019 [2020, 2017]']
+    factorlist = ['methanation cost\n120 Eur/kW/yr[+/- 40%]', 'electrolyzer cost\n146 Eur/kW/yr[+/- 40%]', 'meth and elec cost\n both [+/- 40%]', 'solar cost \n high/low NREL', 'inverter cost\n34 Eur/kW/yr[+/- 40%]', 'year\n2019 [2020, 2017]']
     # highs = [methanation_high, electrolyzer_high, meth_elec_high, year_high, grid_high]
     # lows = [methanation_low, electrolyzer_low, meth_elec_low, year_low]
-    highs = [methanation_high, electrolyzer_high, meth_elec_high, gi_high, year_high]
+    highs = [methanation_high, electrolyzer_high, meth_elec_high, solarhigh, gi_high, year_high]
     highs = [x * 100 for x in highs]
-    lows = [methanation_low, electrolyzer_low, meth_elec_low, gi_low, year_low]
+    lows = [methanation_low, electrolyzer_low, meth_elec_low, solarlow, gi_low, year_low]
     lows = [x * 100 for x in lows]
 
     highbars = ax.barh(factorlist, highs, height= 0.4, color = 'C0')
