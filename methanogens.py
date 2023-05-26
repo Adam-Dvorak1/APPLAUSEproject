@@ -18,12 +18,14 @@ import time
 from multiprocessing import Pool
 import buildnetwork
 import modifynetwork
+import helpers
 importlib.reload(buildnetwork)
 importlib.reload(modifynetwork)
+importlib.reload(helpers)
 
 from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_links, add_methanogen, add_sabatier
 from helpers import extract_capacity_factor, extract_summary, extract_data, override_component_attrs, annual_cost, costs_to_csv
-from modifynetwork import change_gasload, to_netcdf, remove_grid, remove_solar, add_wind
+from modifynetwork import zeroload, change_gasload, to_netcdf, remove_grid, remove_solar, add_wind
 
 
 sweep_dict = {'electrolyzer': [x for x in np.logspace (-1, 1, 10)], "year": ['2017', '2018', '2019', '2020', '2021']}
@@ -58,13 +60,15 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier
-        name = "megen_justsolar_dispatch_zero_double_sweep" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "megen_year" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
         
         solar = True #whether using solar generator or not
         wind = False
-        grid = False#whether using grid generator or not
+        grid = True#whether using grid generator or not
         
+
+        mindf = False
         
 
         
@@ -72,14 +76,15 @@ if __name__ == "__main__":
         # Modify the sweeping range in the sweeping dict in modifynetwork.py
         # Only do one of these at a time. You must do one.
         # 5 April: Cost of grid connection added
-        electrolyzer = True
-        year = False #Note, if you are doing a year run, both solar and grid must be True
+        electrolyzer = False
+        year = True#Note, if you are doing a year run, both solar and grid must be True
         gridinverter = False #This has to do with restricting the size of the grid inverter
-        GIcost = False #GI stands for grid inverter
+        GIcost = False#GI stands for grid inverter
         Spain = False #Then we use a different time series
         
         # solarcost = True # solarcost is not a real experiment because it is dispatch. If we really want to see the impact on the costs, then we just need to go into the costs csvs
 
+        
 
         ##---<<EUR-USD conversion rate>>-------
         # eur_usd = 1.07, change in helpers.py, in the function annual_cost()
@@ -93,11 +98,11 @@ if __name__ == "__main__":
         if electrolyzer == True:
                sweeps = "electrolyzer"
                sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
-               #sweeper = [1] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
+        #        sweeper = [1] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
         elif year == True:
                sweeps = "year"
                sweeper = ['2017', '2018', '2019', '2020']
-               sweeper = ['2018']
+        #        sweeper = ['2018']
         elif gridinverter == True:
                sweeps = 'grid_inverter'
                sweeper = [2, 3, 4, 10] #These will be multiplied by the average electricity demand required per hour, which is 14667 kW
@@ -109,7 +114,7 @@ if __name__ == "__main__":
 
         elif Spain == True:
                sweeps = 'spain_electrolyzer'
-               sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
+        #        sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
                sweeper = [1]
         # elif solarcost == True:
         #         sweeps = 'solar_cost'
@@ -168,6 +173,9 @@ if __name__ == "__main__":
 
         if wind == True:
                 n = add_wind(n)
+
+        if mindf == True:
+                n = zeroload(n)
 
 
 

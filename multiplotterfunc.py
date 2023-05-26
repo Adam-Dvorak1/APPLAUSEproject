@@ -221,7 +221,7 @@ def find_net_income_pass(path):
 
     costdf = pd.read_csv(path, index_col = 0)
 
-    mindf = pd.read_csv("results/csvs/costs/11_04_2023_mindf_default_costs.csv", index_col=0)
+    mindf = pd.read_csv("results/csvs/costs/03_05_2023_Cal_mindf.csv", index_col=0)
 
     gasload = 10000
 
@@ -307,7 +307,7 @@ def find_net_income_pass(path):
         x_coord = x_label_dict[str(val)]
         ax.vlines(x  = x_coord, ymin = lowincome, ymax = highincome, color = 'k')
 
-    ax.set_ylim(0, 145)
+    ax.set_ylim(0, 85)
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax.tick_params(axis='x', rotation=45)
     a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
@@ -318,8 +318,8 @@ def find_net_income_pass(path):
     # plt.show()
     # plt.close('all')
 
-    fig.savefig('Presentations/' + presentation + '/breakeven_gas.pdf')
-    fig.savefig('Presentations/' + presentation + '/breakeven_gas.png', dpi = 500)
+    fig.savefig('Presentations/' + presentation + '/breakeven_gas_comp.pdf')
+    fig.savefig('Presentations/' + presentation + '/breakeven_gas_comp.png', dpi = 500)
 
 
 def find_net_income_pass_Spain(path):
@@ -335,7 +335,7 @@ def find_net_income_pass_Spain(path):
 
     costdf = pd.read_csv(path, index_col = 0)
 
-    mindf = pd.read_csv("results/csvs/costs/19_04_2023_Spain_mindf.csv", index_col=0)
+    mindf = pd.read_csv("results/csvs/costs/03_05_2023_Spain_mindf.csv", index_col=0)
 
     gasload = 10000
 
@@ -661,7 +661,7 @@ def four_cost_plot_pres():
 
     justgrid = 'results/csvs/costs/05_04_2023_megen_justgrid_zero_double_sweep.csv'
     justsolar = 'results/csvs/costs/11_04_2023_megen_justsolar_dispatch_zero_double_sweep.csv' #Justsolar is no longer dispatch
-    gridsolar = 'results/csvs/costs/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv'
+    gridsolar = 'results/csvs/costs/03_05_2023_electrolyzer_gridsolar_dispatch_zero_double_sweep.csv'
     mindf = 'results/csvs/costs/11_04_2023_mindf_default_costs.csv'
     plot_cost_any(justsolar, axs[0])
     plot_cost_any(justgrid, axs[1])
@@ -714,7 +714,7 @@ def four_cost_plot_Spain():
 
     justgrid = 'results/csvs/costs/21_04_2023_Spain_justgrid_megen_sweep.csv'
     justsolar = 'results/csvs/costs/21_04_2023_Spain_justsolar_megen_sweep.csv'
-    gridsolar = 'results/csvs/costs/19_04_2023_Spain_electrolyzer_gridsolar_dispatch_zero_double_sweep.csv'
+    gridsolar = 'results/csvs/costs/03_05_2023_Spain_gridsolar_dispatch_zero_double_sweep.csv'
     mindf = 'results/csvs/costs/19_04_2023_Spain_mindf.csv'
     plot_cost_any(justsolar, axs[0])
     plot_cost_any(justgrid, axs[1])
@@ -784,9 +784,9 @@ def compare_cost_bars():
     methanogencost = 120
     gasload = 10000
 
-    elecdf = pd.read_csv('results/csvs/costs/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv', index_col= 0)
-    yeardf = pd.read_csv('results/csvs/costs/11_04_2023_year_gridsolar_dispatch.csv', index_col=0)
-    gi_costdf = pd.read_csv('results/csvs/costs/12_04_2023_GIcost_gridsolar_dispatch_zero_double_sweep.csv', index_col = 0) #g
+    elecdf = pd.read_csv('results/csvs/costs/03_05_2023_electrolyzer_gridsolar_dispatch_zero_double_sweep.csv', index_col= 0)
+    yeardf = pd.read_csv('results/csvs/costs/03_05_2023_year_gridsolar_dispatch.csv', index_col=0)
+    gi_costdf = pd.read_csv('results/csvs/costs/03_05_2023_GIcost_gridsolar_dispatch.csv', index_col = 0) #g
 
     elecdf_hisolvals = elecdf.copy()
     elecdf_losolvals = elecdf.copy()
@@ -795,7 +795,7 @@ def compare_cost_bars():
     elecdf_hisolvals = mod_solar_cost(elecdf_hisolvals, 'high')
     elecdf_losolvals = mod_solar_cost(elecdf_losolvals, 'low')
 
-    mindf = pd.read_csv("results/csvs/costs/11_04_2023_mindf_default_costs.csv", index_col=0)
+    mindf = pd.read_csv("results/csvs/costs/03_05_2023_Cal_mindf.csv", index_col=0)
     mindf['Net income'] = mindf[mindf.columns[5:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well. 
     sys_income = mindf['Net income'].values[0]
 
@@ -814,8 +814,8 @@ def compare_cost_bars():
     elecdf = elecdf.sort_values(by ="methanogen capital cost")
     megenpr = elecdf['methanogen capital cost'].unique()
     megenpr = [x for x in megenpr]
-    megenlow = megenpr[3]
-    megenhi = megenpr[7]
+    megenlow = megenpr[4]
+    megenhi = megenpr[6]
     methanation_high = elecdf.loc[(elecdf['methanogen capital cost'] == megenhi) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].median())]['cost diff'].values[0]
     methanation_high = methanation_high/basecostreq - 1
     methanation_low = elecdf.loc[(elecdf['methanogen capital cost'] == megenlow) & (elecdf['electrolyzer capital cost'] == elecdf['electrolyzer capital cost'].median())]['cost diff'].values[0]
@@ -824,8 +824,8 @@ def compare_cost_bars():
     elecdf = elecdf.sort_values(by ="electrolyzer capital cost")
     elecpr = elecdf['electrolyzer capital cost'].unique()
     elecpr = [x for x in elecpr]
-    eleclow = elecpr[3]
-    elechi = elecpr[7]
+    eleclow = elecpr[4]
+    elechi = elecpr[6]
 
     electrolyzer_high = elecdf.loc[(elecdf['methanogen capital cost'] == elecdf['methanogen capital cost'].median()) & (elecdf['electrolyzer capital cost'] == elechi)]['cost diff'].values[0]
     electrolyzer_high = electrolyzer_high/basecostreq-1
@@ -863,8 +863,13 @@ def compare_cost_bars():
     gi_costdf = gi_costdf.sort_values(by = 'inverter capital cost')
     gipr = gi_costdf['inverter capital cost'].unique()
     gipr = [x for x in gipr]
-    gilo = gipr[3]
-    gihi = gipr[7]
+    
+    gilo = gipr[4]
+    gihi = gipr[6]
+
+
+    # print(gi_high)
+    # print(basecostreq)
 
     gi_high = gi_costdf.loc[gi_costdf['inverter capital cost']== gihi]['cost diff'].values[0]
     gi_high = gi_high/basecostreq-1
@@ -876,12 +881,14 @@ def compare_cost_bars():
 
     # year_high = 
     fig, ax = plt.subplots()
-    factorlist = ['methanation cost\n120 Eur/kW/yr[+/- 40%]', 'electrolyzer cost\n146 Eur/kW/yr[+/- 40%]', 'meth and elec cost\n both [+/- 40%]', 'solar cost \n high/low NREL', 'inverter cost\n34 Eur/kW/yr[+/- 40%]', 'year\n2019 [2020, 2017]']
-    # highs = [methanation_high, electrolyzer_high, meth_elec_high, year_high, grid_high]
-    # lows = [methanation_low, electrolyzer_low, meth_elec_low, year_low]
-    highs = [methanation_high, electrolyzer_high, meth_elec_high, solarhigh, gi_high, year_high]
+    fig.set_size_inches(8, 4.8)
+    factorlist = ['methanation unit annual capital cost\n25 $/kW/yr[+/- 20%]', 'electrolyzer annualized capital cost\n30 $/kW/yr[+/- 20%]', 'meth and elec cost\n both [+/- 20%]', 'grid inverter annualized capital cost\n11 $/kW/yr[+/- 20%]','solar PV annualized capital cost \n 76 $/kW/yr [+18%/-6%] ']
+    # factorlist = ['methanation unit annual capital cost\n120 $/kW/yr[+/- 40%]', 'electrolyzer annualized capital cost\n146 $/kW/yr[+/- 40%]', 'methanation and electrolyzer cost\n both [+/- 40%]',  'grid inverter annualized capital cost\n34 $/kW/yr[+/- 40%]', 'data year\n2019 [2020, 2017]']
+    highs = [methanation_high, electrolyzer_high, meth_elec_high, gi_high, solarhigh]
+    # highs = [methanation_high, electrolyzer_high, meth_elec_high, gi_high, year_high]
     highs = [x * 100 for x in highs]
-    lows = [methanation_low, electrolyzer_low, meth_elec_low, solarlow, gi_low, year_low]
+    lows = [methanation_low, electrolyzer_low, meth_elec_low, gi_low, solarlow]
+    # lows = [methanation_low, electrolyzer_low, meth_elec_low,  gi_low, year_low]
     lows = [x * 100 for x in lows]
 
     highbars = ax.barh(factorlist, highs, height= 0.4, color = 'C0')
@@ -892,11 +899,11 @@ def compare_cost_bars():
     ax.invert_yaxis()
     ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax = 100))
     ax.spines[['right', 'top', 'left']].set_visible(False)
-    ax.set_xlabel ("Percent change in methanation cost requirement")
+    ax.set_xlabel ("Percent change in break-even gas price")
     plt.tight_layout()
-    # plt.savefig('paper/Figures/RealFigures/compareChangeBars.pdf')
-    plt.show()
-    plt.close('all')
+    plt.savefig('paper/Figures/RealFigures/compareChangeBars.pdf')
+    # plt.show()
+    # plt.close('all')
 
 
     #Finding the default price

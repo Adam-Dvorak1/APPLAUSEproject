@@ -36,6 +36,20 @@ def remove_links(network):
     
     return network
 
+def zeroload(network):
+    '''25 May 2023
+    As I sometimes forget to add in 0 gas demand when doing a mindf, I am finally making a funciton for it'''
+
+    gasdf = pd.read_csv('data/gasdem_csvs/2019AppleGas.csv', index_col = 0)
+    gasdf.index = pd.to_datetime(gasdf.index)
+
+    network.remove("Load", 'Gas Load')
+    network.add("Load", #Why are there two loads here? Which is the name?
+        "Gas Load", 
+        bus="gas", 
+        p_set=gasdf["All_in_one_demand"] * 0) 
+    
+    return network
 
 def add_generators_sol_yrs(network, year):
 
@@ -68,7 +82,7 @@ def add_generators_sol_yrs(network, year):
     network.set_snapshots(hours_in_year)
 
     #We are editing this to see whether it has to do with the csv
-    df_cal_solar = pd.read_csv('data/final_solar_csvs/RealCalFlatsSolarCFs_' + year + '.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
+    df_cal_solar = pd.read_csv('data/final_solar_csvs/PVGISRealCalFlatsSolarCFs_' + year + '.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
     df_cal_solar.index = pd.to_datetime(df_cal_solar.index)
     df_cal_biogas = df_cal_solar['biogas'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #This is just assuming a constant generator, which I added to the original data from renewables.ninja
     df_cal_solar = df_cal_solar['solar'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series 

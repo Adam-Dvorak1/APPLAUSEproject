@@ -1,5 +1,6 @@
 '''The goal of this program is to provide functions that allow for the building of the network'''
 import pandas as pd
+
 from helpers import annual_cost
 
 
@@ -35,7 +36,7 @@ def add_generators(network):
     hours_in_2019 = pd.date_range('2019-01-01T00:00:00','2019-12-31T23:00:00', freq='H') #I changed the date rate from Z
     network.set_snapshots(hours_in_2019)
 
-    df_cal_solar = pd.read_csv('data/final_solar_csvs/RealCalFlatsSolarCFs_2019.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
+    df_cal_solar = pd.read_csv('data/final_solar_csvs/PVGISRealCalFlatsSolarCFs_2019.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
     df_cal_solar.index = pd.to_datetime(df_cal_solar.index)
     df_cal_biogas = df_cal_solar['biogas'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #This is just assuming a constant generator, which I added to the original data from renewables.ninja
     df_cal_solar = df_cal_solar['solar'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series 
@@ -89,6 +90,8 @@ def add_loads(network):
         p_set=gasdf["Constant_MW_methane"] * 3000)#Assuming 30 GW of demand from the grid
 
     return network
+
+
 
 
 def add_stores(network):

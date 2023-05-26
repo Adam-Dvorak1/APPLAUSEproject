@@ -72,7 +72,8 @@ def annual_cost(tech):
         fom = 0
     else:
         fom = fomset['value'].values[0]
-    annu_val = annuity(lifetime,discount_rate)*cap_cost*(1+fom) * eur_usd #in usd/kW
+
+    annu_val = annuity(lifetime,discount_rate)*cap_cost*(1+fom/100) * eur_usd #in usd/kW
     return annu_val
 
 
@@ -195,7 +196,7 @@ def get_costs(n, grid, twovar):
     links = links[links != 0]
     generators = n.generators.loc[:, "p_nom_opt"] * n.generators.loc[:, "capital_cost"]
     if 'Solar PV' in generators: #test to see if it this works
-        solarcost = 130000 * annual_cost('solar-utility') #We have 130 MW of solar electricity
+        solarcost = 130000 * annual_cost('solar-utility') * 453/920#We have 130 MW of solar electricity
         generators['Solar PV'] = solarcost
     generators = generators[generators != 0]
     
@@ -455,6 +456,22 @@ def mod_solar_cost(df, hilo):
             
 
 
+def make_mindf(path):
+    '''
+    3 May 2023
+    
+    This takes in the csv made by a mindf run, '''
+
+    df = pd.read_csv(path)
+
+    newdf = pd.DataFrame(np.repeat(df.values, 11, axis=0))
+
+    newdf.columns = df.columns 
+
+    path = path
+
+    newdf.to_csv(path, index_col = 0)
+
 
 
 #%%
@@ -504,9 +521,9 @@ if __name__ == "__main__":
     twovar = 'electrolyzer cost' #can be 'electrolyzer cost' or 'grid connection cost'
     # extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
     netcdfpath = 'results/NetCDF/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep'
-    allcsvpath = extract_data(netcdfpath)
-    extract_capacity_factor(allcsvpath, twovar = twovar) #twovar can be 'electrolyzer cost' or 'grid connection cost
-    extract_summary(allcsvpath, twovar = twovar)
+    # allcsvpath = extract_data(netcdfpath)
+    # extract_capacity_factor(allcsvpath, twovar = twovar) #twovar can be 'electrolyzer cost' or 'grid connection cost
+    # extract_summary(allcsvpath, twovar = twovar)
     # extract_summary('results/csvs/alldata/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv')
     # make_pres_folders(presdate)
     # playsound('misc/beep-07a.mp3')
