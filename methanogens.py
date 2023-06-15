@@ -24,8 +24,8 @@ importlib.reload(modifynetwork)
 importlib.reload(helpers)
 
 from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_links, add_methanogen, add_sabatier
-from helpers import extract_capacity_factor, extract_summary, extract_data, override_component_attrs, annual_cost, costs_to_csv
-from modifynetwork import zeroload, change_gasload, to_netcdf, remove_grid, remove_solar, add_wind
+from helpers import mindf_csv, extract_capacity_factor, extract_summary, extract_data, override_component_attrs, annual_cost, costs_to_csv
+from modifynetwork import add_sol_cost, zeroload, change_gasload, to_netcdf, remove_grid, remove_solar, add_wind
 
 
 sweep_dict = {'electrolyzer': [x for x in np.logspace (-1, 1, 10)], "year": ['2017', '2018', '2019', '2020', '2021']}
@@ -59,16 +59,16 @@ if __name__ == "__main__":
         startime = time.time()
 
         ##---<<Experimental Variables>>-----
-        methanogens = True #whether methanogen or sabatier
-        name = "megen_year" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        methanogens = True #whether methanogen or sabatier. Don't change it.
+        name = "electrolyzer_gridwind" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
         
-        solar = True #whether using solar generator or not
-        wind = False
+        solar = False #whether using solar generator or not
+        wind = True
         grid = True#whether using grid generator or not
         
 
-        mindf = False
+        mindf = False #When the mindf is true, then use a True Electrolyzer, and then change methanation and electrolyzer lists of these vars to [1]
         
 
         
@@ -76,8 +76,8 @@ if __name__ == "__main__":
         # Modify the sweeping range in the sweeping dict in modifynetwork.py
         # Only do one of these at a time. You must do one.
         # 5 April: Cost of grid connection added
-        electrolyzer = False
-        year = True#Note, if you are doing a year run, both solar and grid must be True
+        electrolyzer = True
+        year = False#Note, if you are doing a year run, both solar and grid must be True
         gridinverter = False #This has to do with restricting the size of the grid inverter
         GIcost = False#GI stands for grid inverter
         Spain = False #Then we use a different time series
@@ -169,8 +169,12 @@ if __name__ == "__main__":
         # Obviously, it makes no sense to remove both generators.
         if grid != True:
                 n = remove_grid(n)
+                if solar == True: # If this is a just sol scenario, then we do not want dispatch
+                       n = add_sol_cost(n)
+                
 
 
+         
         if wind == True:
                 n = add_wind(n)
 
@@ -199,7 +203,13 @@ if __name__ == "__main__":
 
 
         #11 April 2023: Adding this from helpers.py to speed up, get csv right away
-        costs_to_csv(rel_path, grid, sweeps[0]) #The sweeps[0] corresponds to the 'twovar', or the secondary sweeping variable. If it is gi_cost, then it changes the way that the helper csv is used
+        
+               
+        csvpath = costs_to_csv(rel_path, grid, sweeps[0]) #The sweeps[0] corresponds to the 'twovar', or the secondary sweeping variable. If it is gi_cost, then it changes the way that the helper csv is used
+        
+        if mindf == True: #26 May we have modified the costs_to_csv function to return the path, so we can then read the csv and use the same path
+               mindf_csv(csvpath)
+               
         # allcsvpath = extract_data(rel_path) #This extracts time series data and other important data
         # extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
         # extract_capacity_factor(allcsvpath)

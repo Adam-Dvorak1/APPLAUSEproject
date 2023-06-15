@@ -211,17 +211,14 @@ def plot_anysize_all():
 
 
 def find_net_income_pass(path):
-    '''This function is the same as find_net_income() except it passes an ax on to another function
-    5 April 2023
-    
-    Earlier, we have modified this equation to make it so that 
-    
-    20 April 2023
-    We are separating this plot from the four scenarios plot, so '''
+    '''
+    11 June 2023
+     
+    This function reads in  '''
 
     costdf = pd.read_csv(path, index_col = 0)
 
-    mindf = pd.read_csv("results/csvs/costs/03_05_2023_Cal_mindf.csv", index_col=0)
+    mindf = pd.read_csv("results/csvs/costs/26_05_2023_megen_mindf.csv", index_col=0)
 
     gasload = 10000
 
@@ -229,7 +226,7 @@ def find_net_income_pass(path):
 
     experiment = "megen_cost"
 
-    presentation = 'May3pres CORC'
+    # presentation = 'May3pres CORC'
 
     # If any of the values of the column are not 0, keep them. 
     # Gets rid of generators/links etc with no cost
@@ -244,7 +241,7 @@ def find_net_income_pass(path):
 
     costdf['Net income'] = costdf[costdf.columns[5:]].sum(axis = 1) * -1 #From "Battery charger" and on
 
-    print(mindf.columns[4:])
+    # print(mindf.columns[4:])
     mindf['Net income'] = mindf[mindf.columns[5:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well. 
     # 11 April: Now we have changed the mindf because of the added grid cost
 
@@ -278,8 +275,8 @@ def find_net_income_pass(path):
         costdf.index
 
     alldf = costdf.copy()
-    if 'electrolyzer' in o:
-        costdf = costdf.loc[costdf['electrolyzer capital cost'] == costdf['electrolyzer capital cost'].median()]
+
+    costdf = costdf.loc[costdf['electrolyzer capital cost'] == costdf['electrolyzer capital cost'].median()]
     ############################################
     fig, ax = plt.subplots()
     costdf['cost diff'].plot(kind = "bar", ax = ax)
@@ -290,24 +287,34 @@ def find_net_income_pass(path):
 
 
 
-    ax.set_title("Break-even gas price", fontsize = 20)
+    ax.set_title("Methane price", fontsize = 20)
     
     ax.axhline(118, label = "Highest price", color = "#b03060")
-    ax.axhline (25, label = "2022 median", color = "#21cc89")
-    ax.axhline (14, label = "2021 median", color = "#00a8e1")
+    ax.text(0,122,r"$\bf{Highest\:methane\:price\:in\:CA}$", color  = 'r')
+    ax.axhline(138.5, label = "Highest price with carbon tax", linestyle = 'dashed', color = "#b03060")
+    ax.text(0,143,r"$\bf{Highest\:methane\:price\:in\:CA\:with\:carbon\:tax}$", color  = 'r')
+    ax.axhline (25, label = "2022 median", color = 'C1')
+    ax.text(0,29,r"$\bf{2022\:methane\:price\:in\:CA}$", color  = "C1")
+    ax.axhline(45.5, label = "Highest price with carbon tax", linestyle = 'dashed', color = "C1")
+    ax.text(0,50,r"$\bf{2022\:methane\:price\:in\:CA\:with\:carbon\:tax}$", color  = 'C1')
+
+   
 
     ticks = [tick for tick in ax.get_xticklabels()]
 
     x_label_dict = dict([(x.get_text(), x.get_position()[0] ) for x in ticks])
 
+
+    minus20val = alldf['electrolyzer capital cost'].sort_values().unique()[3]
+    plus20val = alldf['electrolyzer capital cost'].sort_values().unique()[-3]
     for val in alldf['methanogen capital cost'].unique():
-        highincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == alldf['electrolyzer capital cost'].max())]["cost diff"].values[0]
-        lowincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == alldf['electrolyzer capital cost'].min())]["cost diff"].values[0]
+        highincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == plus20val)]["cost diff"].values[0]
+        lowincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == minus20val)]["cost diff"].values[0]
         val = round(val, 1)
         x_coord = x_label_dict[str(val)]
         ax.vlines(x  = x_coord, ymin = lowincome, ymax = highincome, color = 'k')
 
-    ax.set_ylim(0, 85)
+    ax.set_ylim(0, 150)
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax.tick_params(axis='x', rotation=45)
     a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
@@ -318,8 +325,9 @@ def find_net_income_pass(path):
     # plt.show()
     # plt.close('all')
 
-    fig.savefig('Presentations/' + presentation + '/breakeven_gas_comp.pdf')
-    fig.savefig('Presentations/' + presentation + '/breakeven_gas_comp.png', dpi = 500)
+    fig.savefig('Poster/gasprice.pdf')
+
+    # fig.savefig('Presentations/' + presentation + '/breakeven_gas_comp.png', dpi = 500)
 
 
 def find_net_income_pass_Spain(path):
@@ -442,7 +450,7 @@ def find_net_income_pass_Spain(path):
 
 
 
-def plot_cost_any(path, ax): #change back to (path, ax)
+def plot_cost_any(path): #change back to (path, ax)
     '''
     9 Feb 2023
     The purpose of this function is to be able to plot cost_any plots side by side
@@ -453,18 +461,18 @@ def plot_cost_any(path, ax): #change back to (path, ax)
 
     o = path.replace('.', ' ').replace('_', ' ').split() #.split() splits by space
 
-    if 'justgrid' in o:
-        experiment = "Just Grid"
-    elif "justsolar" in o:
-        experiment = "Just Solar"
-    elif 'justwind' in o:
-        experiment = "Just Wind"
+    if 'onlygrid' in o:
+        experiment = "only Grid"
+    elif "onlysolar" in o:
+        experiment = "only Solar"
+    elif 'onlywind' in o:
+        experiment = "only Wind"
     elif 'gridwind' in o:
         experiment = 'Full system with wind'
     elif 'mindf' in o:
-        experiment = 'Full system with no gas'
+        experiment = 'Full system with no methane'
     else:
-        experiment = "Full system with solar"
+        experiment = "Full system with methane"
 
 
 
@@ -500,6 +508,10 @@ def plot_cost_any(path, ax): #change back to (path, ax)
     costdf.index = costdf["methanogen capital cost"].round(1)
     costdf = costdf/val/8760*1000 #price per MWh
 
+
+    fig, ax = plt.subplots() #comment this out
+    fig.set_size_inches(8, 7)
+    fig.subplots_adjust(top = 0.8)
     
 
     if 'mindf' in o:# 21 April not entirely sure why costdf for min has one less column but cest la vie
@@ -511,22 +523,27 @@ def plot_cost_any(path, ax): #change back to (path, ax)
 
 
     #comment out these two lines
-    # ax.set_ylabel("LCOE (Dollars/MWh_energy)")
-    # ax.set_xlabel("Methanogen cost (Dollars/kWh)")
-    
-
-    ax.set_title( experiment, fontsize = 20)
+    ax.set_ylabel("LCOE (Dollars/MWh_methane)", fontsize = 16)
+    ax.set_xlabel("Methanation unit cost (Dollars/kWh)", fontsize = 16)
+    ax.tick_params(axis='x', rotation=45)
+    ax.tick_params(axis = 'both', labelsize = 14)
+    ax.set_title('Sensitivity of LCOE to methanation unit cost', fontsize = 20, pad = 60)
     # ax.axhline(340, label = '26-Aug-22 price (high)', color = "C0")
     # ax.axhline(118, label = "Highest price", color = "#b03060")
     # ax.axhline (25, label = "2022 median", color = "#21cc89")
     # ax.axhline (14, label = "2021 median", color = "#00a8e1")
-    ax.set_xlabel('')
-    #ax.legend()
-
-
-    # fig.savefig('Presentations/' + presentation + '/' + experiment + '.pdf')
-    #plt.show()#delete
+    # ax.set_xlabel('') #uncomment this line
+    handles, labels = ax.get_legend_handles_labels()
+    labels[2] = 'methanation'
+    fig.legend(labels = labels, bbox_to_anchor=(0.97, 0.9), ncol =4, fontsize = 11)
+    
     ax.get_legend().remove() #uncomment
+
+    # plt.tight_layout()
+
+
+    fig.savefig('Poster/elecpricebreakdown.pdf')
+    # plt.show()#delete
 
 
 
@@ -542,12 +559,12 @@ def plot_grid_restriction():
 
     o = path.replace('.', ' ').replace('_', ' ').split() #.split() splits by space
 
-    if 'justgrid' in o:
-        experiment = "Just Grid"
-    elif "justsolar" in o:
-        experiment = "Just Solar"
-    elif 'justwind' in o:
-        experiment = "Just Wind"
+    if 'onlygrid' in o:
+        experiment = "only Grid"
+    elif "onlysolar" in o:
+        experiment = "only Solar"
+    elif 'onlywind' in o:
+        experiment = "only Wind"
     elif 'gridwind' in o:
         experiment = 'Full system with wind'
     else:
@@ -611,12 +628,12 @@ def four_cost_plot():
 
     
 
-    justgrid = 'results/csvs/costs/05_04_2023_megen_justgrid_zero_double_sweep.csv'
-    justsolar = 'results/csvs/costs/11_04_2023_megen_justsolar_dispatch_zero_double_sweep.csv'
-    gridsolar = 'results/csvs/costs/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv'
-    mindf = 'results/csvs/costs/11_04_2023_mindf_default_costs.csv'
-    plot_cost_any(justsolar, axs[0])
-    plot_cost_any(justgrid, axs[1])
+    onlygrid = 'results/csvs/costs/26_05_2023_megen_justgrid.csv'
+    onlysolar = 'results/csvs/costs/26_05_2023_megen_justsolar.csv'
+    gridsolar = 'results/csvs/costs/25_05_2023_megen_gridsolar.csv'
+    mindf = 'results/csvs/costs/26_05_2023_megen_mindf.csv'
+    plot_cost_any(onlysolar, axs[0])
+    plot_cost_any(onlygrid, axs[1])
     plot_cost_any(gridsolar, axs[2])
     plot_cost_any(mindf, axs[3])
 
@@ -659,12 +676,12 @@ def four_cost_plot_pres():
 
     
 
-    justgrid = 'results/csvs/costs/05_04_2023_megen_justgrid_zero_double_sweep.csv'
-    justsolar = 'results/csvs/costs/11_04_2023_megen_justsolar_dispatch_zero_double_sweep.csv' #Justsolar is no longer dispatch
-    gridsolar = 'results/csvs/costs/03_05_2023_electrolyzer_gridsolar_dispatch_zero_double_sweep.csv'
-    mindf = 'results/csvs/costs/11_04_2023_mindf_default_costs.csv'
-    plot_cost_any(justsolar, axs[0])
-    plot_cost_any(justgrid, axs[1])
+    onlygrid = 'results/csvs/costs/26_05_2023_megen_onlygrid.csv'
+    onlysolar = 'results/csvs/costs/26_05_2023_megen_onlysolar.csv' #onlysolar is no longer dispatch
+    gridsolar = 'results/csvs/costs/25_05_2023_megen_gridsolar.csv'
+    mindf = 'results/csvs/costs/26_05_2023_megen_mindf.csv'
+    plot_cost_any(onlysolar, axs[0])
+    plot_cost_any(onlygrid, axs[1])
     plot_cost_any(gridsolar, axs[2])
     plot_cost_any(mindf, axs[3])
 
@@ -684,7 +701,7 @@ def four_cost_plot_pres():
     ymin, ymax = axs[2].get_ylim()
     axs[3].set_ylim(ymin, ymax)
     
-    fig.supylabel("Dollars per MWh methane", fontsize = 16)
+    fig.supylabel("USD per MWh methane", fontsize = 16)
     fig.supxlabel("Methanation unit capacity cost (relative to default)", fontsize = 16)
     
 
@@ -697,9 +714,9 @@ def four_cost_plot_pres():
 
 
         
-    fig.savefig('Presentations/' + presentation + '/megencosts_income.pdf')
-    fig.savefig('Presentations/' + presentation + '/megencosts_income.png', dpi = 500)
-    # plt.show()
+    # fig.savefig('Presentations/' + presentation + '/megencosts_income.pdf')
+    # fig.savefig('Presentations/' + presentation + '/megencosts_income.png', dpi = 500)
+    plt.show()
 
 
 
@@ -712,12 +729,12 @@ def four_cost_plot_Spain():
 
     
 
-    justgrid = 'results/csvs/costs/21_04_2023_Spain_justgrid_megen_sweep.csv'
-    justsolar = 'results/csvs/costs/21_04_2023_Spain_justsolar_megen_sweep.csv'
+    onlygrid = 'results/csvs/costs/21_04_2023_Spain_onlygrid_megen_sweep.csv'
+    onlysolar = 'results/csvs/costs/21_04_2023_Spain_onlysolar_megen_sweep.csv'
     gridsolar = 'results/csvs/costs/03_05_2023_Spain_gridsolar_dispatch_zero_double_sweep.csv'
     mindf = 'results/csvs/costs/19_04_2023_Spain_mindf.csv'
-    plot_cost_any(justsolar, axs[0])
-    plot_cost_any(justgrid, axs[1])
+    plot_cost_any(onlysolar, axs[0])
+    plot_cost_any(onlygrid, axs[1])
     plot_cost_any(gridsolar, axs[2])
     plot_cost_any(mindf, axs[3])
 
@@ -784,8 +801,8 @@ def compare_cost_bars():
     methanogencost = 120
     gasload = 10000
 
-    elecdf = pd.read_csv('results/csvs/costs/03_05_2023_electrolyzer_gridsolar_dispatch_zero_double_sweep.csv', index_col= 0)
-    yeardf = pd.read_csv('results/csvs/costs/03_05_2023_year_gridsolar_dispatch.csv', index_col=0)
+    elecdf = pd.read_csv('results/csvs/costs/25_05_2023_megen_gridsolar.csv', index_col= 0)
+    yeardf = pd.read_csv('results/csvs/costs/25_05_2023_megen_year.csv', index_col=0)
     gi_costdf = pd.read_csv('results/csvs/costs/03_05_2023_GIcost_gridsolar_dispatch.csv', index_col = 0) #g
 
     elecdf_hisolvals = elecdf.copy()
@@ -795,7 +812,7 @@ def compare_cost_bars():
     elecdf_hisolvals = mod_solar_cost(elecdf_hisolvals, 'high')
     elecdf_losolvals = mod_solar_cost(elecdf_losolvals, 'low')
 
-    mindf = pd.read_csv("results/csvs/costs/03_05_2023_Cal_mindf.csv", index_col=0)
+    mindf = pd.read_csv("results/csvs/costs/26_05_2023_megen_mindf.csv", index_col=0)
     mindf['Net income'] = mindf[mindf.columns[5:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well. 
     sys_income = mindf['Net income'].values[0]
 
@@ -881,8 +898,8 @@ def compare_cost_bars():
 
     # year_high = 
     fig, ax = plt.subplots()
-    fig.set_size_inches(8, 4.8)
-    factorlist = ['methanation unit annual capital cost\n25 $/kW/yr[+/- 20%]', 'electrolyzer annualized capital cost\n30 $/kW/yr[+/- 20%]', 'meth and elec cost\n both [+/- 20%]', 'grid inverter annualized capital cost\n11 $/kW/yr[+/- 20%]','solar PV annualized capital cost \n 76 $/kW/yr [+18%/-6%] ']
+    fig.set_size_inches(8, 6)
+    factorlist = [r"$\bf{methanation\:unit}$" + ' annualized\ncapital cost 25 $/kW/yr [+/- 20%]', r"$\bf{electrolyzer}$" + ' annualized capital cost\n50 $/kW/yr [+/- 20%]', r"$\bf{Both}$"+' methanation unit and electrolyzer\ncapital cost [+/- 20%]', r"$\bf{grid}$"+ ' connection capital cost\n11 $/kW/yr[+/- 20%]',r"$\bf{solar\:PV}$"' annualized capital cost \n 76 $/kW/yr [+18%/-6%] ']
     # factorlist = ['methanation unit annual capital cost\n120 $/kW/yr[+/- 40%]', 'electrolyzer annualized capital cost\n146 $/kW/yr[+/- 40%]', 'methanation and electrolyzer cost\n both [+/- 40%]',  'grid inverter annualized capital cost\n34 $/kW/yr[+/- 40%]', 'data year\n2019 [2020, 2017]']
     highs = [methanation_high, electrolyzer_high, meth_elec_high, gi_high, solarhigh]
     # highs = [methanation_high, electrolyzer_high, meth_elec_high, gi_high, year_high]
@@ -899,9 +916,11 @@ def compare_cost_bars():
     ax.invert_yaxis()
     ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax = 100))
     ax.spines[['right', 'top', 'left']].set_visible(False)
-    ax.set_xlabel ("Percent change in break-even gas price")
+    ax.set_yticklabels(factorlist, fontsize = 13)
+    ax.set_xlabel ("Percent change in break-even gas price", fontsize = 16)
+    ax.set_title('Sensitivity of methane price to various factors', fontsize = 20, position = (0.13, 0.9))
     plt.tight_layout()
-    plt.savefig('paper/Figures/RealFigures/compareChangeBars.pdf')
+    plt.savefig('Poster/compareChangeBars.pdf')
     # plt.show()
     # plt.close('all')
 
@@ -1272,7 +1291,7 @@ pathiter = (os.path.join(root, filename)
 )
 
 for path in pathiter:
-    newname =  path.replace('nogrid', 'justsolar')
+    newname =  path.replace('nogrid', 'onlysolar')
     if newname != path:
         os.rename(path,newname)
 # %%

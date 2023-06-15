@@ -77,6 +77,36 @@ def annual_cost(tech):
     return annu_val
 
 
+def mindf_csv(path):
+    '''
+    26 May 2023
+    
+    This function takes in a mindf csv and modifies it such that the line is repeated 
+    multiple times, but for different methanation unit prices 
+    
+    It takes the path of the min'''
+
+    df = pd.read_csv(path, index_col = 0)
+
+
+    megenprice = annual_cost("methanation")
+
+    methanogen_costs = [0. , 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2]
+
+    methanogen_costs = [x * megenprice for x in methanogen_costs]
+
+    newdf = pd.DataFrame(np.repeat(df.values, 11, axis=0))
+
+    newdf.columns = df.columns
+
+    newdf['methanogen capital cost'] = methanogen_costs
+
+    newdf.to_csv(path)
+
+
+    
+
+    
 
 def extract_data(folder):
     '''This is a function that makes a pd Data Frame, and adds a row with relevant data for each
@@ -119,7 +149,7 @@ def extract_data(folder):
         tempdf['grid to electricity link ts'] = n.links_t.p0.loc[:, "High to low voltage"]
         tempdf['methanogen link ts'] = n.links_t.p0.loc[:, "methanogens"]
         tempdf['gas store ts'] = n.stores_t.e.loc[:, "gas store"]
-        tempdf["battery store ts"] = n.stores_t.e.loc[:, "battery"]#Note--we have experiments where we remove the solar, but not the battery. In this case, the battery just has 0s
+        tempdf["battery store ts"] = n.stores_t.e.loc[:, "battery"]#Note--we have experiments where we remove the solar, but not the battery. In this case, the battery only has 0s
         tempdf['H2 store ts'] = n.stores_t.e.loc[:, 'H2 store']
         tempdf['biogas generator ts'] = n.generators_t.p.loc[:, 'Biogas'] #We actually don't care about the solar generator because we know it is completely maxed
         
@@ -196,8 +226,13 @@ def get_costs(n, grid, twovar):
     links = links[links != 0]
     generators = n.generators.loc[:, "p_nom_opt"] * n.generators.loc[:, "capital_cost"]
     if 'Solar PV' in generators: #test to see if it this works
-        solarcost = 130000 * annual_cost('solar-utility') * 453/920#We have 130 MW of solar electricity
-        generators['Solar PV'] = solarcost
+        if n.generators.loc['Solar PV', 'capital_cost'] == 0:
+            solarcost = 130000 * annual_cost('solar-utility') #We have 130 MW of solar electricity. 
+            generators['Solar PV'] = solarcost
+    if 'Onshore wind' in generators:
+        windcost = 101023 * annual_cost('onwind')
+        generators['Onshore wind'] = windcost
+
     generators = generators[generators != 0]
     
 
@@ -223,7 +258,7 @@ def get_costs(n, grid, twovar):
         sweep2var = pd.Series(sweep2var)
         sweep2var.index = ['inverter capital cost']
     elif twovar == 'spain_electrolyzer':
-        solarcost = 130000 * annual_cost('solar-utility') * 452.76 / 920 #This is because the pypsa default for 2025 is half that of the NREL 'normal' cost. When we are looking at Spain, it is this way
+        solarcost = 130000 * annual_cost('solar-utility') #This is because the pypsa default for 2025 is half that of the NREL 'normal' cost. When we are looking at Spain, it is this way
         generators['Solar PV'] = solarcost
         sweep2var = n.links.loc['H2 Electrolysis', 'capital_cost']
         sweep2var = pd.Series(sweep2var)
@@ -256,7 +291,7 @@ def get_costs(n, grid, twovar):
 
 
     if grid != True:
-        grid_max = np.inf #We need this to make sure the justsolar csv has enough columns
+        grid_max = np.inf #We need this to make sure the onlysolar csv has enough columns
         grid_max = pd.Series(grid_max)
         grid_max.index = ['grid link max size']
         cost_series = pd.concat([year, gasload, grid_max, megen_cap_cost, sweep2var, links, generators, stores])
@@ -284,7 +319,10 @@ def costs_to_csv(path, isgrid, twovar):
     name = path.split("/")
     name = name[-1]
     
-    df.to_csv('results/csvs/costs/' + name + ".csv")
+    path = 'results/csvs/costs/' + name + ".csv"
+    df.to_csv(path)
+
+    return path
 
 
 def make_pres_folders(prestitle):
@@ -298,9 +336,9 @@ def make_pres_folders(prestitle):
 
     pathlib.Path(path+ "/gridsolar").mkdir(parents=True, exist_ok=True)
     pathlib.Path(path + "/gridwind").mkdir(parents=True, exist_ok=True)
-    pathlib.Path(path + "/justsolar").mkdir(parents=True, exist_ok=True)
-    pathlib.Path(path + "/justwind")
-    pathlib.Path(path + "/justgrid").mkdir(parents=True, exist_ok=True)
+    pathlib.Path(path + "/onlysolar").mkdir(parents=True, exist_ok=True)
+    pathlib.Path(path + "/onlywind")
+    pathlib.Path(path + "/onlygrid").mkdir(parents=True, exist_ok=True)
 
 
     newpath = "Presentations/" + prestitle + "/*" #an example folder will be "Presentations/January31pres/nosolar"
@@ -456,6 +494,10 @@ def mod_solar_cost(df, hilo):
             
 
 
+
+            
+
+
 def make_mindf(path):
     '''
     3 May 2023
@@ -498,12 +540,12 @@ if __name__ == "__main__":
     generates a csv that is stored in results/csvs/costs. This is useful if you want to plot
     info involving LCOE or income. '''
 
-    # path = "results/NetCDF/05_04_2023_megen_justsolar_dispatch_zero_double_sweep"
+    # path = "results/NetCDF/05_04_2023_megen_onlysolar_dispatch_zero_double_sweep"
 
     # costs_to_csv(path, False)
 
 
-    # path = "results/NetCDF/05_04_2023_megen_justsolar_dispatch_zero_double_sweep"
+    # path = "results/NetCDF/05_04_2023_megen_onlysolar_dispatch_zero_double_sweep"
     # costs_to_csv(path, False)
 
     rel_path = 'results/NetCDF/11_04_2023_year_gridsolar_dispatch'
@@ -511,7 +553,7 @@ if __name__ == "__main__":
     #costs_to_csv(path, grid_pres, two_var)
     #if two_var is 'gi_cost', then something is added in the csv
     # costs_to_csv(rel_path, True, 'other')
-    # path = "results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_justsolar"
+    # path = "results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_onlysolar"
     # costs_to_csv(path, False)
 
     # extract_capacity_factor()

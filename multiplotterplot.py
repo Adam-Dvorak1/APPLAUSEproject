@@ -23,9 +23,8 @@ if __name__ == "__main__":
 
 
     #fig, ax = plt.subplots()
-    gridsolar = 'results/csvs/costs/03_05_2023_Spain_gridsolar_dispatch_zero_double_sweep.csv'
-    gridsolar = 'results/csvs/costs/03_05_2023_electrolyzer_gridsolar_dispatch_zero_double_sweep.csv'
-    # four_cost_plot_pres()
+    gridsolar = 'results/csvs/costs/25_05_2023_megen_gridsolar.csv'
+    # plot_cost_any(gridsolar)
     #capacity(sumcsvpath = 'results/csvs/sumdata/summary_12_04_2023_GIcost_gridsolar_dispatch_zero_double_sweep.csv', twovar = 'grid connection cost')
     # capacity()
     # four_cost_plot_Spain()
