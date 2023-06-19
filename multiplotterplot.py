@@ -28,9 +28,10 @@ if __name__ == "__main__":
     #capacity(sumcsvpath = 'results/csvs/sumdata/summary_12_04_2023_GIcost_gridsolar_dispatch_zero_double_sweep.csv', twovar = 'grid connection cost')
     # capacity()
     # four_cost_plot_Spain()
+    # four_cost_plot_pres()
     # find_net_income_pass_Spain(gridsolar)
-    find_net_income_pass(gridsolar)
-    # compare_cost_bars()
+    # find_net_income_pass(gridsolar)
+    compare_cost_bars()
     # plot_elec_ts()
     # compare_cost_bars()
 

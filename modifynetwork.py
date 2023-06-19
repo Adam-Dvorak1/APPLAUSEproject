@@ -350,6 +350,9 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
     if sweep == "electrolyzer":
         network.links.loc['H2 Electrolysis', 'capital_cost'] = annual_cost("electrolysis") * sweep_mult
     
+    elif sweep == 'battery':
+        network.stores.loc['battery', 'capital_cost'] = annual_cost('battery storage') * sweep_mult
+    
     elif sweep == 'year':
 
         if 'Solar PV' in network.generators.index:
@@ -374,6 +377,7 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
         
 
     return network
+
 
 
 

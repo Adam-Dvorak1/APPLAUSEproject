@@ -60,15 +60,15 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier. Don't change it.
-        name = "electrolyzer_gridwind" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "GIcost_gridsolar" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
         
-        solar = False #whether using solar generator or not
-        wind = True
+        solar = True #whether using solar generator or not
+        wind = False
         grid = True#whether using grid generator or not
         
 
-        mindf = False #When the mindf is true, then use a True Electrolyzer, and then change methanation and electrolyzer lists of these vars to [1]
+        mindf = False#When the mindf is true, then use a True Electrolyzer, and then change methanation and electrolyzer lists of these vars to [1]
         
 
         
@@ -76,10 +76,12 @@ if __name__ == "__main__":
         # Modify the sweeping range in the sweeping dict in modifynetwork.py
         # Only do one of these at a time. You must do one.
         # 5 April: Cost of grid connection added
-        electrolyzer = True
+        # 15 June: Cost of battery added
+        electrolyzer = False
+        battery = False
         year = False#Note, if you are doing a year run, both solar and grid must be True
         gridinverter = False #This has to do with restricting the size of the grid inverter
-        GIcost = False#GI stands for grid inverter
+        GIcost = True#GI stands for grid inverter
         Spain = False #Then we use a different time series
         
         # solarcost = True # solarcost is not a real experiment because it is dispatch. If we really want to see the impact on the costs, then we just need to go into the costs csvs
@@ -97,8 +99,11 @@ if __name__ == "__main__":
         '''In addition to a megen cost sweep, the sweep can be electrolyzer, year, or gas_load'''
         if electrolyzer == True:
                sweeps = "electrolyzer"
+        #        sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
+               sweeper = [1] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
+        elif battery == True:
+               sweeps = 'battery'
                sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
-        #        sweeper = [1] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
         elif year == True:
                sweeps = "year"
                sweeper = ['2017', '2018', '2019', '2020']
@@ -205,7 +210,7 @@ if __name__ == "__main__":
         #11 April 2023: Adding this from helpers.py to speed up, get csv right away
         
                
-        csvpath = costs_to_csv(rel_path, grid, sweeps[0]) #The sweeps[0] corresponds to the 'twovar', or the secondary sweeping variable. If it is gi_cost, then it changes the way that the helper csv is used
+        csvpath = costs_to_csv(rel_path, grid, sweeps[0]) #rel_path is the netcdf folder, grid presence is True or False, The sweeps[0] corresponds to the 'twovar', or the secondary sweeping variable. If it is gi_cost, then it changes the way that the helper csv is used
         
         if mindf == True: #26 May we have modified the costs_to_csv function to return the path, so we can then read the csv and use the same path
                mindf_csv(csvpath)

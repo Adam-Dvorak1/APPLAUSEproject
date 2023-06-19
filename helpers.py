@@ -263,6 +263,10 @@ def get_costs(n, grid, twovar):
         sweep2var = n.links.loc['H2 Electrolysis', 'capital_cost']
         sweep2var = pd.Series(sweep2var)
         sweep2var.index = ['electrolyzer capital cost']
+    elif twovar == 'battery':
+        sweep2var = n.stores.loc['battery', 'capital_cost']
+        sweep2var = pd.Series(sweep2var)
+        sweep2var.index = ['battery capital cost']
 
     else: #The default is to add an electrolyzer
         sweep2var = n.links.loc['H2 Electrolysis', 'capital_cost']
@@ -484,9 +488,9 @@ def mod_solar_cost(df, hilo):
     df = df
 
     if hilo == 'high':
-        df['Solar PV'] = annual_cost('solar-utility') * 130000 * 1157/982
+        df['Solar PV'] = annual_cost('solar-utility') * 130000 * 1.2 #NREL = 1157/982
     elif hilo == 'low':
-        df['Solar PV'] = annual_cost('solar-utility') * 130000 * 922/982
+        df['Solar PV'] = annual_cost('solar-utility') * 130000 * 0.8 #NREL = 922/982
     else:
         print('Please use either "high" or "low" for the hilo string')
 
@@ -562,7 +566,9 @@ if __name__ == "__main__":
     # allcsvpath = ''
     twovar = 'electrolyzer cost' #can be 'electrolyzer cost' or 'grid connection cost'
     # extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
-    netcdfpath = 'results/NetCDF/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep'
+    netcdfpath = 'results/NetCDF/15_06_2023_battery_gridsolar'
+    costs_to_csv(netcdfpath, True, 'battery')
+    
     # allcsvpath = extract_data(netcdfpath)
     # extract_capacity_factor(allcsvpath, twovar = twovar) #twovar can be 'electrolyzer cost' or 'grid connection cost
     # extract_summary(allcsvpath, twovar = twovar)
