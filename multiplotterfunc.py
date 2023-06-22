@@ -1,4 +1,4 @@
-'''The purpose of this file is to house the functions that I use to plot my results'''
+# '''The purpose of this file is to house the functions that I use to plot my results'''
 # %%
 import pypsa
 import numpy as np
@@ -41,13 +41,13 @@ linkcost_mults = [round(x, 1) for x in np.logspace(-1, 1, 10)]
 
 costmult_dict = dict(zip(annualcosts, linkcost_mults))
 
-labeldict = {'Highest price': "Highest price", '2022 median': '2022 median', '2021 median': '2021 median', 'H2 Electrolysis': 'H2 electrolysis', 'High to low voltage': 'grid connection', 'methanogens': 'methanation unit', 'Solar PV': 'solar electricity', 'battery': 'battery', 'H2 store': 'H2 store', 'grid elec total cost': 'electricity exported to grid', 'grid elec total income': 'income electricity \nimported from grid'}
+labeldict = {"Onshore wind": "Onshore wind", 'Highest price': "Highest price", '2022 median': '2022 median', '2021 median': '2021 median', 'H2 Electrolysis': 'H2 electrolysis', 'High to low voltage': 'grid connection', 'methanogens': 'methanation unit', 'Solar PV': 'solar electricity', 'battery': 'battery', 'H2 store': 'H2 store', 'grid elec total cost': 'electricity exported to grid', 'grid elec total income': 'income electricity \nimported from grid'}
 
 #---------<<Other  dicts>------------------
 
 color_dict = {"battery": '#9467bd', "battery charger":'#1f77b4', "methanogens": '#2ca02c', "Solar PV": '#ff7f0e',
 "H2 Electrolysis": '#d62728', "grid elec total cost": '#7f7f7f', "grid elec total income": '#e377c2', "H2 store": '#43aaa0', 
-"Onshore wind": '#ADD8E6', 'High to low voltage':'#260d29'}
+"Onshore wind": '#2c7ef2', 'High to low voltage':'#260d29'}
 
 
 
@@ -219,7 +219,12 @@ def find_net_income_pass(path):
 
     costdf = pd.read_csv(path, index_col = 0)
 
+    #This is for solar
     mindf = pd.read_csv("results/csvs/costs/26_05_2023_megen_mindf.csv", index_col=0)
+
+    #This is for wind
+
+    # mindf = pd.read_csv("results/csvs/costs/15_06_2023_electrolyzer_wind_mindf.csv", index_col=0)
 
     gasload = 10000
 
@@ -242,6 +247,8 @@ def find_net_income_pass(path):
 
     costdf['Net income'] = costdf[costdf.columns[5:]].sum(axis = 1) * -1 #From "Battery charger" and on
 
+    # print(costdf)
+    # costdf.to_csv('withnetincome')
     # print(mindf.columns[4:])
     mindf['Net income'] = mindf[mindf.columns[5:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well. 
     # 11 April: Now we have changed the mindf because of the added grid cost
@@ -278,6 +285,7 @@ def find_net_income_pass(path):
     alldf = costdf.copy()
 
     costdf = costdf.loc[costdf['electrolyzer capital cost'] == costdf['electrolyzer capital cost'].median()]
+    print(costdf[costdf['methanogen capital cost'] == costdf['methanogen capital cost'].median()]['cost diff'])
     ############################################
     fig, ax = plt.subplots()
     costdf['cost diff'].plot(kind = "bar", ax = ax)
@@ -288,7 +296,7 @@ def find_net_income_pass(path):
 
 
 
-    ax.set_title("Methane price", fontsize = 20)
+    # ax.set_title("Methane price", fontsize = 20)
 
     # ax.axhline(118, label = "Highest methane price", color = "#b03060")
     # ax.axhline (25, label = "2022 median price", color = "#21cc89")
@@ -329,9 +337,9 @@ def find_net_income_pass(path):
     ax.set_ylabel('Dollars per MWh methane', fontsize = 14)
     fig.subplots_adjust(bottom=0.2)
     # plt.show()
-    # plt.close('all')
+    plt.close('all')
 
-    fig.savefig('paper/Figures/RealFigures/gasprice.pdf')
+    # fig.savefig('paper/Figures/RealFigures/gasprice_wind.pdf')
 
     # fig.savefig('Presentations/' + presentation + '/breakeven_gas_comp.png', dpi = 500)
 
@@ -626,54 +634,6 @@ def plot_grid_restriction():
 
 
 
-def four_cost_plot():
-    
-    presentation = 'April21pres'
-    fig, ax = plt.subplots(2,2,figsize=(10,9), sharex=True)
-    axs = ax.flatten()
-
-    
-
-    onlygrid = 'results/csvs/costs/26_05_2023_megen_justgrid.csv'
-    onlysolar = 'results/csvs/costs/26_05_2023_megen_justsolar.csv'
-    gridsolar = 'results/csvs/costs/25_05_2023_megen_gridsolar.csv'
-    mindf = 'results/csvs/costs/26_05_2023_megen_mindf.csv'
-    plot_cost_any(onlysolar, axs[0])
-    plot_cost_any(onlygrid, axs[1])
-    plot_cost_any(gridsolar, axs[2])
-    plot_cost_any(mindf, axs[3])
-
-
-    for ax in axs:
-        ax.tick_params(axis='both', which='major', labelsize=14)
-        ax.tick_params(axis='x', rotation=45)
-        a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
-        # a = ax.get_xticks()
-        # a = [str(entry) + 'x' for entry in a]
-        ax.set_xticklabels(a)
-
-        #ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=5))#for some reason this percent formatter takes the position of the 
-
-    ymin, ymax = axs[0].get_ylim()
-    axs[1].set_ylim(bottom = ymin)
-    ymin, ymax = axs[2].get_ylim()
-    axs[3].set_ylim(ymin, ymax)
-    
-    fig.supylabel("Dollars per MWh gas", fontsize = 16)
-    fig.supxlabel("Methanation cost relative to default", fontsize = 16)
-    
-
-    handles, labels = axs[2].get_legend_handles_labels()
-    fig.legend(handles, labels, ncol = 3, loc = 'upper center', fontsize = 12)
-    fig.subplots_adjust(top = 0.84, bottom = 0.15)
-
-
-
-        
-    fig.savefig('Presentations/' + presentation + '/megencosts_income.pdf')
-    fig.savefig('Presentations/' + presentation + '/megencosts_income.png', dpi = 500)
-    # plt.show()
-
 def four_cost_plot_pres():
     
     presentation = 'May3pres CORC'
@@ -684,9 +644,9 @@ def four_cost_plot_pres():
     
 
     onlygrid = 'results/csvs/costs/26_05_2023_megen_onlygrid.csv'
-    onlysolar = 'results/csvs/costs/26_05_2023_megen_onlysolar.csv' #onlysolar is no longer dispatch
-    gridsolar = 'results/csvs/costs/25_05_2023_megen_gridsolar.csv'
-    mindf = 'results/csvs/costs/26_05_2023_megen_mindf.csv'
+    onlysolar = 'results/csvs/costs/21_06_2023_onlywind.csv' #onlysolar is no longer dispatch
+    gridsolar = 'results/csvs/costs/15_06_2023_electrolyzer_gridwind.csv'
+    mindf = 'results/csvs/costs/15_06_2023_electrolyzer_wind_mindf.csv'
     plot_cost_any(onlysolar, axs[0])
     plot_cost_any(onlygrid, axs[1])
     plot_cost_any(gridsolar, axs[2])
@@ -732,8 +692,8 @@ def four_cost_plot_pres():
 
 
         
-    fig.savefig('paper/Figures/RealFigures/megencosts_income.pdf')
-    fig.savefig('paper/Figures/RealFigures/megencosts_income.png', dpi = 500)
+    fig.savefig('paper/Figures/RealFigures/megencosts_income_wind.pdf')
+    fig.savefig('paper/Figures/RealFigures/megencosts_income_wind.png', dpi = 500)
     # plt.show()
 
 
@@ -959,6 +919,19 @@ def compare_cost_bars():
 
 
     #Finding the default price
+
+
+##################################################################
+################### CAPACITY FACTOR COMPARE ######################
+##################################################################
+
+
+def cf_compare():
+    '''
+    22 June 2023
+    
+    This function'''
+
 
 ##################################################################
 ########################### HEAT MAPS ############################

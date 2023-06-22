@@ -134,9 +134,12 @@ def add_generators_sol_spain(network):
     
     It is almost a copy of add_generators in buildnetwork.py'''
     gridpresent = False #if the grid is not present already, then we don't want to add it back in
-    
-    network.remove("Generator", "Biogas")
-    network.remove("Generator", "Solar PV")
+    solpresent = False
+    if "Solar PV" in network.generators.index:
+        network.remove("Generator", "Biogas")
+        network.remove("Generator", "Solar PV")
+        solpresent = True
+
 
     if 'Grid' in network.generators.index:
         network.remove("Generator", 'Grid')
@@ -149,7 +152,7 @@ def add_generators_sol_spain(network):
     network.set_snapshots(hours_in_year)
 
     #We are editing this to see whether it has to do with the csv
-    df_cal_solar = pd.read_csv('data/Spain/RealSpainSolarCFs_2019.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
+    df_cal_solar = pd.read_csv('data/Spain/PVGISRealSpainSolarCFS_2019.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
     df_cal_solar.index = pd.to_datetime(df_cal_solar.index)
     df_cal_biogas = df_cal_solar['biogas'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #This is only assuming a constant generator, which I added to the original data from renewables.ninja
     df_cal_solar = df_cal_solar['solar'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series 
@@ -169,15 +172,22 @@ def add_generators_sol_spain(network):
         network.add("Generator", "Grid", bus = 'grid', p_nom = 100000000,#100 GW. The capacity is for free. However, we still pay marginal cost
             carrier = "grid", capital_cost = 0, marginal_cost = gridprice, p_max_pu = gridgen['grid'])#The datafile gives US cents/kWh. I wanted dollars (or euros) per kWh.     # This is using 2019 (UTC) data from CAISO, LCG consulting.Prices are in c/kWh
 
-    
+    if solpresent == True:
+    #dispatch
+        network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
+            carrier = 'solar', capital_cost = 0, #Eur/kW/yr
+            marginal_cost = 0, p_nom = 130000, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
 
-    network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
-        carrier = 'solar', capital_cost = 0, #Eur/kW/yr
-        marginal_cost = 0, p_nom = 130000, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
 
-    network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True, 
-        carrier = 'biogas', capital_cost = 0,
-        marginal_cost = 0, p_max_pu = df_cal_biogas) # In reality, there is a marginal cost for biogas. What is it? 
+    #normal
+        # network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
+        #     carrier = 'solar', capital_cost = annual_cost('solar-utility-eur'), #Eur/kW/yr
+        #     marginal_cost = 0,  p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
+
+
+        network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True, 
+            carrier = 'biogas', capital_cost = 0,
+            marginal_cost = 0, p_max_pu = df_cal_biogas) # In reality, there is a marginal cost for biogas. What is it? 
 
 
     return network
@@ -195,7 +205,9 @@ def add_generators_wind_yrs(network, year):
     
     It takes a string for year. 
     
-    It is almost a copy of add_generators in buildnetwork.py'''
+    It is almost a copy of add_generators in buildnetwork.py
+    
+    Note: if you want to use this function again, you will need to change the capacity'''
     gridpresent = False #if the grid is not present already, then we don't want to add it back in
     network.remove("Generator", "Biogas")
     network.remove("Generator", 'Onshore wind')
@@ -238,6 +250,7 @@ def add_generators_wind_yrs(network, year):
         carrier = 'wind', capital_cost = 0, #Eur/kW/yr
         marginal_cost = 0, p_nom = 130000, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
 
+    
 
     network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True, 
         carrier = 'biogas', capital_cost = 0,
@@ -262,10 +275,15 @@ def add_wind(network):
     df_cal_wind.index = pd.to_datetime(df_cal_wind.index)
     df_cal_wind = df_cal_wind['wind'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series 
 
-
-    network.add("Generator", "Onshore wind", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
+    #Dispatch
+    network.add("Generator", "Onshore wind", bus="local elec",p_nom_extendable = True,
         carrier = 'wind', capital_cost = 0, #Eur/kW/yr
         marginal_cost = 0, p_nom = 101023, p_nom_max = 101023, p_max_pu = df_cal_wind) #Assuming that 
+
+    #Optimized
+    # network.add("Generator", "Onshore wind", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
+    #     carrier = 'wind', capital_cost = annual_cost('onwind'), #Eur/kW/yr
+    #     marginal_cost = 0, p_nom_max = 101023, p_max_pu = df_cal_wind) #Assuming that 
 
 
     return network

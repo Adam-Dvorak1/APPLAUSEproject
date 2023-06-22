@@ -145,7 +145,10 @@ def extract_data(folder):
         tempdf['objective'] = n.objective 
 
         tempdf['electrolyzer ts'] = n.links_t.p0.loc[:, "H2 Electrolysis"]
-        tempdf['solar ts'] = n.generators_t.p.loc[:, 'Solar PV']
+        if "Solar PV" in n.generators.index:
+            tempdf['solar ts'] = n.generators_t.p.loc[:, 'Solar PV']
+        if 'Onshore wind' in n.generators.index:
+            tempdf['wind ts'] = n.generators_t.p.loc[:, 'Onshore wind']
         tempdf['grid to electricity link ts'] = n.links_t.p0.loc[:, "High to low voltage"]
         tempdf['methanogen link ts'] = n.links_t.p0.loc[:, "methanogens"]
         tempdf['gas store ts'] = n.stores_t.e.loc[:, "gas store"]
@@ -227,11 +230,12 @@ def get_costs(n, grid, twovar):
     generators = n.generators.loc[:, "p_nom_opt"] * n.generators.loc[:, "capital_cost"]
     if 'Solar PV' in generators: #test to see if it this works
         if n.generators.loc['Solar PV', 'capital_cost'] == 0:
-            solarcost = 130000 * annual_cost('solar-utility') #We have 130 MW of solar electricity. 
+            solarcost = 130000 * annual_cost('solar-utility-eur') #We have 130 MW of solar electricity. 
             generators['Solar PV'] = solarcost
     if 'Onshore wind' in generators:
-        windcost = 101023 * annual_cost('onwind')
-        generators['Onshore wind'] = windcost
+        if n.generators.loc['Onshore wind', 'capital_cost'] == 0:
+            windcost = 101023 * annual_cost('onwind')
+            generators['Onshore wind'] = windcost
 
     generators = generators[generators != 0]
     
@@ -392,7 +396,7 @@ def extract_capacity_factor(csvpath, twovar):
     
     twovar can be 'electrolyzer cost', 'grid connection cost' '''
 
-    twovar = 'grid connection cost'
+    # twovar = 'grid connection cost'
 
     df = pd.read_csv(csvpath)
     megen_costs = df['megen cost'].unique()
@@ -561,16 +565,23 @@ if __name__ == "__main__":
     # costs_to_csv(path, False)
 
     # extract_capacity_factor()
-    # extract_data()
+    # extract_data('results/NetCDF/16_06_2023_GIcost_gridsolar')
+    # extract_data('results/NetCDF/25_05_2023_megen_gridsolar')
+    # extract_data('results/NetCDF/15_06_2023_electrolyzer_gridwind')
     presdate = "February10pres"
     # allcsvpath = ''
     twovar = 'electrolyzer cost' #can be 'electrolyzer cost' or 'grid connection cost'
     # extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
     netcdfpath = 'results/NetCDF/15_06_2023_battery_gridsolar'
-    costs_to_csv(netcdfpath, True, 'battery')
+    # costs_to_csv(netcdfpath, True, 'battery')
     
     # allcsvpath = extract_data(netcdfpath)
+    allcsvpath = 'results/csvs/alldata/15_06_2023_electrolyzer_gridwind.csv'
     # extract_capacity_factor(allcsvpath, twovar = twovar) #twovar can be 'electrolyzer cost' or 'grid connection cost
+
+
+    allcsvpath = 'results/csvs/alldata/25_05_2023_megen_gridsolar.csv'
+    # extract_capacity_factor(allcsvpath, twovar = twovar)
     # extract_summary(allcsvpath, twovar = twovar)
     # extract_summary('results/csvs/alldata/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv')
     # make_pres_folders(presdate)
