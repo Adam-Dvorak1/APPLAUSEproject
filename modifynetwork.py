@@ -1,4 +1,5 @@
 import pandas as pd
+import datetime
 from helpers import annual_cost
 import numpy as np
 from buildnetwork import add_links
@@ -119,6 +120,79 @@ def add_generators_sol_yrs(network, year):
 
     return network
 
+def add_grid_solar_yrs(network, yeargrid, yearsolar):
+
+    '''
+    27 June 2023
+    
+    The purpose of this function is to compare the combinations of grid and solar years. It will
+    use the year of the grid for the real year of the network'''
+
+    network.remove("Generator", "Biogas")
+    
+    network.remove("Generator", "Solar PV")
+
+    network.remove("Generator", 'Grid')
+
+    
+    hours_in_fullyear = pd.date_range(yeargrid + '-01-01T00:00:00', yeargrid + '-12-31T23:00:00', freq='H') #I changed the date rate from Z
+    
+
+    gridprice = pd.read_csv("data/elecprice_csvs/" + yeargrid + "UTCCAISOprice.csv", index_col = 0) #From http://www.energyonline.com/Data/GenericData.aspx?DataId=20, which is taken from CAISO. Units of /MWh
+    gridprice.index = hours_in_fullyear
+    if yeargrid == '2020':
+        gridprice = gridprice[(np.in1d(gridprice.index.date, [datetime.date(2020, 2, 29)], invert = True))]
+
+    
+    
+
+    hours_in_year = gridprice.index #The purpose of this is because we can easily exclude the leap day by removing it from the dataframe. This also needs to be done to the loads
+    # print(hours_in_year)
+    network.set_snapshots(hours_in_year)
+
+    gridprice = gridprice['price'][[hour.strftime("%Y-%m-%d %H:%M:%S") for hour in network.snapshots]]
+    gridprice = gridprice/1000 #Before, I used to divide by 100. But I believe that I should have divided by 1000, because we want per kWh, and we had per MWh 
+
+
+
+
+    gridgen = pd.DataFrame(index = range(8760))
+    gridgen = gridgen.set_index(hours_in_year)
+    gridgen['grid'] = 1#in kW, so 100GW
+
+
+    network.add("Generator", "Grid", bus = 'grid', p_nom = 100000000,#100 GW. The capacity is for free. However, we still pay marginal cost
+        carrier = "grid", capital_cost = 0, marginal_cost = gridprice, p_max_pu = gridgen['grid'])#The datafile gives US cents/kWh. I wanted dollars (or euros) per kWh.     # This is using 2019 (UTC) data from CAISO, LCG consulting.Prices are in c/kWh
+
+
+    
+
+    #We are editing this to see whether it has to do with the csv
+    df_cal_solar = pd.read_csv('data/final_solar_csvs/PVGISRealCalFlatsSolarCFs_' + yearsolar + '.csv', index_col=0) #Solar CFs taken from renewables.ninja and google maps location of California Flats (35.854394, -120.304389), though renewables.ninja only does 3 decimal points
+    hours_in_solaryear = pd.date_range(yearsolar + '-01-01T00:00:00', yearsolar + '-12-31T23:00:00', freq='H') #We actually need this repeated from yeargrid because the years are different
+    df_cal_solar.index = hours_in_solaryear #Converts to a datetimes series
+    if yearsolar == '2020': #Cuts year 2020 down
+        df_cal_solar = df_cal_solar[(np.in1d(df_cal_solar.index.date, [datetime.date(2020, 2, 29)], invert = True))] #Remember, we don't care about the year of the original once we have the data. We need it to be the same year as the others
+
+    df_cal_solar.index = hours_in_year #Now this should be the right size and the same year as grid, no matter what
+
+    df_cal_biogas = df_cal_solar['biogas'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #This is only assuming a constant generator, which I added to the original data from renewables.ninja
+    df_cal_solar = df_cal_solar['solar'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series 
+
+
+
+    network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
+        carrier = 'solar', capital_cost = 0, #Eur/kW/yr
+        marginal_cost = 0, p_nom = 130000, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
+
+    network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True, 
+        carrier = 'biogas', capital_cost = 0,
+        marginal_cost = 0, p_max_pu = df_cal_biogas) # In reality, there is a marginal cost for biogas. What is it? 
+
+
+    return network
+
+
 
 def add_generators_sol_spain(network):
 
@@ -173,16 +247,16 @@ def add_generators_sol_spain(network):
             carrier = "grid", capital_cost = 0, marginal_cost = gridprice, p_max_pu = gridgen['grid'])#The datafile gives US cents/kWh. I wanted dollars (or euros) per kWh.     # This is using 2019 (UTC) data from CAISO, LCG consulting.Prices are in c/kWh
 
     if solpresent == True:
-    #dispatch
-        network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
-            carrier = 'solar', capital_cost = 0, #Eur/kW/yr
-            marginal_cost = 0, p_nom = 130000, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
-
-
-    #normal
+    #dispatch, use for gridsolar and mindf
         # network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
-        #     carrier = 'solar', capital_cost = annual_cost('solar-utility-eur'), #Eur/kW/yr
-        #     marginal_cost = 0,  p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
+        #     carrier = 'solar', capital_cost = 0, #Eur/kW/yr
+        #     marginal_cost = 0, p_nom = 130000, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
+
+
+    #normal, use for onlysolar
+        network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
+            carrier = 'solar', capital_cost = annual_cost('solar-utility-eur'), #Eur/kW/yr
+            marginal_cost = 0,  p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
 
 
         network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True, 
@@ -315,9 +389,38 @@ def add_loads_yrs(network, year):
         
     return network
 
+def add_loads_gridsolar_yrs(network, year):
+    '''
+    27 June 2023
+    
+    The purpose of this is that when we are doing the gridsolar years variation, 
+    we may want to put a leapyear dataset with a non leapyear dataset. So, everything
+    is 8760 in length (2020 is minus Feb 29). This is for the loads as well'''
+    network.remove("Load", 'Gas Load')
+    network.remove("Load", 'Grid Load')
 
+
+    
+    gasdf = pd.read_csv('data/gasdem_csvs/' + year + 'AppleGas.csv', index_col = 0)
+    gasdf.index = pd.to_datetime(gasdf.index)
+    if year == 2020:
+        gasdf = gasdf[(np.in1d(gasdf.index.date, [datetime.date(2020, 2, 29)], invert = True))]
+
+    network.add("Load", #Why are there two loads here? Which is the name?
+        "Gas Load", 
+        bus="gas", 
+        p_set=gasdf["All_in_one_demand"] * 0) #this is to make a mindf run
+
+
+    network.add("Load", 
+        "Grid Load", 
+        bus="grid", 
+        p_set=gasdf["Constant_MW_methane"] * 300)#Assuming 3 GW of demand from the grid
+        
+    return network
 '''These two functions are for an experiment on 21 November, to see what happens to the grid
 and the solar if the other is removed. That being said, the solar will need to be expanded'''
+
 
 
 
@@ -381,6 +484,12 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
         network = add_loads_yrs(network, sweep_mult)
 
 
+    elif sweep == 'grid-sol-year':
+
+        if 'Solar PV' in network.generators.index: #This needs 
+            network = add_grid_solar_yrs(network, sweep_mult[0], sweep_mult[1]) #We cannot actually use this particular function for grid-sol-year because 
+        network = add_loads_gridsolar_yrs(network, sweep_mult[0])
+
     elif sweep == 'grid_inverter':
         network.links.loc['High to low voltage', 'p_nom_max'] = 14667 * sweep_mult
 
@@ -427,8 +536,10 @@ def to_netcdf(network, sweep, sweep_mult, megen_mult, path):
         sweep_mult = round (sweep_mult)
 
 
-
-    path = path + "/" + sweep + f"_{sweep_mult}_megen_cost_{megen_mult}.nc"
+    if sweep != 'grid-sol-year':
+        path = path + "/" + sweep + f"_{sweep_mult}_megen_cost_{megen_mult}.nc"
+    else:
+        path = path + '/grid'  + f"_{sweep_mult[0]}_sol_{sweep_mult[1]}.nc"# For el-sol-year, we don't actually care about the methanation sweep
     
     n.export_to_netcdf(path)
 

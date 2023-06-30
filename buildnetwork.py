@@ -45,7 +45,7 @@ def add_generators(network):
     gridprice = pd.read_csv("data/elecprice_csvs/2019UTCCAISOprice.csv", index_col = 0) #From http://www.energyonline.com/Data/GenericData.aspx?DataId=20, which is taken from CAISO. Units of /MWh
     gridprice.index = pd.to_datetime(gridprice.index)
     gridprice = gridprice['price'][[hour.strftime("%Y-%m-%d %H:%M:%S") for hour in network.snapshots]]
-    gridprice = gridprice/1000 #Before, I used to divide by 100. But I believe that I should have divided by 1000, because we want per kWh, and we had per MWh ##note this is incorrect. 
+    gridprice = gridprice/1000 #Before, I used to divide by 100. But I believe that I should have divided by 1000, because we want per kWh, and we had per MWh 
 
 
     gridgen = pd.DataFrame(index = range (8760))

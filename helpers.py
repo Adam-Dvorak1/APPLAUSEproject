@@ -216,11 +216,13 @@ def get_costs(n, grid, twovar):
 
     '''This takes a network and tries to find all of the relevant costs
     If grid = True, then the total electricity 
-    12 April:
+    12 April 2023:
     In an effort to not keep adding columns to the costs csv, we are going to switch out one of 
     the columns every single time. This will be the secondary sweeping variable. 
     
-    In addition, we will no longer keep track of everything else that we do not need'''
+    In addition, we will no longer keep track of everything else that we do not need
+    
+'''
 
 
 
@@ -262,8 +264,6 @@ def get_costs(n, grid, twovar):
         sweep2var = pd.Series(sweep2var)
         sweep2var.index = ['inverter capital cost']
     elif twovar == 'spain_electrolyzer':
-        solarcost = 130000 * annual_cost('solar-utility') #This is because the pypsa default for 2025 is half that of the NREL 'normal' cost. When we are looking at Spain, it is this way
-        generators['Solar PV'] = solarcost
         sweep2var = n.links.loc['H2 Electrolysis', 'capital_cost']
         sweep2var = pd.Series(sweep2var)
         sweep2var.index = ['electrolyzer capital cost']
@@ -308,20 +308,119 @@ def get_costs(n, grid, twovar):
     
     return cost_df
 
+def get_costs_gridsolyr(n, yeargrid, yearsolar, grid, twovar):
+
+    '''
+    This is based on get_costs.
+
+    27 June 2023
+    
+    For one of the twovar, the gridsolar year sweep, important information is in the 
+    filepath of each network'''
+
+
+
+    
+    links = n.links.loc[:, "p_nom_opt"] * n.links.loc[:, "capital_cost"]
+    links = links[links != 0]
+    generators = n.generators.loc[:, "p_nom_opt"] * n.generators.loc[:, "capital_cost"]
+    if 'Solar PV' in generators: #test to see if it this works
+        if n.generators.loc['Solar PV', 'capital_cost'] == 0:
+            solarcost = 130000 * annual_cost('solar-utility-eur') #We have 130 MW of solar electricity. 
+            generators['Solar PV'] = solarcost
+    if 'Onshore wind' in generators:
+        if n.generators.loc['Onshore wind', 'capital_cost'] == 0:
+            windcost = 101023 * annual_cost('onwind')
+            generators['Onshore wind'] = windcost
+
+    generators = generators[generators != 0]
+    
+
+
+    stores = n.stores.loc[:, "e_nom_opt"] * n.stores.loc[:, "capital_cost"]
+   
+    
+
+    yearg = yeargrid
+    yearg = pd.Series(yearg)
+    yearg.index = ['grid year']
+    
+    yearsol = yearsolar
+    yearsol = pd.Series(yearsol)
+    yearsol.index = ['solar year']
+    
+
+    megen_cap_cost =  n.links.loc["methanogens", "capital_cost"]
+    megen_cap_cost = pd.Series(megen_cap_cost)
+    megen_cap_cost.index = ["methanogen capital cost"]
+
+    if twovar == 'gi_cost':
+        sweep2var = n.links.loc['High to low voltage', 'capital_cost']
+        sweep2var = pd.Series(sweep2var)
+        sweep2var.index = ['inverter capital cost']
+    elif twovar == 'spain_electrolyzer':
+        sweep2var = n.links.loc['H2 Electrolysis', 'capital_cost']
+        sweep2var = pd.Series(sweep2var)
+        sweep2var.index = ['electrolyzer capital cost']
+    elif twovar == 'battery':
+        sweep2var = n.stores.loc['battery', 'capital_cost']
+        sweep2var = pd.Series(sweep2var)
+        sweep2var.index = ['battery capital cost']
+
+    else: #The default is to add an electrolyzer
+        sweep2var = n.links.loc['H2 Electrolysis', 'capital_cost']
+        sweep2var = pd.Series(sweep2var)
+        sweep2var.index = ['electrolyzer capital cost']
+
+    
+
+    
+
+    if grid == True:
+        grid_cost, grid_income = get_gridcost(n)
+        grid_cost = pd.Series(grid_cost)
+        grid_cost.index = ['grid elec total cost']
+
+
+        grid_income= pd.Series(grid_income)
+        grid_income.index = ['grid elec total income']
+
+        grid_max =  n.links.loc['High to low voltage', 'p_nom_max']
+        grid_max = pd.Series(grid_max)
+        grid_max.index = ['grid link max size']
+
+        cost_series = pd.concat([yearg, yearsol, grid_max, megen_cap_cost, sweep2var, links, generators, stores, grid_cost, grid_income])
+
+
+
+    cost_df = pd.DataFrame([cost_series])
+    
+    return cost_df
+
+
 
 
 
 def costs_to_csv(path, isgrid, twovar):
+    '''If the twovar is 'grid-sol-year', then it does something a bit different'''
     searchpath = path + "/*"
     df = pd.DataFrame()
 
-    for file in glob.glob(searchpath):
-        n = pypsa.Network()
-        n.import_from_netcdf(file)
-        cost_df = get_costs(n, isgrid, twovar) #True because we are looking for the marginal price of the grid sum, so we add a bit
-
-
-        df = pd.concat([df, cost_df])
+    if twovar != 'grid-sol-year':
+        for file in glob.glob(searchpath):
+            n = pypsa.Network()
+            n.import_from_netcdf(file)
+            cost_df = get_costs(n, isgrid, twovar) #True because we are looking for the marginal price of the grid sum, so we add a bit
+            df = pd.concat([df, cost_df])
+    else:
+        for file in glob.glob(searchpath):
+            o = file.replace('/', ' ').replace('.', ' ').replace('_', ' ').split() #.split() splits by space
+            gridyear = int(o[-4])
+            solyear = int(o[-2])
+            n = pypsa.Network()
+            n.import_from_netcdf(file)
+            cost_df = get_costs_gridsolyr(n, gridyear, solyear, isgrid, twovar) #True because we are looking for the marginal price of the grid sum, so we add a bit
+            df = pd.concat([df, cost_df])
 
 
     name = path.split("/")
@@ -548,46 +647,21 @@ if __name__ == "__main__":
     generates a csv that is stored in results/csvs/costs. This is useful if you want to plot
     info involving LCOE or income. '''
 
-    # path = "results/NetCDF/05_04_2023_megen_onlysolar_dispatch_zero_double_sweep"
 
-    # costs_to_csv(path, False)
-
-
-    # path = "results/NetCDF/05_04_2023_megen_onlysolar_dispatch_zero_double_sweep"
-    # costs_to_csv(path, False)
-
-    rel_path = 'results/NetCDF/11_04_2023_year_gridsolar_dispatch'
-
-    #costs_to_csv(path, grid_pres, two_var)
-    #if two_var is 'gi_cost', then something is added in the csv
-    # costs_to_csv(rel_path, True, 'other')
-    # path = "results/NetCDF/17_02_2023_elctrlyzer_megen_sweep_onlysolar"
-    # costs_to_csv(path, False)
-
-    # extract_capacity_factor()
-    # extract_data('results/NetCDF/16_06_2023_GIcost_gridsolar')
-    # extract_data('results/NetCDF/25_05_2023_megen_gridsolar')
-    # extract_data('results/NetCDF/15_06_2023_electrolyzer_gridwind')
-    presdate = "February10pres"
-    # allcsvpath = ''
     twovar = 'electrolyzer cost' #can be 'electrolyzer cost' or 'grid connection cost'
     # extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
-    netcdfpath = 'results/NetCDF/15_06_2023_battery_gridsolar'
-    # costs_to_csv(netcdfpath, True, 'battery')
+    netcdfpath = 'results/NetCDF/27_06_2023_yearsolar'
+    costs_to_csv(netcdfpath, True, 'grid-sol-year')
     
     # allcsvpath = extract_data(netcdfpath)
-    allcsvpath = 'results/csvs/alldata/15_06_2023_electrolyzer_gridwind.csv'
+    # allcsvpath = 'results/csvs/alldata/15_06_2023_electrolyzer_gridwind.csv'
     # extract_capacity_factor(allcsvpath, twovar = twovar) #twovar can be 'electrolyzer cost' or 'grid connection cost
 
-
-    allcsvpath = 'results/csvs/alldata/25_05_2023_megen_gridsolar.csv'
-    # extract_capacity_factor(allcsvpath, twovar = twovar)
-    # extract_summary(allcsvpath, twovar = twovar)
-    # extract_summary('results/csvs/alldata/11_04_2023_electrolyzer_megen_gridsolar_dispatch_zero_double_sweep.csv')
-    # make_pres_folders(presdate)
-    # playsound('misc/beep-07a.mp3')
-
-
+    # get_costs()
+    netcdfpath = 'results/NetCDF/21_06_2023_onlywind'
+    # allcsvpath = extract_data(netcdfpath)
+    # allcsvpath = 'results/csvs/alldata/15_06_2023_electrolyzer_gridwind.csv'
+    # extract_capacity_factor(allcsvpath, twovar = twovar) #
     # extract_summary(csvpath) 
 
 

@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier. Don't change it.
-        name = "Spain_gridsolar" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "yearsolar_mindf" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
         
         solar = True#whether using solar generator or not
@@ -80,9 +80,10 @@ if __name__ == "__main__":
         electrolyzer = False
         battery = False
         year = False#Note, if you are doing a year run, both solar and grid must be True
+        gridsolaryear = True
         gridinverter = False #This has to do with restricting the size of the grid inverter
         GIcost = False#GI stands for grid inverter
-        Spain = True #Then we use a different time series
+        Spain = False #Then we use a different time series
         
         # solarcost = True # solarcost is not a real experiment because it is dispatch. If we really want to see the impact on the costs, then we just need to go into the costs csvs
 
@@ -107,7 +108,10 @@ if __name__ == "__main__":
         elif year == True:
                sweeps = "year"
                sweeper = ['2017', '2018', '2019', '2020']
-        #        sweeper = ['2018']
+        elif gridsolaryear == True:
+               sweeps = 'grid-sol-year'
+               yearlist = ['2017', '2018', '2019', '2020']
+               sweeper = [x for x in itertools.product(yearlist, yearlist)]
         elif gridinverter == True:
                sweeps = 'grid_inverter'
                sweeper = [2, 3, 4, 10] #These will be multiplied by the average electricity demand required per hour, which is 14667 kW
@@ -115,15 +119,11 @@ if __name__ == "__main__":
         elif GIcost == True:
                 sweeps = "gi_cost"
                 sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
-
-
         elif Spain == True:
                sweeps = 'spain_electrolyzer'
-               sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
-        #        sweeper = [1]
-        # elif solarcost == True:
-        #         sweeps = 'solar_cost'
-        #         sweeper = ['low', 'high']
+        #        sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
+               sweeper = [1]
+
                 
        
 
@@ -131,8 +131,8 @@ if __name__ == "__main__":
         # It may be that it is basically never worth it. In fact, our first results show that it is actually better to just use
         # The solar generator to produce electricity rather than produce methane
 
-        # methanogen_costs = [1]
-        methanogen_costs = [0. , 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
+        methanogen_costs = [1]
+        # methanogen_costs = [0. , 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
 
 
 
@@ -201,7 +201,7 @@ if __name__ == "__main__":
         endpath = list([rel_path])
 
         f = list(itertools.product(ns, sweeps, sweeper, methanogen_costs, endpath))
-
+        # print(f)
 
         with Pool(processes=4) as pool:
                 pool.starmap(to_netcdf, f) #This also solves the network
@@ -212,8 +212,8 @@ if __name__ == "__main__":
                
         csvpath = costs_to_csv(rel_path, grid, sweeps[0]) #rel_path is the netcdf folder, grid presence is True or False, The sweeps[0] corresponds to the 'twovar', or the secondary sweeping variable. If it is gi_cost, then it changes the way that the helper csv is used
         
-        if mindf == True: #26 May we have modified the costs_to_csv function to return the path, so we can then read the csv and use the same path
-               mindf_csv(csvpath)
+        # if mindf == True: #26 May we have modified the costs_to_csv function to return the path, so we can then read the csv and use the same path
+        #        mindf_csv(csvpath)
                
         # allcsvpath = extract_data(rel_path) #This extracts time series data and other important data
         # extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
