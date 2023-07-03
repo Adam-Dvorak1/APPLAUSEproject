@@ -13,7 +13,7 @@ importlib.reload(multiplotterfunc)
 importlib.reload(helpers)
 
 
-from multiplotterfunc import  cf_compare, four_cost_plot_pres, capacity, cf_sensitivity, find_net_income_pass_Spain, four_cost_plot_Spain,  find_net_income_pass, plot_elec_ts, compare_cost_bars, plot_grid_restriction, plot_cost_any, plot_anysize_all, plot_anysize, compare_dcurves,  plot_gridtoelec_dcurv, plot_methlink_dcurv, plot_gasstore_dcurv
+from multiplotterfunc import  find_all_netincome, plot_gridprice_dc, plot_all_gridprice, find_net_income_year_el_solar, cf_compare, four_cost_plot_pres, capacity, cf_sensitivity, find_net_income_pass_Spain, four_cost_plot_Spain,  find_net_income_pass, plot_elec_ts, compare_cost_bars, plot_cost_any, plot_anysize_all, plot_anysize, compare_dcurves,  plot_gridtoelec_dcurv, plot_methlink_dcurv, plot_gasstore_dcurv
 
 #generators_dcurve, battery_dcurve, storage_dcurve, methane_link_dcurve, plot_linksize, plot_objective,
 
@@ -36,8 +36,13 @@ if __name__ == "__main__":
     # four_cost_plot_Spain()
     gridsolar = 'results/csvs/costs/23_06_2023_Spain_gridsolar.csv'
     # four_cost_plot_pres()
-    find_net_income_pass_Spain(gridsolar)
+    # find_net_income_pass_Spain(gridsolar)
+    path = 'results/csvs/costs/27_06_2023_yearsolar.csv'
+    # find_net_income_year_el_solar(path)
     # find_net_income_pass(gridsolar)
+    # plot_all_gridprice()
+    # plot_gridprice_dc()
+    find_all_netincome()
     # compare_cost_bars()
     # plot_elec_ts()
     # compare_cost_bars()

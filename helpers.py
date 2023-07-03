@@ -5,7 +5,7 @@ from pypsa.descriptors import Dict
 import pandas as pd
 import glob
 import pathlib
-from datetime import datetime
+import datetime
 import pypsa
 import numpy as np
 import itertools
@@ -103,9 +103,83 @@ def mindf_csv(path):
 
     newdf.to_csv(path)
 
+def return_income_df(path, choice):
+    '''
+    2 July 2023
+    The purpose of this function is to do a little what the find_income functions do in multiplotterfunc.
+    
+    'choice' can be solar, wind, or spain'''
+    costdf = pd.read_csv(path, index_col = 0)
+
+    if choice == 'solar':
+        mindf = pd.read_csv('results/csvs/costs/26_05_2023_megen_mindf.csv', index_col=0)
+    elif choice == 'wind':
+        mindf = pd.read_csv('results/csvs/costs/15_06_2023_electrolyzer_wind_mindf.csv', index_col = 0)
+    elif choice == 'spain':
+        mindf = pd.read_csv('results/csvs/costs/23_06_2023_Spain_mindf.csv', index_col = 0)
+    else:
+        print('Choice a different choice')
+
+    gasload = 10000
+
+    experiment = "megen_cost"
+
+
+    # If any of the values of the column are not 0, keep them. 
+    # Gets rid of generators/links etc with no cost
+    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
+
+
+    # To find the net income, add up all of the total income and expenses. Costs are positive
+    # and income is negative. Then, multiply by -1 to get the positive balance if you made money 
+    # This skips over Gas Load, methanogen capital cost, and electrolyzer capital cost. If 'year'
+    # is in the columns, it also skips over that
+
+    costdf['Net income'] = costdf[costdf.columns[5:]].sum(axis = 1) * -1 #From "Battery charger" and on
+
+    mindf['Net income'] = mindf[mindf.columns[5:]].sum(axis = 1) * -1 
+    sys_income = mindf['Net income'].values[0]
+
+
+
+    costdf = costdf.sort_values(['Gas Load', 'methanogen capital cost'])
+
+    costdf['cost diff']= costdf['Net income'] - sys_income 
+   
+    costdf['cost diff'] = costdf['cost diff']/8760*1000/gasload * -1 #10000 kW or 10 MW
+
+    mediancost = costdf['methanogen capital cost'].median()
+
+    if experiment == "megen_cost":
+        costdf['methanogen capital cost'] = costdf['methanogen capital cost']/mediancost
+        costdf.index = costdf["methanogen capital cost"].round(1)
+        costdf.index
+
+
+
+    costdf = costdf.loc[costdf['electrolyzer capital cost'] == costdf['electrolyzer capital cost'].median()]
+
+    return costdf
+
+
 
     
+def prep_csv(path):
+    '''
+    1 July 2023
+    The purpose of this function is to prep a csv into a df for use in duration curves in multiplotterfunc
+    We are just going to exclude February 29 from the year 2020 so we can plot them all on the same graph'''
+    df = pd.read_csv(path, index_col = 0)
+    df.index = pd.to_datetime(df.index)
 
+    year = [x for x in df.index.year][0]
+
+    if df.index.year[0] == 2020:
+        df = df[(np.in1d(df.index.date, [datetime.date(2020, 2, 29)], invert = True))]
+
+    df = df.sort_values(by = ['price'],ascending=False)
+    df = df.reset_index(drop = True)
+    return df
     
 
 def extract_data(folder):

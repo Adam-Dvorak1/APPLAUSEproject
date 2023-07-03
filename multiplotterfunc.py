@@ -6,7 +6,9 @@ import pandas as pd
 from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.dates as mdates
 from matplotlib.colors import LogNorm
+from matplotlib import patheffects
 from pathlib import Path
 import re
 import math
@@ -18,7 +20,7 @@ import matplotlib.ticker as mtick
 import helpers
 importlib.reload(helpers)
 import string
-from helpers import annual_cost, add_costreq_column, mod_solar_cost
+from helpers import return_income_df, prep_csv, annual_cost, add_costreq_column, mod_solar_cost
 
 
 
@@ -481,6 +483,124 @@ def find_net_income_pass_Spain(path):
 
 
 
+def find_all_netincome():
+    '''
+    2 July 2023
+    
+    The purpose of this function is to plot the break even gas price of the solar system,
+    the wind system, and the Spain system. Together with it, we will maybe add 2022 prices and the 
+    max European gas price. The output will be a multiple bar chart'''
+
+    sns.set_theme()
+    solar = return_income_df('results/csvs/costs/25_05_2023_megen_gridsolar.csv', choice = 'solar')
+    wind = return_income_df('results/csvs/costs/15_06_2023_electrolyzer_gridwind.csv', choice = 'wind')
+    spain = return_income_df('results/csvs/costs/23_06_2023_Spain_gridsolar.csv', choice = 'spain')
+
+    combinedf = pd.DataFrame()
+
+    combinedf.index = solar.index
+    combinedf['CA solar'] = solar['cost diff']
+    combinedf['CA wind'] = wind['cost diff']
+    combinedf['ESP solar'] = spain['cost diff']
+
+    fig, ax = plt.subplots()
+    combinedf.plot( y = [ 'CA wind', 'CA solar','ESP solar'],  kind = 'bar', ax = ax)
+    ax.set_ylim(0, 150)
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    ax.tick_params(axis='x', rotation=45)
+    a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
+    ax.set_xticklabels(a)
+    ax.set_xlabel("Methanation unit capacity cost (relative to default)", fontsize = 14)
+    ax.set_ylabel('Dollars per MWh methane', fontsize = 14)
+    fig.subplots_adjust(bottom=0.4)
+
+    ax.axhline (25, label = "2022 median methane price in CA", color = 'C1')
+    # ax.text(0,29,"2022 methane price in CA", color  = "C1", path_effects=
+    #         [patheffects.withStroke(linewidth=1,foreground="k")])
+    ax.axhline(45.5, label = "2022 median methane price in CA with carbon tax", linestyle = 'dashed', color = "C1")
+    # ax.text(0,50,"2022 methane price in CA with carbon tax", color  = 'C1', path_effects=
+    #         [patheffects.withStroke(linewidth=1,foreground="k")])
+    
+    ax.axhline (65, label = "2022 Spain July 1 price", color = 'C0')
+    # ax.text(0,70,"2022 methane price in Spain", color  = "C0", path_effects=
+    #         [patheffects.withStroke(linewidth=1,foreground="k")])
+    ax.axhline(85, label = "2022 Spain July 1 price with carbon tax", linestyle = 'dashed', color = "C0")
+    # ax.text(0,90,"2022 methane price in Spain with carbon tax", color  = 'C0', path_effects=
+    #         [patheffects.withStroke(linewidth=1,foreground="k")])
+
+    (handles, labels) = ax.get_legend_handles_labels()
+
+    handles.insert(4, plt.Line2D([0,0],[0,0], linestyle='none', marker='None'))
+    labels.insert(4,'')
+    ax.legend(handles[::-1], labels[::-1], loc = 'lower center', ncol = 2, bbox_to_anchor=(0.5, -0.8))
+    # plt.show()
+    plt.savefig('paper/Figures/RealFigures/allnetincome.pdf')
+    plt.savefig('paper/Figures/RealFigures/allnetincome.png', dpi = 500)
+    plt.savefig('paper/Figures/Screenshots/allnetincome.png', dpi = 100)
+
+def find_net_income_year_el_solar(path):
+    '''
+    30 June 2023
+    
+    This could belong as a 'break even gas price' function (the find_net_income functions),
+     or a heatmap, because the purpose of this function is to compare the break even gas price
+     that we get from each combination of weather/solar year. We get this experiment from 
+     27 June 2023 'yearsolar'. To find the break even gas price, we also need the mindf, which
+      is from the same day '''
+    
+    costdf = pd.read_csv(path, index_col = 0)
+
+    #This is for solar
+    mindf = pd.read_csv("results/csvs/costs/27_06_2023_yearsolar_mindf.csv", index_col=0)
+
+
+    gasload = 10000
+
+
+    # If any of the values of the column are not 0, keep them. 
+    # Gets rid of generators/links etc with no cost
+    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]
+
+
+    # To find the net income, add up all of the total income and expenses. Costs are positive
+    # and income is negative. Then, multiply by -1 to get the positive balance if you made money 
+    # This skips over Gas Load, methanogen capital cost, and electrolyzer capital cost. If 'year'
+    # is in the columns, it also skips over that
+
+    costdf['Net income'] = costdf[costdf.columns[5:]].sum(axis = 1) * -1 #From "Battery charger" and on
+    mindf['Net income'] = mindf[mindf.columns[5:]].sum(axis = 1) * -1 
+
+    # How much can you expect to make with 0 gas load--ie, the solar system and the
+    # battery is financing itself for the grid
+    sys_income = mindf['Net income'].values[0]
+
+
+    costdf['cost diff']= costdf['Net income'] - sys_income 
+    #Finding cost diff per MW per hour
+    costdf['cost diff'] = costdf['cost diff']/8760*1000/gasload * -1 #10000 kW or 10 MW
+
+
+    # var = 'H2 store size'
+    costdf = costdf.pivot(index = 'solar year', columns = 'grid year', values= 'cost diff')
+    costdf.sort_index(level = 0, ascending = False, inplace = True)
+
+    fig, ax= plt.subplots()
+    sns.heatmap(costdf, cmap = 'viridis', annot = True, ax = ax)
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    # ax.tick_params(axis = 'y', rotation = 0)
+    # ax.tick_params(axis='x', rotation=45)
+
+    # fig.subplots_adjust(bottom = 0.15)
+    # ax.set_title(var + ' (kWh)')
+    plt.savefig('paper/Figures/RealFigures/yearelecsolar.pdf')
+    plt.savefig('paper/Figures/Screenshots/yearelecsolar.png', dpi = 100)
+
+    # plt.show()
+    
+
+
+
+
 def plot_cost_any(path, ax): #change back to (path, ax)
     '''
     9 Feb 2023
@@ -575,78 +695,6 @@ def plot_cost_any(path, ax): #change back to (path, ax)
 
     # fig.savefig('Poster/elecpricebreakdown.pdf')
     # plt.show()#delete
-
-
-
-def plot_grid_restriction():
-    '''23 March 2023
-    This function takes a run that analyzes the effect of grid restriction. Using the normal sabatier price, 
-    it plots on the x axis the variation in the grid restriction'''
-    presentation = 'March24pres'
-    path = 'results/csvs/costs/24_03_2023_grid_invert_megen_median_gridsolar_dispatch_uppers.csv'
-    costdf = pd.read_csv(path, index_col = 0)
-
-    val = 10000
-
-    o = path.replace('.', ' ').replace('_', ' ').split() #.split() splits by space
-
-    if 'onlygrid' in o:
-        experiment = "only Grid"
-    elif "onlysolar" in o:
-        experiment = "only Solar"
-    elif 'onlywind' in o:
-        experiment = "only Wind"
-    elif 'gridwind' in o:
-        experiment = 'Full system with wind'
-    else:
-        experiment = "Full system with solar"
-
-
-
-    costdf = costdf.loc[:,  (costdf != 0).any(axis=0)]#If any of the values of the column are not 0, keep them. Gets rid of generators/links etc with no cost
-
-    costdf = costdf.loc[costdf['methanogen capital cost'] == 120]
-    costdf = costdf.sort_values(by = 'grid link max size')
-    costdf.index = costdf['grid link max size'] /14667
-
-    # print(costdf)
-
-    cols = costdf.columns.to_list()
-    cols = cols [0:5] + [cols[-1]] + cols [5:-1] # bc solar, delete for data frames that already have solar in the right position
- 
-    costdf = costdf[cols]
-
-
-    costdf = costdf/val/8760*1000 #price per MWh
-
-
-    colors = [color_dict[colname] for colname in costdf.columns.get_level_values(0)[5:]]
-
-    fig, ax = plt.subplots()
-    costdf[costdf.columns[5:]].plot( kind = "bar", stacked = True, color = colors, ax = ax) #, ax = ax
-
-    for label in ax.get_xticklabels():
-        label.set_rotation(0)
-        
-        
-    ax.set_xlabel('Multiplier to average')
-
-    #comment out these two lines
-    # ax.set_ylabel("LCOE (Dollars/MWh_energy)")
-    # ax.set_xlabel("Methanogen cost (Dollars/kWh)")
-    ax.set_title( experiment, fontsize = 20)
-    # ax.axhline(340, label = '26-Aug-22 price (high)', color = "C0")
-    ax.axhline(118, label = "Highest price", color = "C1")
-    ax.axhline (25, label = "2022 median", color = "C2")
-    ax.axhline (14, label = "2021 median", color = "C3")
-  
-    # ax.legend()
-
-
-    #fig.savefig('Presentations/' + presentation + '/' + experiment + 'gridrestriction.pdf')
-    plt.show()#delete
-    plt.close('all')
-    ax.get_legend().remove() #uncomment
 
 
 
@@ -1087,13 +1135,16 @@ def cf_sensitivity():
     plt.savefig('Presentations/' + presentation + '/_'+ twovar + "_" + var + '.pdf')
 
 
-##################################################################
-########################TIME SERIES #########################
-##################################################################
+##################################################################################
+######################## DURATION CURVES AND TIME SERIES #########################
+##################################################################################
+
 
 def plot_elec_ts():
     df = pd.read_csv('results/csvs/alldata/11_04_2023_year_2019_gridsolar_dispatch_onerun.csv')
+    
     fig, ax = plt.subplots()
+    half_year_locator = mdates.MonthLocator(interval=6)
     df[24:192].plot(x = 'snapshot', y = ['solar ts', 'grid to electricity link ts', 'battery store ts'], ax = ax)
     fig.legend()
     # fig, ax = plt.subplots()
@@ -1102,9 +1153,105 @@ def plot_elec_ts():
     plt.savefig("Presentations/April21pres/electimeseriesJan.pdf")
 
 
-##################################################################
-######################## DURATION CURVES #########################
-##################################################################
+
+def plot_gridprice(path, ax):
+    '''
+    1 July 2023
+    The purpose of this function is to serve as a helper for the bigger function
+    plot_all_gridprice()'''
+    ax.tick_params(axis='both', which='major', labelsize=12)
+    df = pd.read_csv(path, index_col = 0)
+    df.index = pd.to_datetime(df.index)
+    df.plot(ax = ax, linewidth = 0.25)
+    date_fmt = mdates.DateFormatter('%b %Y')
+    ax.xaxis.set_major_formatter(date_fmt)
+    ax.get_legend().remove()
+
+
+    # ax.xaxis.set_major_locator(quarter_year_locator)
+    # ax.xaxis.set_major_formatter(month_formatter)
+
+
+
+def plot_all_gridprice():
+    '''
+    1 July 2023
+    The purpose of this function is to plot the gridprice of california from 2017-2020
+    in four rows'''
+    # sns.set_theme()
+    fig, axs = plt.subplots(4, 1, sharey = True)
+    plot_gridprice('data/elecprice_csvs/2017UTCCAISOprice.csv', axs[0])
+    plot_gridprice('data/elecprice_csvs/2018UTCCAISOprice.csv', axs[1])
+    plot_gridprice('data/elecprice_csvs/2019UTCCAISOprice.csv', axs[2])
+    plot_gridprice('data/elecprice_csvs/2020UTCCAISOprice.csv', axs[3])
+    axs = axs.flatten()
+    colors = ['C0', 'C1', 'C2', 'C3']
+    for ax in axs[0:4]:
+        ax.xaxis.set_ticklabels([])
+
+      
+    # date_fmt = mdates.DateFormatter('%b %Y')
+    axs[3].xaxis.set_ticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+    handles = []
+    labels = []
+    for n, ax in enumerate(axs):
+        ax.text(0.01, 0.78, string.ascii_lowercase[n] + ")", transform=ax.transAxes, 
+        size=14, weight='bold')
+        ax.get_lines()[0].set_color(colors[n])
+
+        handle, label = ax.get_legend_handles_labels()
+        if n == 2:
+            for line in handle:
+                line.set_linewidth(0.5)
+        handles.append(handle[0])
+        labels.append(label[0])
+    labels = ['2017', '2018', '2019', '2020']
+    
+
+    # handles, labels = fig.
+    leg = fig.legend(handles = handles, labels = labels,ncol = 4, loc= 'upper center')
+
+    for n, line in enumerate(leg.get_lines()):
+        line.set_linewidth(1)
+        if n == 2:
+            line.set_linewidth(2)
+    ax.set_xlabel('Hours in a year')
+    ax.set_ylabel('Dollars per kWh electricity')
+    fig.savefig('paper/Figures/RealFigures/supfigs/elecprices.pdf')
+    fig.savefig('paper/Figures/Screenshots/supfigs/elecprices.png', dpi = 100)
+    # plt.show()
+    # plt.close('all')
+
+def plot_gridprice_dc():
+    '''
+    1 July 2023
+    The purpose of this function is to plot the duration curve of four electricity price
+    time series from California'''
+    fig, ax = plt.subplots()
+    elec17 = prep_csv('data/elecprice_csvs/2017UTCCAISOprice.csv')
+    elec18 = prep_csv('data/elecprice_csvs/2018UTCCAISOprice.csv')
+    elec19 = prep_csv('data/elecprice_csvs/2019UTCCAISOprice.csv')
+    elec20 = prep_csv('data/elecprice_csvs/2020UTCCAISOprice.csv')
+
+
+    ax.plot(elec19['price'], linewidth = 4, label = '2019', color = 'C2')
+    ax.plot(elec17['price'], linewidth = 3, linestyle = 'dotted', label = '2017')
+    ax.plot(elec18['price'], linewidth = 2, linestyle = '--', label = '2018')
+    
+    ax.plot(elec20['price'], linewidth = 1, label = '2020', color = 'C3')
+
+    ax.legend()
+    handles, labels = ax.get_legend_handles_labels()
+    # ax.set_xlabel('Hours in a year')
+    # ax.set_ylabel('Dollars per kWh electricity')
+    
+    
+    fig.savefig('paper/Figures/RealFigures/supfigs/elecprice_dcurv.pdf')
+    fig.savefig('paper/Figures/Screenshots/supfigs/elecprice_dcurv.png', dpi = 100)
+    # plt.show()
+    # plt.close('all')
+
+
 
 def compare_dcurves():
     nosolar = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nosolar.csv")
@@ -1140,7 +1287,6 @@ def compare_dcurves():
     plt.savefig("Presentations/December8pres/three_dcurve_reverse.pdf")
     plt.savefig("Presentations/December8pres/three_dcurves_reverse.png", dpi = 500)
     plt.show()
-
 
 def plot_methlink_dcurv(path):
     '''This uses a csv provided by extract_data(), in helpers, to make a plot of all of the duration curves
