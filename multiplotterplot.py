@@ -19,34 +19,7 @@ from multiplotterfunc import  find_all_netincome, plot_gridprice_dc, plot_all_gr
 
 if __name__ == "__main__":
 
-    #path = 'results/csvs/costs/06_12_2022_gasdem_megencost_sweep.csv'
-
-
-    #fig, ax = plt.subplots()
-
-    #wind
     gridsolar = 'results/csvs/costs/15_06_2023_electrolyzer_gridwind.csv'
-    gridsolar = 'results/csvs/costs/25_05_2023_megen_gridsolar.csv'
-    # plot_cost_any(gridsolar)
-    # cfcsvpath = 'results/csvs/cfdata/allcfs_21_06_2023_onlywind.csv'
-    cfcsvpath = 'results/csvs/cfdata/allcfs_26_05_2023_megen_onlysolar.csv'
-    # cf_compare(csvpath=cfcsvpath, twovar = 'electrolyzer cost')
-    #capacity(sumcsvpath = 'results/csvs/sumdata/summary_12_04_2023_GIcost_gridsolar_dispatch_zero_double_sweep.csv', twovar = 'grid connection cost')
-    # capacity()
-    # four_cost_plot_Spain()
-    gridsolar = 'results/csvs/costs/23_06_2023_Spain_gridsolar.csv'
-    # four_cost_plot_pres()
-    # find_net_income_pass_Spain(gridsolar)
-    path = 'results/csvs/costs/27_06_2023_yearsolar.csv'
-    # find_net_income_year_el_solar(path)
-    # find_net_income_pass(gridsolar)
-    # plot_all_gridprice()
-    # plot_gridprice_dc()
-    find_all_netincome()
-    # compare_cost_bars()
-    # plot_elec_ts()
-    # compare_cost_bars()
 
-    # plot_battsize()
-
+    cf_sensitivity()
 # asdf

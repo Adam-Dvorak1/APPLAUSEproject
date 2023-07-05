@@ -1091,26 +1091,27 @@ def capacity(sumcsvpath, twovar):
 
 
 def cf_sensitivity():
-    '''20 April 2023
+    '''
+    20 April 2023
     This function uses a csv that takes into account all of the different biomethane time series, sees 
     what percent each of them is varying, and so forth
     
     Twovar can be 'electrolyzer cost' or 'grid connection cost
     '''
-    df = pd.read_csv('results/csvs/cfdata/allcfs_12_04_2023_GIcost_gridsolar_dispatch_zero_double_sweep.csv', index_col = 0)
+    df = pd.read_csv('results/csvs/cfdata/allcfs_25_05_2023_megen_gridsolar.csv', index_col = 0)
 
     #var = 'constant biogas'
     #var = 'constant biogas +/-1%'
     # var = 'constant biogas +/-10%'
     # var = 'biogas capacity factor'
-    var = 'grid capacity factor'
+    # var = 'grid capacity factor'
     # var = 'local to grid capacity factor'
     # var = 'grid to local capacity factor'
     # var = 'electrolyzer capacity factor'
-    # var = 'methanation capacity factor'
+    var = 'methanation capacity factor'
 
 
-    twovar = 'grid connection cost'
+    twovar = 'electrolyzer cost'
     presentation = 'Maypres'
     df['methanation cost'] = df['methanation cost'] / df['methanation cost'].median()
     df[twovar] = df[twovar]/ df[twovar].median()
@@ -1125,6 +1126,10 @@ def cf_sensitivity():
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax.tick_params(axis = 'y', rotation = 0)
     ax.tick_params(axis='x', rotation=45)
+    a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
+    ax.set_xticklabels(a)
+    a = a[::-1]
+    ax.set_yticklabels(a)
 
     fig.subplots_adjust(bottom = 0.15)
     ax.set_title(var)
@@ -1132,7 +1137,10 @@ def cf_sensitivity():
     # plt.show()
     # plt.close('all')
     #var = 'constant biogas err10'
-    plt.savefig('Presentations/' + presentation + '/_'+ twovar + "_" + var + '.pdf')
+
+    # plt.savefig('paper/Figures/RealFigures/'+ var + '.pdf')
+    # plt.savefig('paper/Figures/RealFigures/'+ var + '.png', dpi = 500)
+    # plt.savefig('paper/Figures/Screenshots/ss_'+ var + '.png', dpi = 100)
 
 
 ##################################################################################
