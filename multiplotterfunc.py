@@ -58,6 +58,10 @@ color_dict = {"battery": '#9467bd', "battery charger":'#1f77b4', "methanogens": 
 ####################################################################
 ################     SINGLE DATA POINT PLOTS      ##################
 ####################################################################
+def plot_gridlinksize():
+    '''
+    5 July 2023
+    This function takes in cost csvs from '''
 def plot_linksize(path):
 
     #This needs:
@@ -612,7 +616,7 @@ def plot_cost_any(path, ax): #change back to (path, ax)
 
     o = path.replace('.', ' ').replace('_', ' ').split() #.split() splits by space
 
-    if 'onlygrid' in o:
+    if 'gridwind' in o:
         experiment = "Only Grid"
     elif "onlysolar" in o:
         experiment = "Only Solar"
@@ -999,7 +1003,7 @@ def compare_cost_bars():
 
 
 ##################################################################
-################### CAPACITY FACTOR COMPARE ######################
+###################### CAPACITY FACTORS ##########################
 ##################################################################
 
 
@@ -1047,11 +1051,6 @@ def cf_compare(csvpath, twovar):
     # plt.close('all')
 
     
-##################################################################
-########################### HEAT MAPS ############################
-##################################################################
-
-
 def capacity(sumcsvpath, twovar):
     '''
     26 April 2023
@@ -1145,7 +1144,37 @@ def cf_sensitivity():
 
 ##################################################################################
 ######################## DURATION CURVES AND TIME SERIES #########################
-##################################################################################
+#################################################################################
+
+def plot_bp_gas():
+    '''
+    5 July 2023
+    The purpose of this function is to plot the natural gas prices around the world. 
+    It plots the same data as the figure on page 33 of the BP stats review. Years
+    2005-2021. I typed in the table on the page by hand. '''
+
+    countries = {'GER': [5.83, 7.87, 7.99, 11.6, 8.53, 8.03, 10.49, 10.93, 10.73, 9.11, 6.72, 4.93, 5.62, 6.64, 5.03, 4.06, 8.94],
+     'UK': [7.38, 7.88, 6.01, 10.79, 4.85, 6.56, 9.04, 9.46, 10.64, 8.25, 6.53, 4.69, 5.80, 8.06, 4.47, 3.42, 15.80],
+     'NED': [6.07, 7.46, 5.93, 10.66, 4.96, 6.77, 9.26, 9.45, 9.75, 8.14, 6.44, 4.54, 5.72, 7.90, 4.45, 3.07, 16.02],
+     'USA': [8.79, 6.76, 6.95, 8.85, 3.89, 4.39, 4.01, 2.76, 3.71, 4.35, 2.69, 2.46, 2.96, 3.12, 2.51, 1.99, 3.84],
+     'CAN': [7.25, 5.83, 6.17, 7.99, 3.38, 3.69, 3.47, 2.27, 2.93, 3.87, 2.01, 1.55, 2.58, 1.18, 1.27, 1.58, 2.75]}
+    
+    
+    df = pd.DataFrame(countries)
+    years = np.linspace(2005, 2021, 17)
+    df.index = years
+    fig, ax = plt.subplots()
+    df.plot(ax = ax, linewidth = 2)
+    ax.set_xlabel('Year', fontsize = 14)
+    ax.xaxis.set_tick_params(labelsize=12)
+    ax.yaxis.set_tick_params(labelsize=12)
+    ax.set_ylabel('USD per million Btu', fontsize = 14)
+    plt.savefig('paper/Figures/RealFigures/bp_gasprice.pdf')
+    plt.savefig('paper/Figures/RealFigures/bp_gasprice.png', dpi = 500)
+    plt.savefig('paper/Figures/Screenshots/ss_bp_gasprice.png', dpi = 100)
+    # plt.show()
+    # plt.close('all')
+    
 
 
 def plot_elec_ts():
@@ -1235,6 +1264,7 @@ def plot_gridprice_dc():
     1 July 2023
     The purpose of this function is to plot the duration curve of four electricity price
     time series from California'''
+    plt.rcdefaults()
     fig, ax = plt.subplots()
     elec17 = prep_csv('data/elecprice_csvs/2017UTCCAISOprice.csv')
     elec18 = prep_csv('data/elecprice_csvs/2018UTCCAISOprice.csv')
@@ -1250,51 +1280,150 @@ def plot_gridprice_dc():
 
     ax.legend()
     handles, labels = ax.get_legend_handles_labels()
-    # ax.set_xlabel('Hours in a year')
-    # ax.set_ylabel('Dollars per kWh electricity')
+    ax.set_xlabel('Hours in a year')
+    ax.set_ylabel('Dollars per kWh electricity')
     
+    ax.set_yscale('symlog')
     
     fig.savefig('paper/Figures/RealFigures/supfigs/elecprice_dcurv.pdf')
-    fig.savefig('paper/Figures/Screenshots/supfigs/elecprice_dcurv.png', dpi = 100)
+    fig.savefig('paper/Figures/RealFigures/supfigs/elecprice_dcurv.png', dpi = 500)
+    fig.savefig('paper/Figures/Screenshots/supfigs/ss_elecprice_dcurv.png', dpi = 100)
     # plt.show()
     # plt.close('all')
 
 
+def plot_gridprice_dc_wspain():
+    '''
+    5 July 2023
+    The purpose of this function is to plot the duration curve of prices from Spain together
+    with electricity prices from California'''
+    plt.rcdefaults()
+    fig, ax = plt.subplots()
+
+    elec19 = prep_csv('data/elecprice_csvs/2019UTCCAISOprice.csv')
+
+    elecESP = prep_csv('data/Spain/2019UTCDayAheadPrice.csv')
+
+
+    ax.plot(elec19['price'], linewidth = 4, label = '2019 CA', color = 'C2')
+    ax.plot(elecESP['price'], linewidth = 2, linestyle = '--', label = '2019 Spain', color = 'C0')
+
+    ax.legend()
+    handles, labels = ax.get_legend_handles_labels()
+    ax.set_yscale('symlog')
+    ax.set_xlabel('Hours in a year')
+    ax.set_ylabel('Dollars per kWh electricity')
+    
+    
+    fig.savefig('paper/Figures/RealFigures/supfigs/elecprice_dcurv_wspain.pdf')
+    fig.savefig('paper/Figures/RealFigures/supfigs/elecprice_dcurv_wspain.png', dpi = 500)
+    fig.savefig('paper/Figures/Screenshots/supfigs/ss_elecprice_dcurv_wspain.png', dpi = 100)
+    # plt.show()
+    # plt.close('all')
+
 
 def compare_dcurves():
-    nosolar = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nosolar.csv")
-    nogrid = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep_nogrid.csv")
-    gridsolar = pd.read_csv("results/csvs/06_12_2022_gasdem_megencost_sweep.csv")
+    '''
+    Modified 5 July 2023
+    
+    This function was originally created in late 2022. Now, we will use the corpse of
+    this function to make a new one, so that we can make a supplementary Figure about the
+    methanation link time series'''
+    onlysolar = pd.read_csv("results/csvs/alldata/26_05_2023_megen_onlysolar.csv")
+    onlygrid = pd.read_csv("results/csvs/alldata/26_05_2023_megen_onlygrid.csv")
+    gridsolar = pd.read_csv("results/csvs/alldata/25_05_2023_megen_gridsolar.csv")
 
-    nosolarmax = nosolar.query('load == load.max() & `megen cost` == `megen cost`.max() ')
-    nogridmax = nogrid.query('load == load.max() & `megen cost` == `megen cost`.max() ')
-    gridsolarmax = gridsolar.query('load == load.max() & `megen cost` == `megen cost`.max() ')
 
 
-    nosolarmax= nosolarmax.sort_values(by = ["methanogen link ts"], ascending = False)
-    nosolarmax.index = range(8760)
+    onlysolar = onlysolar.query('`megen cost` == `megen cost`.median() ')
+    onlygrid = onlygrid.query(' `megen cost` == `megen cost`.median() ')
+    gridsolar = gridsolar.query(' `megen cost` == `megen cost`.median() & `electrolyzer cost` == `electrolyzer cost`.median()')
 
-    nogridmax = nogridmax.sort_values(by = ["methanogen link ts"], ascending = False)
-    nogridmax.index = range(8760)
 
-    gridsolarmax= gridsolarmax.sort_values(by = ["methanogen link ts"], ascending = False)
-    gridsolarmax.index = range(8760)
+    onlysolar= onlysolar.sort_values(by = ["methanogen link ts"], ascending = False)
+    onlysolar.index = range(8760)
+
+
+    onlygrid = onlygrid.sort_values(by = ["methanogen link ts"], ascending = False)
+    onlygrid.index = range(8760)
+
+    gridsolar= gridsolar.sort_values(by = ["methanogen link ts"], ascending = False)
+    gridsolar.index = range(8760)
+
+    onlysolar['methanogen link ts'] = onlysolar['methanogen link ts'] /1000
+    onlygrid['methanogen link ts'] = onlygrid['methanogen link ts']/1000
+    gridsolar['methanogen link ts'] = gridsolar['methanogen link ts']/1000
 
     fig, ax = plt.subplots()
 
-    ax.plot(gridsolarmax['methanogen link ts'], label = "Grid and solar", color = "C2")
-    ax.plot(nosolarmax['methanogen link ts'], label = "Only grid", color = "C0")
-    ax.plot(nogridmax['methanogen link ts'], label = "Only solar", color = "C1")
+    ax.plot(gridsolar['methanogen link ts'], label = "Full System", color = "C2")
+    ax.plot(onlysolar['methanogen link ts'], label = "Only solar", color = "C1")
+    ax.plot(onlygrid['methanogen link ts'], label = "Only grid", color = "C0")
 
 
-    ax.set_title("Dcurve of megen link 3 scenarios, 10MW load and 10x sabatier cost")
-    ax.set_xlabel("hours")
-    ax.set_ylabel("kWh/h")
+    # ax.set_title("Dcurve of megen link 3 scenarios, 10MW load and 10x sabatier cost")
+    ax.set_xlabel("hours", fontsize = 14)
+    ax.xaxis.set_tick_params(labelsize=12)
+    ax.yaxis.set_tick_params(labelsize=12)
+    ax.set_ylabel("MW", fontsize = 14)
     
-    ax.legend()
-    plt.savefig("Presentations/December8pres/three_dcurve_reverse.pdf")
-    plt.savefig("Presentations/December8pres/three_dcurves_reverse.png", dpi = 500)
-    plt.show()
+    ax.legend(fontsize = 12)
+    plt.savefig('paper/Figures/RealFigures/supfigs/methlink_dc.pdf')
+    plt.savefig('paper/Figures/RealFigures/supfigs/methlink_dc.png', dpi = 500)
+    plt.savefig('paper/Figures/Screenshots/supfigs/ss_methlink_dc.png', dpi = 100)
+    # plt.show()
+
+def compare_dcurves_secondary():
+    '''
+    5 July 2023
+    
+    Based on compare_dcurves, this function finds the difference in electrolyzer performance
+    between the solar, wind, and spain cases'''
+    gridsolar = pd.read_csv("results/csvs/alldata/25_05_2023_megen_gridsolar.csv")
+    gridwind = pd.read_csv('results/csvs/alldata/15_06_2023_electrolyzer_gridwind.csv')
+    spainsolar = pd.read_csv("results/csvs/alldata/23_06_2023_Spain_gridsolar.csv")
+
+
+
+
+    spainsolar = spainsolar.query(' `megen cost` == `megen cost`.median() & `electrolyzer cost` == `electrolyzer cost`.median()')
+    gridwind = gridwind.query(' `megen cost` == `megen cost`.median() & `electrolyzer cost` == `electrolyzer cost`.median()')
+    gridsolar = gridsolar.query(' `megen cost` == `megen cost`.median() & `electrolyzer cost` == `electrolyzer cost`.median()')
+
+
+    spainsolar= spainsolar.sort_values(by = ["grid to electricity link ts"], ascending = False)
+    spainsolar.index = range(8760)
+
+
+    gridwind = gridwind.sort_values(by = ["grid to electricity link ts"], ascending = False)
+    gridwind.index = range(8760)
+
+    gridsolar= gridsolar.sort_values(by = ["grid to electricity link ts"], ascending = False)
+    gridsolar.index = range(8760)
+
+    spainsolar['grid to electricity link ts'] = spainsolar['grid to electricity link ts'] /1000
+    gridwind['grid to electricity link ts'] = gridwind['grid to electricity link ts']/1000
+    gridsolar['grid to electricity link ts'] = gridsolar['grid to electricity link ts']/1000
+
+    fig, ax = plt.subplots()
+
+    ax.plot(gridsolar['grid to electricity link ts'], label = "CA solar", linewidth = 3, color = "C2")
+    ax.plot(spainsolar['grid to electricity link ts'], label = "ESP solar", linewidth = 2, color = "C1")
+    ax.plot(gridwind['grid to electricity link ts'], label = "CA wind", linestyle = '--', color = "C0")
+
+
+    # ax.set_title("Dcurve of megen link 3 scenarios, 10MW load and 10x sabatier cost")
+    ax.set_xlabel("hours", fontsize = 14)
+    ax.xaxis.set_tick_params(labelsize=12)
+    ax.yaxis.set_tick_params(labelsize=12)
+    ax.set_ylabel("Grid connection operation (MW)", fontsize = 14)
+    
+    ax.legend(fontsize = 12)
+    plt.savefig('paper/Figures/RealFigures/supfigs/gridconnection_dc.pdf')
+    plt.savefig('paper/Figures/RealFigures/supfigs/gridconnection_dc.png', dpi = 500)
+    plt.savefig('paper/Figures/Screenshots/supfigs/ss_gridconnection_dc.png', dpi = 100)
+    # plt.show()
+
 
 def plot_methlink_dcurv(path):
     '''This uses a csv provided by extract_data(), in helpers, to make a plot of all of the duration curves

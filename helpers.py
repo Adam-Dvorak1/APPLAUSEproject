@@ -724,11 +724,12 @@ if __name__ == "__main__":
 
     twovar = 'electrolyzer cost' #can be 'electrolyzer cost' or 'grid connection cost'
     # extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
-    netcdfpath = 'results/NetCDF/25_05_2023_megen_gridsolar'
-    # costs_to_csv(netcdfpath, True, 'grid-sol-year')
-    
+    netcdfpath = 'results/NetCDF/23_06_2023_Spain_gridsolar'
     allcsvpath = extract_data(netcdfpath)
-    extract_capacity_factor(allcsvpath, twovar = twovar)
+
+    # netcdfpath = 'results/NetCDF/15_06_2023_electrolyzer_gridwind'
+    # allcsvpath = extract_data(netcdfpath)
+    # extract_capacity_factor(allcsvpath, twovar = twovar)
     # allcsvpath = 'results/csvs/alldata/15_06_2023_electrolyzer_gridwind.csv'
     # extract_capacity_factor(allcsvpath, twovar = twovar) #twovar can be 'electrolyzer cost' or 'grid connection cost
 
