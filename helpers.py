@@ -306,7 +306,7 @@ def get_costs(n, grid, twovar):
     generators = n.generators.loc[:, "p_nom_opt"] * n.generators.loc[:, "capital_cost"]
     if 'Solar PV' in generators: #test to see if it this works
         if n.generators.loc['Solar PV', 'capital_cost'] == 0:
-            solarcost = 130000 * annual_cost('solar-utility-eur') #We have 130 MW of solar electricity. 
+            solarcost = 130000 * annual_cost('solar-utility') #We have 130 MW of solar electricity. 
             generators['Solar PV'] = solarcost
     if 'Onshore wind' in generators:
         if n.generators.loc['Onshore wind', 'capital_cost'] == 0:
@@ -725,7 +725,7 @@ if __name__ == "__main__":
     twovar = 'electrolyzer cost' #can be 'electrolyzer cost' or 'grid connection cost'
     # extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
     netcdfpath = 'results/NetCDF/23_06_2023_Spain_gridsolar'
-    allcsvpath = extract_data(netcdfpath)
+    # allcsvpath = extract_data(netcdfpath)
 
     # netcdfpath = 'results/NetCDF/15_06_2023_electrolyzer_gridwind'
     # allcsvpath = extract_data(netcdfpath)

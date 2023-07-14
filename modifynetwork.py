@@ -236,7 +236,7 @@ def add_generators_sol_spain(network):
         gridprice.index = pd.to_datetime(gridprice.index)
         gridprice = gridprice['price'][[hour.strftime("%Y-%m-%d %H:%M:%S") for hour in network.snapshots]]
         gridprice = gridprice/1000 #Before, I used to divide by 100. But I believe that I should have divided by 1000, because we want per kWh, and we had per MWh 
-
+        gridprice = gridprice * 1.07 # The csv is in euro, so we need to convert to dollars
         gridgen = pd.DataFrame(index = range (8760))
 
         gridgen = gridgen.set_index(hours_in_year)
@@ -249,13 +249,13 @@ def add_generators_sol_spain(network):
     if solpresent == True:
     #dispatch, use for gridsolar and mindf
         # network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
-        #     carrier = 'solar', capital_cost = 0, #Eur/kW/yr
+        #     carrier = 'solar', capital_cost = 0, #USD/kW/yr
         #     marginal_cost = 0, p_nom = 130000, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
 
 
     #normal, use for onlysolar
         network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
-            carrier = 'solar', capital_cost = annual_cost('solar-utility-eur'), #Eur/kW/yr
+            carrier = 'solar', capital_cost = annual_cost('solar-utility-eur'), #USD/kW/yr
             marginal_cost = 0,  p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
 
 

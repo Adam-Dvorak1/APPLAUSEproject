@@ -82,7 +82,7 @@ def add_loads(network):
     network.add("Load", #Why are there two loads here? Which is the name?
         "Gas Load", 
         bus="gas", 
-        p_set=gasdf["All_in_one_demand"]) #An average of 10 MW of demand, all at the end of the year 
+        p_set=gasdf["All_in_one_demand"]*10) #An average of 10 MW of demand, all at the end of the year 
 
     network.add("Load", 
         "Grid Load", 

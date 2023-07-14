@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier. Don't change it.
-        name = "yearsolar_mindf" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "highdem_gridsolar_mindf" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
         
         solar = True#whether using solar generator or not
@@ -68,7 +68,7 @@ if __name__ == "__main__":
         grid = True#whether using grid generator or not
         
 
-        mindf = False#When the mindf is true, then use a True Electrolyzer, and then change methanation and electrolyzer lists of these vars to [1]
+        mindf = True#When the mindf is true, then use a True Electrolyzer, and then change methanation and electrolyzer lists of these vars to [1]
         
 
         
@@ -77,10 +77,10 @@ if __name__ == "__main__":
         # Only do one of these at a time. You must do one.
         # 5 April: Cost of grid connection added
         # 15 June: Cost of battery added
-        electrolyzer = False
+        electrolyzer = True
         battery = False
         year = False#Note, if you are doing a year run, both solar and grid must be True
-        gridsolaryear = True
+        gridsolaryear = False
         gridinverter = False #This has to do with restricting the size of the grid inverter
         GIcost = False#GI stands for grid inverter
         Spain = False #Then we use a different time series

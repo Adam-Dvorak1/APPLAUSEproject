@@ -221,7 +221,10 @@ def find_net_income_pass(path):
     '''
     11 June 2023
      
-    This function reads in a cost csv. It doesn't really 'pass' anymore  '''
+    This function reads in a cost csv. It doesn't really 'pass' anymore.
+    
+    10 July 2023
+    We change the  '''
 
     costdf = pd.read_csv(path, index_col = 0)
 
@@ -232,11 +235,10 @@ def find_net_income_pass(path):
 
     # mindf = pd.read_csv("results/csvs/costs/15_06_2023_electrolyzer_wind_mindf.csv", index_col=0)
 
-    gasload = 10000
 
     o = path.split("_")
 
-    experiment = "megen_cost"
+    experiment = "gas price"
 
     # presentation = 'May3pres CORC'
 
@@ -276,7 +278,7 @@ def find_net_income_pass(path):
     costdf['cost diff']= costdf['Net income'] - sys_income 
    
     #Finding cost diff per MW per hour
-    costdf['cost diff'] = costdf['cost diff']/8760*1000/gasload * -1 #10000 kW or 10 MW
+    costdf['cost diff'] = costdf.apply(lambda row: row['cost diff']/8760*1000/row['Gas Load'] * -1, axis = 1) #10000 kW or 10 MW
 
 
 
@@ -286,7 +288,12 @@ def find_net_income_pass(path):
     if experiment == "megen_cost":
         costdf['methanogen capital cost'] = costdf['methanogen capital cost']/mediancost
         costdf.index = costdf["methanogen capital cost"].round(1)
-        costdf.index
+
+    elif experiment== 'gas price':
+        costdf['Gas Load'] = costdf['Gas Load']/10000
+        costdf.index = costdf['Gas Load']
+
+
 
     alldf = costdf.copy()
 
@@ -295,6 +302,8 @@ def find_net_income_pass(path):
     ############################################
     fig, ax = plt.subplots()
     costdf['cost diff'].plot(kind = "bar", ax = ax)
+
+    # print(costdf)
 
 
 
@@ -309,14 +318,14 @@ def find_net_income_pass(path):
     # ax.axhline (14, label = "2021 median price", color = "#00a8e1")
 
 
-    ax.axhline(118, label = "Highest price", color = "#b03060")
-    ax.text(0,122,r"$\bf{Highest\:methane\:price\:in\:CA}$", color  = 'r')
-    ax.axhline(138.5, label = "Highest price with carbon tax", linestyle = 'dashed', color = "#b03060")
-    ax.text(0,143,r"$\bf{Highest\:methane\:price\:in\:CA\:with\:carbon\:tax}$", color  = 'r')
-    ax.axhline (25, label = "2022 median", color = 'C1')
-    ax.text(0,29,r"$\bf{2022\:methane\:price\:in\:CA}$", color  = "C1")
-    ax.axhline(45.5, label = "Highest price with carbon tax", linestyle = 'dashed', color = "C1")
-    ax.text(0,50,r"$\bf{2022\:methane\:price\:in\:CA\:with\:carbon\:tax}$", color  = 'C1')
+    # ax.axhline(118, label = "Highest price", color = "#b03060")
+    # ax.text(0,122,r"$\bf{Highest\:methane\:price\:in\:CA}$", color  = 'r')
+    # ax.axhline(138.5, label = "Highest price with carbon tax", linestyle = 'dashed', color = "#b03060")
+    # ax.text(0,143,r"$\bf{Highest\:methane\:price\:in\:CA\:with\:carbon\:tax}$", color  = 'r')
+    # ax.axhline (25, label = "2022 median", color = 'C1')
+    # ax.text(0,29,r"$\bf{2022\:methane\:price\:in\:CA}$", color  = "C1")
+    # ax.axhline(45.5, label = "Highest price with carbon tax", linestyle = 'dashed', color = "C1")
+    # ax.text(0,50,r"$\bf{2022\:methane\:price\:in\:CA\:with\:carbon\:tax}$", color  = 'C1')
 
    
 
@@ -325,29 +334,35 @@ def find_net_income_pass(path):
     x_label_dict = dict([(x.get_text(), x.get_position()[0] ) for x in ticks])
 
 
-    minus20val = alldf['electrolyzer capital cost'].sort_values().unique()[3]
-    plus20val = alldf['electrolyzer capital cost'].sort_values().unique()[-3]
-    for val in alldf['methanogen capital cost'].unique():
-        highincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == plus20val)]["cost diff"].values[0]
-        lowincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == minus20val)]["cost diff"].values[0]
-        val = round(val, 1)
-        x_coord = x_label_dict[str(val)]
-        ax.vlines(x  = x_coord, ymin = lowincome, ymax = highincome, color = 'k')
+    # minus20val = alldf['electrolyzer capital cost'].sort_values().unique()[3]
+    # plus20val = alldf['electrolyzer capital cost'].sort_values().unique()[-3]
+    # for val in alldf['methanogen capital cost'].unique():
+    #     highincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == plus20val)]["cost diff"].values[0]
+    #     lowincome = alldf.loc[(alldf['methanogen capital cost'] == val) & (alldf['electrolyzer capital cost'] == minus20val)]["cost diff"].values[0]
+    #     val = round(val, 1)
+    #     x_coord = x_label_dict[str(val)]
+    #     ax.vlines(x  = x_coord, ymin = lowincome, ymax = highincome, color = 'k')
 
-    ax.set_ylim(0, 150)
+    # ax.set_ylim(0, 150)
     ax.tick_params(axis='both', which='major', labelsize=14)
-    ax.tick_params(axis='x', rotation=45)
-    a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
+    ax.tick_params(axis='x', rotation=0)
+    # a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
+    a = ['0.1x', '1x', '10x']
     ax.set_xticklabels(a)
-    ax.set_xlabel("Methanation unit capacity cost (relative to default)", fontsize = 14)
+    # ax.set_xlabel("Methanation unit capacity cost (relative to default)", fontsize = 14)
+    ax.set_xlabel("Gas load (relative to default)", fontsize = 14)
     ax.set_ylabel('Dollars per MWh methane', fontsize = 14)
     fig.subplots_adjust(bottom=0.2)
     # plt.show()
-    plt.close('all')
+    # plt.close('all')
 
     # fig.savefig('paper/Figures/RealFigures/gasprice_wind.pdf')
 
     # fig.savefig('Presentations/' + presentation + '/breakeven_gas_comp.png', dpi = 500)
+
+    fig.savefig('paper/Figures/RealFigures/supfigs/Gas_load_comp.pdf')
+    fig.savefig('paper/Figures/RealFigures/supfigs/Gas_load_comp.png', dpi = 500)
+    fig.savefig('paper/Figures/Screenshots/supfigs/Gas_load_comp.png', dpi = 100)
 
 
 def find_net_income_pass_Spain(path):
@@ -1102,12 +1117,12 @@ def cf_sensitivity():
     #var = 'constant biogas'
     #var = 'constant biogas +/-1%'
     # var = 'constant biogas +/-10%'
-    # var = 'biogas capacity factor'
+    var = 'biogas capacity factor'
     # var = 'grid capacity factor'
     # var = 'local to grid capacity factor'
     # var = 'grid to local capacity factor'
     # var = 'electrolyzer capacity factor'
-    var = 'methanation capacity factor'
+    # var = 'methanation capacity factor'
 
 
     twovar = 'electrolyzer cost'
@@ -1115,13 +1130,14 @@ def cf_sensitivity():
     df['methanation cost'] = df['methanation cost'] / df['methanation cost'].median()
     df[twovar] = df[twovar]/ df[twovar].median()
     df = df.round(2)
+    df['biogas capacity factor'] = df['biogas capacity factor'] * 100
 
 
     df = df.pivot(index = 'methanation cost', columns = twovar, values= var)
     df.sort_index(level = 0, ascending = False, inplace = True)
 
     fig, ax = plt.subplots()
-    sns.heatmap(df, cmap = 'viridis', annot = True, ax = ax)
+    sns.heatmap(df, cmap = 'viridis', annot = True, ax = ax, cbar_kws={ 'label': 'Capacity factor (%)'})
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax.tick_params(axis = 'y', rotation = 0)
     ax.tick_params(axis='x', rotation=45)
@@ -1137,9 +1153,9 @@ def cf_sensitivity():
     # plt.close('all')
     #var = 'constant biogas err10'
 
-    # plt.savefig('paper/Figures/RealFigures/'+ var + '.pdf')
-    # plt.savefig('paper/Figures/RealFigures/'+ var + '.png', dpi = 500)
-    # plt.savefig('paper/Figures/Screenshots/ss_'+ var + '.png', dpi = 100)
+    plt.savefig('paper/Figures/RealFigures/'+ var + '.pdf')
+    plt.savefig('paper/Figures/RealFigures/'+ var + '.png', dpi = 500)
+    plt.savefig('paper/Figures/Screenshots/ss_'+ var + '.png', dpi = 100)
 
 
 ##################################################################################
@@ -1151,24 +1167,46 @@ def plot_bp_gas():
     5 July 2023
     The purpose of this function is to plot the natural gas prices around the world. 
     It plots the same data as the figure on page 33 of the BP stats review. Years
-    2005-2021. I typed in the table on the page by hand. '''
+    2005-2021. I typed in the table on the page by hand.
+    
+    13 July 2023
+    Adding 2022, from Energy Institute stats review '''
 
-    countries = {'GER': [5.83, 7.87, 7.99, 11.6, 8.53, 8.03, 10.49, 10.93, 10.73, 9.11, 6.72, 4.93, 5.62, 6.64, 5.03, 4.06, 8.94],
-     'UK': [7.38, 7.88, 6.01, 10.79, 4.85, 6.56, 9.04, 9.46, 10.64, 8.25, 6.53, 4.69, 5.80, 8.06, 4.47, 3.42, 15.80],
-     'NED': [6.07, 7.46, 5.93, 10.66, 4.96, 6.77, 9.26, 9.45, 9.75, 8.14, 6.44, 4.54, 5.72, 7.90, 4.45, 3.07, 16.02],
-     'USA': [8.79, 6.76, 6.95, 8.85, 3.89, 4.39, 4.01, 2.76, 3.71, 4.35, 2.69, 2.46, 2.96, 3.12, 2.51, 1.99, 3.84],
-     'CAN': [7.25, 5.83, 6.17, 7.99, 3.38, 3.69, 3.47, 2.27, 2.93, 3.87, 2.01, 1.55, 2.58, 1.18, 1.27, 1.58, 2.75]}
+    # sns.set_theme()
+    plt.rcdefaults()
+    countries = {'GER': [5.83, 7.87, 7.99, 11.6, 8.53, 8.03, 10.49, 10.93, 10.73, 9.11, 6.72, 4.93, 5.62, 6.64, 5.03, 4.06, 8.94, 24.17],
+     'UK': [7.38, 7.88, 6.01, 10.79, 4.85, 6.56, 9.04, 9.46, 10.64, 8.25, 6.53, 4.69, 5.80, 8.06, 4.47, 3.42, 15.80, 25.10],
+     'NED': [6.07, 7.46, 5.93, 10.66, 4.96, 6.77, 9.26, 9.45, 9.75, 8.14, 6.44, 4.54, 5.72, 7.90, 4.45, 3.07, 16.02, 37.48],
+     'USA': [8.79, 6.76, 6.95, 8.85, 3.89, 4.39, 4.01, 2.76, 3.71, 4.35, 2.69, 2.46, 2.96, 3.12, 2.51, 1.99, 3.84, 6.45],
+     'CAN': [7.25, 5.83, 6.17, 7.99, 3.38, 3.69, 3.47, 2.27, 2.93, 3.87, 2.01, 1.55, 2.58, 1.18, 1.27, 1.58, 2.75, np.nan]}
     
     
     df = pd.DataFrame(countries)
-    years = np.linspace(2005, 2021, 17)
+    years = pd.date_range('2005', '2023', freq = 'Y')
     df.index = years
     fig, ax = plt.subplots()
     df.plot(ax = ax, linewidth = 2)
     ax.set_xlabel('Year', fontsize = 14)
+    ax.set_ylim(0, 60)
+    ax.legend(loc = "upper left")
     ax.xaxis.set_tick_params(labelsize=12)
     ax.yaxis.set_tick_params(labelsize=12)
     ax.set_ylabel('USD per million Btu', fontsize = 14)
+
+
+    '''
+    In this section of the code, we are going to plot daily data from 2022
+    '''
+
+    axinax = ax.inset_axes([0.4, 0.65, 0.5, 0.3])
+    df2 = pd.read_csv('data/ICE Dutch TTF Natural Gas Futures Historical Data(1).csv') 
+    df2 = df2.sort_index(ascending=False)
+    df2 = df2.reset_index(drop=True)
+    df2['Price'].plot(ax = axinax, color = 'C2')
+    
+    axinax.set_xticklabels(['test', 'Jan', 'May', 'Oct'])
+    ax.text(0.85, 0.6, s = '2022', transform = ax.transAxes)
+    
     plt.savefig('paper/Figures/RealFigures/bp_gasprice.pdf')
     plt.savefig('paper/Figures/RealFigures/bp_gasprice.png', dpi = 500)
     plt.savefig('paper/Figures/Screenshots/ss_bp_gasprice.png', dpi = 100)

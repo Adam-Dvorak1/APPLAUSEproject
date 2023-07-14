@@ -19,9 +19,11 @@ from multiplotterfunc import  compare_dcurves_secondary, plot_gridprice_dc_wspai
 
 if __name__ == "__main__":
 
-    gridsolar = 'results/csvs/costs/15_06_2023_electrolyzer_gridwind.csv'
-
-    compare_dcurves_secondary()
+    gridsolar = 'results/csvs/costs/10_07_2023_demvar_gridsolar.csv'
+    # cf_sensitivity()
+    plot_bp_gas()
+    # find_net_income_pass('results/csvs/costs/10_07_2023_demvar_gridsolar.csv')
+    # compare_dcurves_secondary()
     # plot_bp_gas()
     # plot_gridprice_dc()
     # plot_gridprice_dc_wspain()
