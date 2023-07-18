@@ -82,7 +82,7 @@ def add_loads(network):
     network.add("Load", #Why are there two loads here? Which is the name?
         "Gas Load", 
         bus="gas", 
-        p_set=gasdf["All_in_one_demand"]*10) #An average of 10 MW of demand, all at the end of the year 
+        p_set=gasdf["All_in_one_demand"]) #An average of 10 MW of demand, all at the end of the year 
 
     network.add("Load", 
         "Grid Load", 
@@ -98,7 +98,7 @@ def add_stores(network):
     '''This adds three stores: a battery, for the solar generator; a gas store, for the load;
     and a CO2 environment, to capture the CO2 '''
 
-    tech_data = pd.read_csv("data/costs_2025_NRELsolwind.csv")
+    tech_data = pd.read_csv("data/costs_2030_NRELsolwind.csv")
 
     ## ------------------battery---------------------------
     network.add("Bus", "battery", carrier = "battery")
@@ -180,7 +180,7 @@ def add_stores(network):
             bus = "H2 store",
             e_cyclic = True, #NO FREE LUNCH must return back to original position by end of the year
             e_nom_extendable = True,
-            capital_cost = annual_cost("hydrogen storage tank incl. compressor"))#Note, I am not sure whether
+            capital_cost = annual_cost("hydrogen storage tank type 1 including compressor"))#Note, I am not sure whether
 
     network.add("Link",
             "To H2 store",
@@ -205,7 +205,7 @@ def add_links(network):
     '''This adds links that are not methanogenesis or connecting to stores:
     electrolysis, high to low voltage electricity, solar to electricity, biogas'''
     
-    tech_data = pd.read_csv("data/costs_2025_NRELsolwind.csv")
+    tech_data = pd.read_csv("data/costs_2030_NRELsolwind.csv")
 
     ## ---------------Electrolysis--------------------------
     '''Compression is taken in during the methanogenesis link'''

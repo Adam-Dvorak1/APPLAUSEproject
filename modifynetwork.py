@@ -247,18 +247,15 @@ def add_generators_sol_spain(network):
             carrier = "grid", capital_cost = 0, marginal_cost = gridprice, p_max_pu = gridgen['grid'])#The datafile gives US cents/kWh. I wanted dollars (or euros) per kWh.     # This is using 2019 (UTC) data from CAISO, LCG consulting.Prices are in c/kWh
 
     if solpresent == True:
+        if gridpresent == True:
     #dispatch, use for gridsolar and mindf
-        # network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
-        #     carrier = 'solar', capital_cost = 0, #USD/kW/yr
-        #     marginal_cost = 0, p_nom = 130000, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
-
-
-    #normal, use for onlysolar
-        network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
-            carrier = 'solar', capital_cost = annual_cost('solar-utility-eur'), #USD/kW/yr
-            marginal_cost = 0,  p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
-
-
+            network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
+                carrier = 'solar', capital_cost = 0, #USD/kW/yr
+                marginal_cost = 0, p_nom = 130000, p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
+        if gridpresent == False:
+            network.add("Generator", "Solar PV", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
+                carrier = 'solar', capital_cost = annual_cost('solar-utility-eur'), #USD/kW/yr
+                marginal_cost = 0,  p_nom_max = 130000, p_max_pu = df_cal_solar) #Max installation of 130 MW, which is Apple's share of Cal Flats https://www.apple.com/newsroom/2021/03/apple-powers-ahead-in-new-renewable-energy-solutions-with-over-110-suppliers/
         network.add("Generator", "Biogas", bus="biogas", p_nom_extendable = True, 
             carrier = 'biogas', capital_cost = 0,
             marginal_cost = 0, p_max_pu = df_cal_biogas) # In reality, there is a marginal cost for biogas. What is it? 
@@ -349,15 +346,11 @@ def add_wind(network):
     df_cal_wind.index = pd.to_datetime(df_cal_wind.index)
     df_cal_wind = df_cal_wind['wind'][[hour.strftime("%Y-%m-%dT%H:%M:%S") for hour in network.snapshots]] #capacity factor time series 
 
-    #Dispatch
     network.add("Generator", "Onshore wind", bus="local elec",p_nom_extendable = True,
         carrier = 'wind', capital_cost = 0, #Eur/kW/yr
         marginal_cost = 0, p_nom = 101023, p_nom_max = 101023, p_max_pu = df_cal_wind) #Assuming that 
 
-    #Optimized
-    # network.add("Generator", "Onshore wind", bus="local elec",p_nom_extendable = True,#We can't put p_nom here because p_nom is for free. We need p_nom_extendable to be True, and then set a max
-    #     carrier = 'wind', capital_cost = annual_cost('onwind'), #Eur/kW/yr
-    #     marginal_cost = 0, p_nom_max = 101023, p_max_pu = df_cal_wind) #Assuming that 
+
 
 
     return network
@@ -437,6 +430,19 @@ def add_sol_cost(network):
 
     return network
 
+def add_wind_cost(network):
+    '''17 July 2023
+    
+    Since the only solar scenario prices do not make sense if we only force in 130 MW, we change it
+    
+    Now has cost. P_nom is 0'''
+
+    network.generators.loc['Onshore wind', 'capital_cost'] = annual_cost('onwind')
+
+    network.generators.loc['Onshore wind', 'p_nom'] = 0
+
+    return network
+
 
 def remove_grid(network):
 
@@ -497,7 +503,7 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
         network.links.loc['High to low voltage', 'capital_cost'] = annual_cost('electricity grid connection') * sweep_mult
 
     elif sweep == 'spain_electrolyzer':
-        network = add_generators_sol_spain(network)
+        # network = add_generators_sol_spain(network)
         network.links.loc['H2 Electrolysis', 'capital_cost'] = annual_cost("electrolysis") * sweep_mult
 
 

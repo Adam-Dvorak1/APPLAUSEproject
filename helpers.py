@@ -63,7 +63,7 @@ def annual_cost(tech):
 
     eur_usd = 1.07
     discount_rate = 0.07
-    data = pd.read_csv("data/costs_2025_NRELsolwind.csv")
+    data = pd.read_csv("data/costs_2030_NRELsolwind.csv")
     tech_data = data.loc[data['technology'] == tech]
     cap_cost =tech_data.query("parameter == 'investment'")['value'].values[0] #in eur/kW
     lifetime = tech_data.query("parameter == 'lifetime'")['value'].values[0]
@@ -296,6 +296,8 @@ def get_costs(n, grid, twovar):
     
     In addition, we will no longer keep track of everything else that we do not need
     
+    17 July: adding differentiation between spain/cal solar so we don't need to change
+    the code every time
 '''
 
 
@@ -305,9 +307,14 @@ def get_costs(n, grid, twovar):
     links = links[links != 0]
     generators = n.generators.loc[:, "p_nom_opt"] * n.generators.loc[:, "capital_cost"]
     if 'Solar PV' in generators: #test to see if it this works
-        if n.generators.loc['Solar PV', 'capital_cost'] == 0:
-            solarcost = 130000 * annual_cost('solar-utility') #We have 130 MW of solar electricity. 
-            generators['Solar PV'] = solarcost
+        if twovar == 'spain_electrolyzer':
+            if n.generators.loc['Solar PV', 'capital_cost'] == 0:
+                solarcost = 130000 * annual_cost('solar-utility-eur') #We have 130 MW of solar electricity. 
+                generators['Solar PV'] = solarcost        
+        else:    
+            if n.generators.loc['Solar PV', 'capital_cost'] == 0:
+                solarcost = 130000 * annual_cost('solar-utility') #We have 130 MW of solar electricity. 
+                generators['Solar PV'] = solarcost
     if 'Onshore wind' in generators:
         if n.generators.loc['Onshore wind', 'capital_cost'] == 0:
             windcost = 101023 * annual_cost('onwind')

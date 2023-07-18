@@ -25,7 +25,7 @@ importlib.reload(helpers)
 
 from buildnetwork import add_buses, add_generators, add_loads, add_stores, add_links, add_methanogen, add_sabatier
 from helpers import mindf_csv, extract_capacity_factor, extract_summary, extract_data, override_component_attrs, annual_cost, costs_to_csv
-from modifynetwork import add_sol_cost, zeroload, change_gasload, to_netcdf, remove_grid, remove_solar, add_wind
+from modifynetwork import add_generators_sol_spain, add_wind_cost, add_sol_cost, zeroload, change_gasload, to_netcdf, remove_grid, remove_solar, add_wind
 
 
 sweep_dict = {'electrolyzer': [x for x in np.logspace (-1, 1, 10)], "year": ['2017', '2018', '2019', '2020', '2021']}
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier. Don't change it.
-        name = "highdem_gridsolar_mindf" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "spain_mindf" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
         
         solar = True#whether using solar generator or not
@@ -77,13 +77,13 @@ if __name__ == "__main__":
         # Only do one of these at a time. You must do one.
         # 5 April: Cost of grid connection added
         # 15 June: Cost of battery added
-        electrolyzer = True
+        electrolyzer = False
         battery = False
         year = False#Note, if you are doing a year run, both solar and grid must be True
         gridsolaryear = False
         gridinverter = False #This has to do with restricting the size of the grid inverter
         GIcost = False#GI stands for grid inverter
-        Spain = False #Then we use a different time series
+        Spain = True#Then we use a different time series
         
         # solarcost = True # solarcost is not a real experiment because it is dispatch. If we really want to see the impact on the costs, then we just need to go into the costs csvs
 
@@ -100,8 +100,12 @@ if __name__ == "__main__":
         '''In addition to a megen cost sweep, the sweep can be electrolyzer, year, or gas_load'''
         if electrolyzer == True:
                sweeps = "electrolyzer"
-        #        sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
-               sweeper = [1] #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
+               sweeper = [1]
+               if mindf == False:
+                      if solar == True or wind == True:
+                             if grid == True:
+                                    sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
+               #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
         elif battery == True:
                sweeps = 'battery'
                sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
@@ -121,8 +125,11 @@ if __name__ == "__main__":
                 sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
         elif Spain == True:
                sweeps = 'spain_electrolyzer'
-        #        sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
                sweeper = [1]
+               if mindf == False:
+                      if solar == True and grid == True:
+                             sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
+         
 
                 
        
@@ -130,9 +137,10 @@ if __name__ == "__main__":
         # We are doing huge sweeps to see the extremes--under what conditions is it worth it to produce methane from our methanogenesis? 
         # It may be that it is basically never worth it. In fact, our first results show that it is actually better to just use
         # The solar generator to produce electricity rather than produce methane
-
-        methanogen_costs = [1]
-        # methanogen_costs = [0. , 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
+        if mindf:
+                methanogen_costs = [1]
+        else:
+                methanogen_costs = [0. , 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
 
 
 
@@ -168,7 +176,8 @@ if __name__ == "__main__":
 
 
         #We are interested in the behavior of the system if we use wind instead. These will be cases without any solar, however
-
+        if wind == True:
+                n = add_wind(n)
         
         # In contrast, I also gave myself the option of removing the grid and forcing the system to rely on the solar generator.
         # Obviously, it makes no sense to remove both generators.
@@ -176,12 +185,17 @@ if __name__ == "__main__":
                 n = remove_grid(n)
                 if solar == True: # If this is a just sol scenario, then we do not want dispatch
                        n = add_sol_cost(n)
+                if wind == True:
+                       n = add_wind_cost(n)
+                # if Spain == True:
+                #        n = add_spain_cost(n)
                 
 
+        if Spain == True: 
+               n = add_generators_sol_spain(n)
 
          
-        if wind == True:
-                n = add_wind(n)
+
 
         if mindf == True:
                 n = zeroload(n)
@@ -212,12 +226,14 @@ if __name__ == "__main__":
                
         csvpath = costs_to_csv(rel_path, grid, sweeps[0]) #rel_path is the netcdf folder, grid presence is True or False, The sweeps[0] corresponds to the 'twovar', or the secondary sweeping variable. If it is gi_cost, then it changes the way that the helper csv is used
         
-        # if mindf == True: #26 May we have modified the costs_to_csv function to return the path, so we can then read the csv and use the same path
-        #        mindf_csv(csvpath)
+        if mindf == True: #26 May we have modified the costs_to_csv function to return the path, so we can then read the csv and use the same path
+               mindf_csv(csvpath)
+
+        if solar == True and grid == True and mindf == False and electrolyzer == True:
                
-        # allcsvpath = extract_data(rel_path) #This extracts time series data and other important data
-        # extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
-        # extract_capacity_factor(allcsvpath)
+                allcsvpath = extract_data(rel_path) #This extracts time series data and other important data
+                # extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
+                extract_capacity_factor(allcsvpath, twovar = sweeps[0])
 
         endtime = time.time()
         print(endtime-startime)

@@ -43,7 +43,7 @@ linkcost_mults = [round(x, 1) for x in np.logspace(-1, 1, 10)]
 
 costmult_dict = dict(zip(annualcosts, linkcost_mults))
 
-labeldict = {"Onshore wind": "Onshore wind", 'Highest price': "Highest price", '2022 median': '2022 median', '2021 median': '2021 median', 'H2 Electrolysis': 'H2 electrolysis', 'High to low voltage': 'grid connection', 'methanogens': 'methanation unit', 'Solar PV': 'solar electricity', 'battery': 'battery', 'H2 store': 'H2 store', 'grid elec total cost': 'electricity exported to grid', 'grid elec total income': 'income electricity \nimported from grid'}
+labeldict = {"Onshore wind": "Onshore wind", 'Highest price': "Highest price", '2022 median': '2022 median', '2021 median': '2021 median', 'H2 Electrolysis': 'H2 electrolysis', 'High to low voltage': 'grid connection', 'methanogens': 'methanation unit', 'Solar PV': 'solar electricity', 'battery': 'battery', 'H2 store': 'H2 store', 'grid elec total cost': 'electricity imported from grid', 'grid elec total income': 'income electricity \nexported to grid'}
 
 #---------<<Other  dicts>------------------
 
@@ -727,10 +727,10 @@ def four_cost_plot_pres():
 
     
 
-    onlygrid = 'results/csvs/costs/26_05_2023_megen_onlygrid.csv'
-    onlysolar = 'results/csvs/costs/21_06_2023_onlywind.csv' #onlysolar is no longer dispatch
-    gridsolar = 'results/csvs/costs/15_06_2023_electrolyzer_gridwind.csv'
-    mindf = 'results/csvs/costs/15_06_2023_electrolyzer_wind_mindf.csv'
+    onlygrid = 'results/csvs/costs/17_07_2023_electrolyzer_onlygrid.csv'
+    onlysolar = 'results/csvs/costs/17_07_2023_electrolyzer_onlysolar.csv' #onlysolar is no longer dispatch
+    gridsolar = 'results/csvs/costs/17_07_2023_electrolyzer_gridsolar.csv'
+    mindf = 'results/csvs/costs/17_07_2023_electrolyzer_mindf.csv'
     plot_cost_any(onlysolar, axs[0])
     plot_cost_any(onlygrid, axs[1])
     plot_cost_any(gridsolar, axs[2])
@@ -776,9 +776,9 @@ def four_cost_plot_pres():
 
 
         
-    fig.savefig('paper/Figures/RealFigures/megencosts_income_wind.pdf')
-    fig.savefig('paper/Figures/RealFigures/megencosts_income_wind.png', dpi = 500)
-    # plt.show()
+    # fig.savefig('paper/Figures/RealFigures/megencosts_income_wind.pdf')
+    # fig.savefig('paper/Figures/RealFigures/megencosts_income_wind.png', dpi = 500)
+    plt.show()
 
 
 
