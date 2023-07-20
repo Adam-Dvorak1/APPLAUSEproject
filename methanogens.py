@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
         ##---<<Experimental Variables>>-----
         methanogens = True #whether methanogen or sabatier. Don't change it.
-        name = "spain_mindf" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
+        name = "DR0.9_gridsolar_mindf" #name of the run, added to date. Use gridsolar, nosolar, or nogrid at the end
         #only solar or wind can be chosen at one time
         
         solar = True#whether using solar generator or not
@@ -77,13 +77,13 @@ if __name__ == "__main__":
         # Only do one of these at a time. You must do one.
         # 5 April: Cost of grid connection added
         # 15 June: Cost of battery added
-        electrolyzer = False
+        electrolyzer = True
         battery = False
-        year = False#Note, if you are doing a year run, both solar and grid must be True
+        h2store = False
         gridsolaryear = False
         gridinverter = False #This has to do with restricting the size of the grid inverter
         GIcost = False#GI stands for grid inverter
-        Spain = True#Then we use a different time series
+        Spain = False#Then we use a different time series
         
         # solarcost = True # solarcost is not a real experiment because it is dispatch. If we really want to see the impact on the costs, then we just need to go into the costs csvs
 
@@ -101,17 +101,17 @@ if __name__ == "__main__":
         if electrolyzer == True:
                sweeps = "electrolyzer"
                sweeper = [1]
-               if mindf == False:
-                      if solar == True or wind == True:
-                             if grid == True:
-                                    sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
+        #        if mindf == False:
+        #               if solar == True or wind == True:
+        #                      if grid == True:
+        #                             sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
                #It is important that we always use an odd number of sweeping numbers for the function compare_cost_bars() in multiplotterfunc.py so it can easily find the median (ie default) value
         elif battery == True:
                sweeps = 'battery'
                sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
-        elif year == True:
-               sweeps = "year"
-               sweeper = ['2017', '2018', '2019', '2020']
+        elif h2store == True:
+               sweeps = 'H2 store'
+               sweeper = [0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2]
         elif gridsolaryear == True:
                sweeps = 'grid-sol-year'
                yearlist = ['2017', '2018', '2019', '2020']
@@ -137,11 +137,13 @@ if __name__ == "__main__":
         # We are doing huge sweeps to see the extremes--under what conditions is it worth it to produce methane from our methanogenesis? 
         # It may be that it is basically never worth it. In fact, our first results show that it is actually better to just use
         # The solar generator to produce electricity rather than produce methane
-        if mindf:
+        if mindf: #Spain, wind, solar mindfs
+                methanogen_costs = [1]
+        elif electrolyzer == False: #We don't care about sweeps in methanogen cost if we are varying other variables
                 methanogen_costs = [1]
         else:
                 methanogen_costs = [0. , 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2]#multiplier to sabatier price, varying from 1/10 sabatier price to 10 x sabatier price
-
+                methanogen_costs = [1]
 
 
         ##---<<Network creation>>-----

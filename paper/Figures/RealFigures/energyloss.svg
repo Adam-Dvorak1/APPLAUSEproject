@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="0.35769654"
-     inkscape:cx="532.57434"
-     inkscape:cy="1062.353"
+     inkscape:zoom="0.42676494"
+     inkscape:cx="561.19886"
+     inkscape:cy="365.5408"
      inkscape:window-width="1440"
      inkscape:window-height="790"
      inkscape:window-x="448"
@@ -117,26 +117,26 @@
        x="5.5031123"
        y="57.039074" />
     <rect
-       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.459692;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none"
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.503;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none"
        id="rect31-3"
-       width="64.260307"
-       height="26.340309"
+       width="64.217484"
+       height="31.497484"
        x="69.661072"
-       y="70.136726" />
+       y="64.979553" />
     <rect
-       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.410896;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none"
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.449229;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none"
        id="rect31-3-2"
-       width="64.309105"
-       height="21.029104"
-       x="133.92137"
-       y="75.447929" />
+       width="64.270775"
+       height="25.15077"
+       x="133.94054"
+       y="71.233765" />
     <rect
-       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.406435;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none"
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.444689;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none"
        id="rect31-3-2-0"
-       width="64.313568"
-       height="20.573565"
-       x="198.23047"
-       y="75.903473" />
+       width="64.275314"
+       height="24.643311"
+       x="198.2496"
+       y="71.68927" />
     <text
        xml:space="preserve"
        style="font-weight:bold;font-size:10.5833px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
@@ -219,54 +219,54 @@
     <text
        xml:space="preserve"
        style="font-weight:bold;font-size:10.5833px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
-       x="83.440979"
-       y="87.017235"
+       x="79.032257"
+       y="84.438652"
        id="text3808-3"><tspan
          sodipodi:role="line"
          id="tspan3806-9"
          style="font-size:10.5833px;stroke-width:0.264583"
-         x="83.440979"
-         y="87.017235">67 kWh</tspan></text>
+         x="79.032257"
+         y="84.438652">80.0 kWh</tspan></text>
     <text
        xml:space="preserve"
        style="font-weight:bold;font-size:10.5833px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
-       x="143.33836"
-       y="89.672836"
+       x="143.31253"
+       y="87.519508"
        id="text3808-3-9"><tspan
          sodipodi:role="line"
          id="tspan3806-9-5"
          style="font-size:10.5833px;stroke-width:0.264583"
-         x="143.33836"
-         y="89.672836">53.6 kWh</tspan></text>
+         x="143.31253"
+         y="87.519508">64.0 kWh</tspan></text>
     <text
        xml:space="preserve"
        style="font-weight:bold;font-size:10.5833px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
-       x="207.64969"
-       y="89.900612"
+       x="207.62387"
+       y="87.721283"
        id="text3808-3-9-2"><tspan
          sodipodi:role="line"
          id="tspan3806-9-5-8"
          style="font-size:10.5833px;stroke-width:0.264583"
-         x="207.64969"
-         y="89.900612">52.4 kWh</tspan></text>
+         x="207.62387"
+         y="87.721283">62.7 kWh</tspan></text>
     <path
-       style="fill:none;stroke:#000000;stroke-width:13.6023;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 69.830875,63.637043 c 0,0 13.165459,0.222548 31.156075,-9.85757 3.42923,-1.921384 7.03375,-4.217095 10.75583,-6.960017"
+       style="fill:none;stroke:#000000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 69.661072,60.743243 c 0,0 13.165459,0.222548 31.156078,-9.85757 3.42923,-1.921384 7.03375,-4.217095 10.75583,-6.960017"
        id="path7219-1"
        sodipodi:nodetypes="csc" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:5.4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 134.05662,72.610642 c 0,0 13.16547,0.222548 31.1561,-9.85757 3.42923,-1.921384 7.03375,-4.217095 10.75583,-6.960017"
+       style="fill:none;stroke:#000000;stroke-width:6.4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 134.05662,67.848142 c 0,0 13.16547,0.222548 31.1561,-9.85757 3.42923,-1.921384 7.03375,-4.217095 10.75583,-6.960017"
        id="path7219-1-7"
        sodipodi:nodetypes="csc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 198.11868,75.490814 c 0,0 13.16547,0.222548 31.1561,-9.85757 3.42923,-1.921384 7.03375,-4.217095 10.75583,-6.960017"
+       d="m 198.11868,71.257481 c 0,0 13.16547,0.222548 31.1561,-9.85757 3.42923,-1.921384 7.03375,-4.217095 10.75583,-6.960017"
        id="path7219-1-7-0"
        sodipodi:nodetypes="csc" />
     <g
        id="g10596"
-       transform="matrix(13.299899,0,0,16.655224,-2915.7767,-386.96455)">
+       transform="matrix(8.7665505,0,0,10.978193,-1884.7906,-242.79211)">
       <g
          id="path10598">
         <g
@@ -281,7 +281,7 @@
     </g>
     <g
        id="g10596-4"
-       transform="matrix(7.1318795,0,0,8.9311243,-1447.5116,-177.14889)">
+       transform="matrix(7.1318795,0,0,8.9311243,-1449.6284,-180.32391)">
       <g
          id="path10598-3">
         <g
@@ -296,7 +296,7 @@
     </g>
     <g
        id="g10596-4-4"
-       transform="matrix(1.629978,0,0,2.0411922,-130.99174,5.4089126)">
+       transform="matrix(1.629978,0,0,2.0411922,-130.99174,1.175579)">
       <g
          id="path10598-3-5">
         <g

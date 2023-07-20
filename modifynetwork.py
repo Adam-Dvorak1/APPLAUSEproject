@@ -480,14 +480,8 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
     elif sweep == 'battery':
         network.stores.loc['battery', 'capital_cost'] = annual_cost('battery storage') * sweep_mult
     
-    elif sweep == 'year':
-
-        if 'Solar PV' in network.generators.index:
-            network = add_generators_sol_yrs(network, sweep_mult)
-        if 'Onshore wind' in network.generators.index:
-            network = add_generators_wind_yrs(network, sweep_mult)
-       
-        network = add_loads_yrs(network, sweep_mult)
+    elif sweep == 'H2 store':
+        network.stores.loc['H2 store', 'capital_cost'] = annual_cost('hydrogen storage tank type 1 including compressor') * sweep_mult
 
 
     elif sweep == 'grid-sol-year':
@@ -505,6 +499,8 @@ def change_loads_costs(network, sweep, sweep_mult, megen_mult):
     elif sweep == 'spain_electrolyzer':
         # network = add_generators_sol_spain(network)
         network.links.loc['H2 Electrolysis', 'capital_cost'] = annual_cost("electrolysis") * sweep_mult
+    
+    # elif sweep == ''
 
 
         

@@ -77,6 +77,26 @@ def annual_cost(tech):
     return annu_val
 
 
+# def annual_cost_changedr(tech):
+#     '''Taking a string as input for the type of technology, this function
+#     calculates the annualized cost of a technology'''
+#     #The conversion rate between euro and usd is 1.07 on February 16 2023
+
+#     eur_usd = 1.07
+#     discount_rate = 0.07
+#     data = pd.read_csv("data/costs_2030_NRELsolwind.csv")
+#     tech_data = data.loc[data['technology'] == tech]
+#     cap_cost =tech_data.query("parameter == 'investment'")['value'].values[0] #in eur/kW
+#     lifetime = tech_data.query("parameter == 'lifetime'")['value'].values[0]
+#     fomset= tech_data.query("parameter == 'FOM'")
+#     if fomset.empty:
+#         fom = 0
+#     else:
+#         fom = fomset['value'].values[0]
+
+#     annu_val = annuity(lifetime,discount_rate)*cap_cost*(1+fom/100) * eur_usd #in usd/kW
+#     return annu_val
+
 def mindf_csv(path):
     '''
     26 May 2023
@@ -112,11 +132,11 @@ def return_income_df(path, choice):
     costdf = pd.read_csv(path, index_col = 0)
 
     if choice == 'solar':
-        mindf = pd.read_csv('results/csvs/costs/26_05_2023_megen_mindf.csv', index_col=0)
+        mindf = pd.read_csv('results/csvs/costs/17_07_2023_electrolyzer_mindf.csv', index_col=0)
     elif choice == 'wind':
-        mindf = pd.read_csv('results/csvs/costs/15_06_2023_electrolyzer_wind_mindf.csv', index_col = 0)
+        mindf = pd.read_csv('results/csvs/costs/17_07_2023_electrolyzer_mindf_wind.csv', index_col = 0)
     elif choice == 'spain':
-        mindf = pd.read_csv('results/csvs/costs/23_06_2023_Spain_mindf.csv', index_col = 0)
+        mindf = pd.read_csv('results/csvs/costs/17_07_2023_spain_mindf.csv', index_col = 0)
     else:
         print('Choice a different choice')
 
@@ -352,7 +372,10 @@ def get_costs(n, grid, twovar):
         sweep2var = n.stores.loc['battery', 'capital_cost']
         sweep2var = pd.Series(sweep2var)
         sweep2var.index = ['battery capital cost']
-
+    elif twovar == 'H2 store':
+        sweep2var = n.stores.loc['H2 store', 'capital_cost']
+        sweep2var = pd.Series(sweep2var)
+        sweep2var.index = ['H2 store capital cost']
     else: #The default is to add an electrolyzer
         sweep2var = n.links.loc['H2 Electrolysis', 'capital_cost']
         sweep2var = pd.Series(sweep2var)
@@ -729,22 +752,11 @@ if __name__ == "__main__":
     info involving LCOE or income. '''
 
 
-    twovar = 'electrolyzer cost' #can be 'electrolyzer cost' or 'grid connection cost'
-    # extract_summary(allcsvpath) #This extracts the non-time series data from the previous csv. We use this to make heatmaps of capacity
-    netcdfpath = 'results/NetCDF/23_06_2023_Spain_gridsolar'
-    # allcsvpath = extract_data(netcdfpath)
+    allcsvpath = 'results/csvs/alldata/17_07_2023_electrolyzer_gridsolar.csv'
+    twovar = 'electrolyzer cost'
+    extract_capacity_factor(allcsvpath, twovar = twovar) #twovar can be 'electrolyzer cost' or 'grid connection cost
+    netcdfpath = 'results/NetCDF/18_07_2023_h2store_gridsolar'
+    # costs_to_csv(netcdfpath, True, 'H2 store')
 
-    # netcdfpath = 'results/NetCDF/15_06_2023_electrolyzer_gridwind'
-    # allcsvpath = extract_data(netcdfpath)
-    # extract_capacity_factor(allcsvpath, twovar = twovar)
-    # allcsvpath = 'results/csvs/alldata/15_06_2023_electrolyzer_gridwind.csv'
-    # extract_capacity_factor(allcsvpath, twovar = twovar) #twovar can be 'electrolyzer cost' or 'grid connection cost
-
-    # get_costs()
-    netcdfpath = 'results/NetCDF/21_06_2023_onlywind'
-    # allcsvpath = extract_data(netcdfpath)
-    # allcsvpath = 'results/csvs/alldata/15_06_2023_electrolyzer_gridwind.csv'
-    # extract_capacity_factor(allcsvpath, twovar = twovar) #
-    # extract_summary(csvpath) 
 
 

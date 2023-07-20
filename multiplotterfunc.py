@@ -511,11 +511,11 @@ def find_all_netincome():
     max European gas price. The output will be a multiple bar chart'''
 
     sns.set_theme()
-    solar = return_income_df('results/csvs/costs/25_05_2023_megen_gridsolar.csv', choice = 'solar')
-    wind = return_income_df('results/csvs/costs/15_06_2023_electrolyzer_gridwind.csv', choice = 'wind')
-    spain = return_income_df('results/csvs/costs/23_06_2023_Spain_gridsolar.csv', choice = 'spain')
+    solar = return_income_df('results/csvs/costs/17_07_2023_electrolyzer_gridsolar.csv', choice = 'solar')
+    wind = return_income_df('results/csvs/costs/17_07_2023_electrolyzer_gridwind.csv', choice = 'wind')
+    spain = return_income_df('results/csvs/costs/17_07_2023_spain_gridsolar.csv', choice = 'spain')
 
-    combinedf = pd.DataFrame()
+    combinedf = pd.DataFrame(index = range(len(solar)))
 
     combinedf.index = solar.index
     combinedf['CA solar'] = solar['cost diff']
@@ -728,9 +728,9 @@ def four_cost_plot_pres():
     
 
     onlygrid = 'results/csvs/costs/17_07_2023_electrolyzer_onlygrid.csv'
-    onlysolar = 'results/csvs/costs/17_07_2023_electrolyzer_onlysolar.csv' #onlysolar is no longer dispatch
-    gridsolar = 'results/csvs/costs/17_07_2023_electrolyzer_gridsolar.csv'
-    mindf = 'results/csvs/costs/17_07_2023_electrolyzer_mindf.csv'
+    onlysolar = 'results/csvs/costs/17_07_2023_electrolyzer_onlywind.csv' #onlysolar is no longer dispatch
+    gridsolar = 'results/csvs/costs/17_07_2023_electrolyzer_gridwind.csv'
+    mindf = 'results/csvs/costs/17_07_2023_electrolyzer_mindf_wind.csv'
     plot_cost_any(onlysolar, axs[0])
     plot_cost_any(onlygrid, axs[1])
     plot_cost_any(gridsolar, axs[2])
@@ -774,11 +774,16 @@ def four_cost_plot_pres():
     fig.subplots_adjust(top = 0.84, bottom = 0.15)
 
 
+    # plt.show()
+    fig.savefig('paper/Figures/Screenshots/ss_fourplots_wind.png', dpi = 100)
+    fig.savefig('paper/Figures/RealFigures/fourplots_wind.pdf')
+    fig.savefig('paper/Figures/RealFigures/fourplots_wind.png', dpi = 500)
+    plt.close('all')
 
         
     # fig.savefig('paper/Figures/RealFigures/megencosts_income_wind.pdf')
     # fig.savefig('paper/Figures/RealFigures/megencosts_income_wind.png', dpi = 500)
-    plt.show()
+
 
 
 
@@ -793,10 +798,10 @@ def four_cost_plot_Spain():
 
     
 
-    onlygrid = 'results/csvs/costs/21_06_2023_Spain_onlygrid.csv'
-    onlysolar = 'results/csvs/costs/23_06_2023_Spain_onlysolar.csv'
-    gridsolar = 'results/csvs/costs/23_06_2023_Spain_gridsolar.csv'
-    mindf = 'results/csvs/costs/23_06_2023_Spain_mindf.csv'
+    onlygrid = 'results/csvs/costs/17_07_2023_spain_onlygrid.csv'
+    onlysolar = 'results/csvs/costs/17_07_2023_spain_onlysolar.csv'
+    gridsolar = 'results/csvs/costs/17_07_2023_spain_gridsolar.csv'
+    mindf = 'results/csvs/costs/17_07_2023_spain_mindf.csv'
     plot_cost_any(onlysolar, axs[0])
     plot_cost_any(onlygrid, axs[1])
     plot_cost_any(gridsolar, axs[2])
@@ -840,10 +845,10 @@ def four_cost_plot_Spain():
     fig.subplots_adjust(top = 0.83, bottom = 0.15)
 
 
-
         
-    # fig.savefig('paper/Figures/RealFigures/supfigs/Spainfoursystem.pdf')
-    fig.savefig('paper/Figures/RealFigures/supfigs/Spainfoursystem.png', dpi = 500)
+    fig.savefig('paper/Figures/Screenshots/supfigs/ss_fourplots_Spain.png', dpi = 100)
+    fig.savefig('paper/Figures/RealFigures/supfigs/fourplots_Spain.pdf')
+    fig.savefig('paper/Figures/RealFigures/supfigs/fourplots_Spain.png', dpi = 500)
     # plt.show()
 
 
@@ -875,10 +880,12 @@ def compare_cost_bars():
     methanogencost = 120
     gasload = 10000
 
-    elecdf = pd.read_csv('results/csvs/costs/25_05_2023_megen_gridsolar.csv', index_col= 0)
-    yeardf = pd.read_csv('results/csvs/costs/25_05_2023_megen_year.csv', index_col=0)
-    battdf = pd.read_csv('results/csvs/costs/15_06_2023_battery_gridsolar.csv', index_col = 0)
-    gi_costdf = pd.read_csv('results/csvs/costs/16_06_2023_GIcost_gridsolar.csv', index_col = 0) #g
+    elecdf = pd.read_csv('results/csvs/costs/17_07_2023_electrolyzer_gridsolar.csv', index_col= 0)
+    battdf = pd.read_csv('results/csvs/costs/18_07_2023_battery_gridsolar.csv', index_col = 0)
+    # h2df = pd.read_csv('results/csvs/costs/18_07_2023_h2store_gridsolar.csv', index_col = 0)
+    gi_costdf = pd.read_csv('results/csvs/costs/18_07_2023_gicost_gridsolar.csv', index_col = 0) #g
+    drdf05 = pd.read_csv('results/csvs/costs/18_07_2023_DR0.5_gridsolar.csv', index_col = 0) #discount rate of 5%
+    drdf09 = pd.read_csv('results/csvs/costs/19_07_2023_DR0.9_gridsolar.csv', index_col = 0)
 
     elecdf_hisolvals = elecdf.copy()
     elecdf_losolvals = elecdf.copy()
@@ -887,17 +894,28 @@ def compare_cost_bars():
     elecdf_hisolvals = mod_solar_cost(elecdf_hisolvals, 'high')
     elecdf_losolvals = mod_solar_cost(elecdf_losolvals, 'low')
 
-    mindf = pd.read_csv("results/csvs/costs/26_05_2023_megen_mindf.csv", index_col=0)
+    mindf = pd.read_csv("results/csvs/costs/17_07_2023_electrolyzer_mindf.csv", index_col=0)
     mindf['Net income'] = mindf[mindf.columns[5:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf, we will need to change this as well. 
     sys_income = mindf['Net income'].values[0]
 
+    mindf05 = pd.read_csv('results/csvs/costs/18_07_2023_DR0.5_gridsolar_mindf.csv', index_col = 0)
+    mindf09 = pd.read_csv('results/csvs/costs/19_07_2023_DR0.9_gridsolar_mindf.csv', index_col = 0)
+
+    mindf05['Net income'] = mindf05[mindf05.columns[5:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf05, we will need to change this as well. 
+    sys_income05 = mindf05['Net income'].values[0]
+
+    mindf09['Net income'] = mindf09[mindf09.columns[5:]].sum(axis = 1) * -1 #Before we did not care about the electrolyzer capital cost. If we change the mindf09, we will need to change this as well. 
+    sys_income09 = mindf09['Net income'].values[0]
+    
     elecdf = add_costreq_column(elecdf, gasload, sys_income)
     elecdf_hisolvals = add_costreq_column(elecdf_hisolvals, gasload, sys_income)
     elecdf_losolvals = add_costreq_column(elecdf_losolvals, gasload, sys_income)
-    yeardf = add_costreq_column(yeardf, gasload, sys_income)
+    # h2df = add_costreq_column(h2df, gasload, sys_income)
     battdf = add_costreq_column(battdf, gasload, sys_income)
     #print(elecdf.loc[elecdf['methanogen capital cost'] == 120])
     gi_costdf = add_costreq_column(gi_costdf, gasload, sys_income)
+    drdf05 = add_costreq_column(drdf05, gasload, sys_income05)
+    drdf09 = add_costreq_column(drdf09, gasload, sys_income09)
 
 
     
@@ -933,10 +951,24 @@ def compare_cost_bars():
     battlow = battpr[4]
     batthi = battpr[6]
 
+
+    # h2df = h2df.sort_values(by ="H2 store capital cost")
+    # h2pr = h2df['H2 store capital cost'].unique()
+    # h2pr = [x for x in h2pr]
+    # h2low = h2pr[4]
+    # h2hi = h2pr[6]
+
+
     batt_high = battdf.loc[(battdf['methanogen capital cost'] == battdf['methanogen capital cost'].median()) & (battdf['battery capital cost'] == batthi)]['cost diff'].values[0]
     batt_high = batt_high/basecostreq-1
     batt_low = battdf.loc[(battdf['methanogen capital cost'] == battdf['methanogen capital cost'].median()) & (battdf['battery capital cost'] == battlow)]['cost diff'].values[0]
     batt_low = batt_low/basecostreq-1
+
+
+    # h2_high = h2df.loc[ (h2df['H2 store capital cost'] == h2hi)]['cost diff'].values[0]
+    # h2_high = h2_high/basecostreq-1
+    # h2_low = h2df.loc[ (h2df['H2 store capital cost'] == h2low)]['cost diff'].values[0]
+    # h2_low = h2_low/basecostreq-1
 
 
     meth_elec_high = elecdf.loc[(elecdf['methanogen capital cost'] == megenhi) & (elecdf['electrolyzer capital cost'] == elechi)]['cost diff'].values[0]
@@ -944,11 +976,16 @@ def compare_cost_bars():
     meth_elec_low = elecdf.loc[(elecdf['methanogen capital cost'] == megenlow) & (elecdf['electrolyzer capital cost'] == eleclow)]['cost diff'].values[0]
     meth_elec_low = meth_elec_low/basecostreq - 1
 
+    # print(elecdf_hisolvals)
     solarhigh = elecdf_hisolvals.loc[(elecdf_hisolvals['methanogen capital cost'] == elecdf_hisolvals['methanogen capital cost'].median()) & (elecdf_hisolvals['electrolyzer capital cost'] == elecdf_hisolvals['electrolyzer capital cost'].median())]['cost diff'].values[0]
     solarhigh = solarhigh/basecostreq - 1
     solarlow = elecdf_losolvals.loc[(elecdf_losolvals['methanogen capital cost'] == elecdf_losolvals['methanogen capital cost'].median()) & (elecdf_losolvals['electrolyzer capital cost'] == elecdf_losolvals['electrolyzer capital cost'].median())]['cost diff'].values[0]
     solarlow = solarlow/basecostreq - 1    
 
+    drhigh = drdf09['cost diff'].values[0]
+    drhigh = drhigh/basecostreq-1
+    drlow = drdf05['cost diff'].values[0]
+    drlow = drlow/basecostreq-1
 
 
     # val17 = yeardf.loc[yeardf['year'] == 2017]['cost diff'].values[0]
@@ -988,12 +1025,12 @@ def compare_cost_bars():
     # year_high = 
     fig, ax = plt.subplots()
     fig.set_size_inches(8, 6)
-    factorlist = [r"$\bf{methanation\:unit}$" + ' annualized\ncapital cost 25 $/kW/yr [+/- 20%]', r"$\bf{electrolyzer}$" + ' annualized capital cost\n50 $/kW/yr [+/- 20%]', r"$\bf{Both}$"+' methanation unit and electrolyzer\ncapital cost [+/- 20%]', r"$\bf{battery\:storage}$"+' annualized\ncapital cost 18 $/kWh/yr[+/- 20%]', r"$\bf{grid}$"+ ' connection annualized capital cost\n11 $/kW/yr[+/- 20%]',r"$\bf{solar\:PV}$"' annualized capital cost \n 76 $/kW/yr [+/- 20%] ']
-    # factorlist = ['methanation unit annual capital cost\n120 $/kW/yr[+/- 40%]', 'electrolyzer annualized capital cost\n146 $/kW/yr[+/- 40%]', 'methanation and electrolyzer cost\n both [+/- 40%]',  'grid inverter annualized capital cost\n34 $/kW/yr[+/- 40%]', 'data year\n2019 [2020, 2017]']
-    highs = [methanation_high, electrolyzer_high, meth_elec_high, batt_high, gi_high, solarhigh]
+    factorlist = [r"$\bf{electrolyzer}$" + ' annualized capital cost\n43 USD/kW/yr [+/- 20%]', r"$\bf{methanation\:unit}$" + ' annualized\ncapital cost 76 USD/kW/yr [+/- 20%]', r"$\bf{Both}$"+' methanation unit and electrolyzer\ncapital cost [+/- 20%]',  r"$\bf{grid}$"+ ' connection annualized capital cost\n14 USD/kW/yr[+/- 20%]', r"$\bf{battery\:storage}$"+' annualized\ncapital cost 15 USD/kWh/yr[+/- 20%]',r"$\bf{solar\:PV}$"' annualized capital cost \n 59 USD/kW/yr [+/- 20%] ', r"$\bf{discount\:rate}$"' 7% [5\% - 9\%] ']
+    # factorlist = ['methanation unit annual capital cost\n120 USD/kW/yr[+/- 40%]', 'electrolyzer annualized capital cost\n146 $/kW/yr[+/- 40%]', 'methanation and electrolyzer cost\n both [+/- 40%]',  'grid inverter annualized capital cost\n34 $/kW/yr[+/- 40%]', 'data year\n2019 [2020, 2017]']
+    highs = [electrolyzer_high, methanation_high, meth_elec_high,  gi_high,  batt_high,solarhigh, drhigh]
     # highs = [methanation_high, electrolyzer_high, meth_elec_high, gi_high, year_high]
     highs = [x * 100 for x in highs]
-    lows = [methanation_low, electrolyzer_low, meth_elec_low, batt_low, gi_low, solarlow]
+    lows = [ electrolyzer_low, methanation_low, meth_elec_low,  gi_low, batt_low,solarlow, drlow]
     # lows = [methanation_low, electrolyzer_low, meth_elec_low,  gi_low, year_low]
     lows = [x * 100 for x in lows]
 
@@ -1007,9 +1044,11 @@ def compare_cost_bars():
     ax.spines[['right', 'top', 'left']].set_visible(False)
     ax.set_yticklabels(factorlist, fontsize = 13)
     ax.set_xlabel ("Percent change in break-even gas price", fontsize = 16)
-    ax.set_title('Sensitivity of methane price to various factors', fontsize = 20, position = (0.13, 0.9))
+    # ax.set_title('Sensitivity of methane price to various factors', fontsize = 20, position = (0.13, 0.9))
     plt.tight_layout()
     plt.savefig('paper/figures/RealFigures/compareChangeBars.pdf')
+    plt.savefig('paper/figures/RealFigures/compareChangeBars.png', dpi = 500)
+    plt.savefig('paper/figures/Screenshots/ss_compareChangeBars.png', dpi = 100)
     # plt.show()
     # plt.close('all')
 
@@ -1112,7 +1151,7 @@ def cf_sensitivity():
     
     Twovar can be 'electrolyzer cost' or 'grid connection cost
     '''
-    df = pd.read_csv('results/csvs/cfdata/allcfs_25_05_2023_megen_gridsolar.csv', index_col = 0)
+    df = pd.read_csv('results/csvs/cfdata/allcfs_17_07_2023_electrolyzer_gridsolar.csv', index_col = 0)
 
     #var = 'constant biogas'
     #var = 'constant biogas +/-1%'

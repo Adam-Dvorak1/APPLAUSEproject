@@ -22,7 +22,10 @@ if __name__ == "__main__":
     gridsolar = 'results/csvs/costs/10_07_2023_demvar_gridsolar.csv'
     # cf_sensitivity()
     # plot_bp_gas()
-    four_cost_plot_pres()
+    # four_cost_plot_pres()
+    # four_cost_plot_Spain()
+    # find_all_netincome(
+    compare_cost_bars()
     # find_net_income_pass('results/csvs/costs/10_07_2023_demvar_gridsolar.csv')
     # compare_dcurves_secondary()
     # plot_bp_gas()
