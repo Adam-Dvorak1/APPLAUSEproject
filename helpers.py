@@ -166,14 +166,14 @@ def return_income_df(path, choice):
 
     costdf['cost diff']= costdf['Net income'] - sys_income 
    
-    costdf['cost diff'] = costdf['cost diff']/8760*1000/gasload * -1 #10000 kW or 10 MW
+    costdf['cost diff'] = costdf['cost diff']/8760*1000/gasload/0.769 * -1 #10000 kW or 10 MW
 
     mediancost = costdf['methanogen capital cost'].median()
 
     if experiment == "megen_cost":
         costdf['methanogen capital cost'] = costdf['methanogen capital cost']/mediancost
         costdf.index = costdf["methanogen capital cost"].round(1)
-        costdf.index
+
 
 
 
@@ -636,14 +636,14 @@ def extract_capacity_factor(csvpath, twovar):
 
     
         #Grid generator capacity factor
-        gridcf = realdf['grid to electricity link ts'].abs().sum()/(realdf['grid to electricity link ts'].abs().max() * 8760)
+        # gridcf = realdf['grid to electricity link ts'].abs().sum()/(realdf['grid to electricity link ts'].abs().max() * 8760)
 
 
-        #Grid generator only low to high voltage(solar to grid)
-        loc_to_gridcf = abs(realdf[realdf['grid to electricity link ts'] < 0]['grid to electricity link ts'].sum()/(realdf['grid to electricity link ts'].abs().max() * 8760))
+        # #Grid generator only low to high voltage(solar to grid)
+        # loc_to_gridcf = abs(realdf[realdf['grid to electricity link ts'] < 0]['grid to electricity link ts'].sum()/(realdf['grid to electricity link ts'].abs().max() * 8760))
         
-        #Grid generator only high to low voltage (grid to local)
-        grid_to_loccf = realdf[realdf['grid to electricity link ts'] > 0]['grid to electricity link ts'].sum()/(realdf['grid to electricity link ts'].abs().max() * 8760)
+        # #Grid generator only high to low voltage (grid to local)
+        # grid_to_loccf = realdf[realdf['grid to electricity link ts'] > 0]['grid to electricity link ts'].sum()/(realdf['grid to electricity link ts'].abs().max() * 8760)
         
 
         #electrolyzer capacity factor
@@ -660,7 +660,9 @@ def extract_capacity_factor(csvpath, twovar):
 
 
 
-        s = pd.Series(np.array([pair[0], pair[1], frac_10_percent, biogasfrac, biocf, gridcf, loc_to_gridcf, grid_to_loccf, electrolyzercf, methanationcf]))
+        # s = pd.Series(np.array([pair[0], pair[1], frac_10_percent, biogasfrac, biocf, gridcf, loc_to_gridcf, grid_to_loccf, electrolyzercf, methanationcf]))
+        s = pd.Series(np.array([pair[0], pair[1], frac_10_percent, biogasfrac, biocf, electrolyzercf, methanationcf]))
+
 
         newdf = pd.concat([newdf, s], axis = 1)
 
@@ -673,7 +675,8 @@ def extract_capacity_factor(csvpath, twovar):
     name = csvpath.split("/")
     name = name[-1]
 
-    newdf = newdf.rename(columns = {0: 'methanation cost', 1: twovar, 2: 'constant biogas +/-10%', 3: 'constant biogas', 4: 'biogas capacity factor', 5: 'grid capacity factor', 6: 'local to grid capacity factor', 7: 'grid to local capacity factor', 8: 'electrolyzer capacity factor', 9: 'methanation capacity factor'})
+    newdf = newdf.rename(columns = {0: 'methanation cost', 1: twovar, 2: 'constant biogas +/-10%', 3: 'constant biogas', 4: 'biogas capacity factor', 5: 'electrolyzer capacity factor', 6: 'methanation capacity factor'})
+    # newdf = newdf.rename(columns = {0: 'methanation cost', 1: twovar, 2: 'constant biogas +/-10%', 3: 'constant biogas', 4: 'biogas capacity factor', 5: 'grid capacity factor', 6: 'local to grid capacity factor', 7: 'grid to local capacity factor', 8: 'electrolyzer capacity factor', 9: 'methanation capacity factor'})
     newdf.to_csv('results/csvs/cfdata/allcfs_' + name)
 
 
@@ -754,7 +757,12 @@ if __name__ == "__main__":
 
     allcsvpath = 'results/csvs/alldata/17_07_2023_electrolyzer_gridsolar.csv'
     twovar = 'electrolyzer cost'
-    extract_capacity_factor(allcsvpath, twovar = twovar) #twovar can be 'electrolyzer cost' or 'grid connection cost
+    # allcsvpath = extract_data('results/NetCDF/17_07_2023_electrolyzer_onlygrid')
+    # extract_capacity_factor(allcsvpath, twovar = twovar) 
+    # allcsvpath = extract_data('results/NetCDF/18_07_2023_electrolyzer_onlysolar')
+    allcsvpath = 'results/csvs/alldata/18_07_2023_electrolyzer_onlysolar.csv'
+    extract_capacity_factor(allcsvpath, twovar = twovar) 
+    #twovar can be 'electrolyzer cost' or 'grid connection cost
     netcdfpath = 'results/NetCDF/18_07_2023_h2store_gridsolar'
     # costs_to_csv(netcdfpath, True, 'H2 store')
 

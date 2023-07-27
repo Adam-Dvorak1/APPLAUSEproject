@@ -290,9 +290,9 @@ def add_methanogen(network):
         marginal_cost=0,
         capital_cost=annual_cost("methanation") ,   # annualised capital costs. it gets overridden in modifynetwork.py change_loads_costs() by  annual_cost("methanation") * megen_mult
         p_nom_extendable=True,
-        efficiency=0.8 * 0.9785,    # how much CH4 is produced per H2 input. So 0.8 MW Ch4 produced per MW of H2
-        efficiency2= 0.01, #I have no idea how many MW CO2 is emitted per MW of H2. 
-        efficiency3 = - 0.2 * 0.8 * 0.9785, #Let's assume that 0.2 MW of compressed CO2 is used per 1 MW of CH4. Negative.
+        efficiency=0.8 * 0.9785,    # how much CH4 is produced per H2 input. So 0.8 kWh Ch4 produced per kWh of H2
+        efficiency2= 0.01, #This is just a placeholder in case we want to keep track of CO2 emissions
+        efficiency3 = - 0.2 * 0.8 * 0.9785, # 0.2 kg CO2 is used per 1 kWh of CH4. Negative.
         lifetime=30)
 
     return network

@@ -24,13 +24,13 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1.5514539"
-     inkscape:cx="373.52061"
-     inkscape:cy="293.59558"
-     inkscape:window-width="1920"
+     inkscape:zoom="0.86018472"
+     inkscape:cx="349.92484"
+     inkscape:cy="322.60512"
+     inkscape:window-width="1619"
      inkscape:window-height="1087"
-     inkscape:window-x="404"
-     inkscape:window-y="69"
+     inkscape:window-x="125"
+     inkscape:window-y="25"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg5" />
   <defs
@@ -277,14 +277,14 @@
   </g>
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
-     x="8.9449043"
-     y="73.383728"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
+     x="2.9613044"
+     y="73.098793"
      id="text9749"><tspan
        id="tspan9747"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:Helvetica;-inkscape-font-specification:Helvetica;stroke-width:0.264583"
-       x="8.9449043"
-       y="73.383728">high-voltage</tspan></text>
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';stroke-width:0.264583"
+       x="2.9613044"
+       y="73.098793">electricity (e)</tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
@@ -294,7 +294,51 @@
        id="tspan9747-38"
        style="font-style:oblique;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.81944px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Oblique';stroke-width:0.264583"
        x="79.393013"
-       y="96.451775">electrolyzer</tspan></text>
+       y="96.451775">electrolyzer (η<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan43544">e</tspan>)</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
+     x="108.27736"
+     y="156.67912"
+     id="text9749-9-4"><tspan
+       id="tspan9747-38-5"
+       style="font-style:oblique;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.81944px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Oblique';stroke-width:0.264583"
+       x="108.27736"
+       y="156.67912">compression (η<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan76894">c</tspan>)</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
+     x="142.00079"
+     y="134.86023"
+     id="text9749-9-4-1"><tspan
+       x="142.00079"
+       y="134.86023"
+       id="tspan81209"
+       sodipodi:role="line"><tspan
+         id="tspan9747-38-5-1"
+         style="font-style:oblique;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.81944px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Oblique';stroke-width:0.264583"
+         x="142.00079"
+         y="134.86023">sabatier       </tspan></tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
+     x="141.21034"
+     y="142.22836"
+     id="text9749-9-4-1-7"
+     inkscape:transform-center-x="1.8455338"
+     inkscape:transform-center-y="-21.838817"><tspan
+       x="141.21034"
+       y="142.22836"
+       id="tspan81209-6"
+       sodipodi:role="line"><tspan
+         id="tspan9747-38-5-1-8"
+         style="font-style:oblique;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.81944px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Oblique';stroke-width:0.264583"
+         x="141.21034"
+         y="142.22836">methanation</tspan></tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
@@ -335,8 +379,8 @@
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';stroke-width:0.264583"
        x="23.004162"
        y="158.53105">CH<tspan
-   style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:65%;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';baseline-shift:sub"
-   id="tspan51868-7">4</tspan></tspan></text>
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan31839">4</tspan> (m)</tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
@@ -347,18 +391,20 @@
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';stroke-width:0.264583"
        x="11.937276"
        y="107.01212">H<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan25201">2 </tspan>(y)<tspan
    style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:65%;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';baseline-shift:sub"
-   id="tspan31759">2</tspan></tspan></text>
+   id="tspan31759" /></tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
-     x="181.1673"
-     y="20.135063"
+     x="136.43275"
+     y="8.1678638"
      id="text9749-5-0"><tspan
        id="tspan9747-0-0"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';stroke-width:0.264583"
-       x="181.1673"
-       y="20.135063">grid</tspan></text>
+       x="136.43275"
+       y="8.1678638">grid (g)</tspan></text>
   <path
      style="fill:none;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
      d="M 75.529467,77.071242 V 111.68187"
@@ -644,31 +690,43 @@
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
-     x="13.51414"
-     y="21.264088"
+     x="10.094941"
+     y="9.5818233"
      id="text9749-5"><tspan
        id="tspan15921"
-       x="13.51414"
-       y="21.264088"><tspan
+       x="10.094941"
+       y="9.5818233"><tspan
          id="tspan9747-9"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';stroke-width:0.264583"
-         x="13.51414"
-         y="21.264088">solar</tspan></tspan><tspan
+         x="10.094941"
+         y="9.5818233">solar (s)</tspan></tspan><tspan
        id="tspan15923"
-       x="13.51414"
-       y="32.288387" /></text>
+       x="10.094941"
+       y="20.606123" /></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
-     x="56.204201"
-     y="21.767599"
+     x="53.924732"
+     y="7.8058662"
      id="text9749-5-9"><tspan
        id="tspan15921-3"
-       x="56.204201"
-       y="21.767599"
+       x="53.924732"
+       y="7.8058662"
        style="font-style:oblique;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Helvetica;-inkscape-font-specification:'Helvetica Oblique'">g<tspan
    style="font-size:65%;baseline-shift:sub"
    id="tspan8768">s</tspan></tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
+     x="173.97939"
+     y="7.6401119"
+     id="text9749-5-9-2"><tspan
+       id="tspan15921-3-3"
+       x="173.97939"
+       y="7.6401119"
+       style="font-style:oblique;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Helvetica;-inkscape-font-specification:'Helvetica Oblique'">g<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan8768-6">g</tspan></tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.81944px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
@@ -788,7 +846,7 @@
        y="59.917618"
        style="font-style:oblique;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Helvetica;-inkscape-font-specification:'Helvetica Oblique'">f<tspan
    style="font-size:65%;baseline-shift:sub"
-   id="tspan11508-0-3-0">o</tspan></tspan></text>
+   id="tspan11508-0-3-0">ge</tspan></tspan></text>
   <text
      xml:space="preserve"
      style="font-size:7.05556px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:Helvetica;word-spacing:0px;stroke-width:0.264583"
@@ -808,5 +866,27 @@
      id="text6777"><tspan
        sodipodi:role="line"
        id="tspan6775"
+       style="stroke-width:0.264583" /></text>
+  <text
+     xml:space="preserve"
+     style="font-weight:bold;font-size:17.6389px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold';word-spacing:0px;stroke-width:0.264583"
+     x="199.01006"
+     y="136.26192"
+     id="text105826"><tspan
+       sodipodi:role="line"
+       id="tspan105824"
        style="stroke-width:0.264583"></tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:oblique;font-size:8.81944px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica Oblique';word-spacing:0px;stroke-width:0.264583"
+     x="190.93987"
+     y="138.05783"
+     id="text114456"><tspan
+       sodipodi:role="line"
+       id="tspan114454"
+       style="font-size:8.81944px;stroke-width:0.264583"
+       x="190.93987"
+       y="138.05783">(η<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan122256">s</tspan>)</tspan></text>
 </svg>

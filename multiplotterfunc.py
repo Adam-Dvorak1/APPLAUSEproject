@@ -523,27 +523,27 @@ def find_all_netincome():
     combinedf['ESP solar'] = spain['cost diff']
 
     fig, ax = plt.subplots()
-    combinedf.plot( y = [ 'CA wind', 'CA solar','ESP solar'],  kind = 'bar', ax = ax)
-    ax.set_ylim(0, 150)
+    combinedf.plot( y = [ 'CA wind', 'CA solar','ESP solar'],  kind = 'bar', ax = ax, color = ["C0", 'C1', 'C4'])
+    ax.set_ylim(0, 140)
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax.tick_params(axis='x', rotation=45)
     a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
     ax.set_xticklabels(a)
     ax.set_xlabel("Methanation unit capacity cost (relative to default)", fontsize = 14)
-    ax.set_ylabel('Dollars per MWh methane', fontsize = 14)
+    ax.set_ylabel('USD/MWh methane', fontsize = 14)
     fig.subplots_adjust(bottom=0.4)
 
-    ax.axhline (25, label = "2022 median methane price in CA", color = 'C1')
+    ax.axhline (25, label = r"$\mathrm{2022\;median\;methane\;price\;in\;CA}$", color = 'C1')
     # ax.text(0,29,"2022 methane price in CA", color  = "C1", path_effects=
     #         [patheffects.withStroke(linewidth=1,foreground="k")])
-    ax.axhline(45.5, label = "2022 median methane price in CA with carbon tax", linestyle = 'dashed', color = "C1")
+    ax.axhline(45.5, label = r"$ \mathrm{2022\;median\;CA\;price\;with\;100\;USD/t}_{CO_2}\;\mathrm{tax}$", linestyle = 'dashed', color = "C1")
     # ax.text(0,50,"2022 methane price in CA with carbon tax", color  = 'C1', path_effects=
     #         [patheffects.withStroke(linewidth=1,foreground="k")])
     
-    ax.axhline (65, label = "2022 Spain July 1 price", color = 'C0')
+    ax.axhline (115, label = r"$\mathrm{2022\;median\;NED\;TTF\;price}$", color = 'C4')
     # ax.text(0,70,"2022 methane price in Spain", color  = "C0", path_effects=
     #         [patheffects.withStroke(linewidth=1,foreground="k")])
-    ax.axhline(85, label = "2022 Spain July 1 price with carbon tax", linestyle = 'dashed', color = "C0")
+    ax.axhline(135, label = r"$ \mathrm{2022\;median\;NED\;TTF\;with\;100\;USD/t}_{CO_2}\;\mathrm{tax}$", linestyle = 'dashed', color = "C4")
     # ax.text(0,90,"2022 methane price in Spain with carbon tax", color  = 'C0', path_effects=
     #         [patheffects.withStroke(linewidth=1,foreground="k")])
 
@@ -551,11 +551,12 @@ def find_all_netincome():
 
     handles.insert(4, plt.Line2D([0,0],[0,0], linestyle='none', marker='None'))
     labels.insert(4,'')
-    ax.legend(handles[::-1], labels[::-1], loc = 'lower center', ncol = 2, bbox_to_anchor=(0.5, -0.8))
+    ax.legend(handles[::-1], labels[::-1], loc = 'lower center', ncol = 2, bbox_to_anchor=(0.5, -0.84))
     # plt.show()
     plt.savefig('paper/Figures/RealFigures/allnetincome.pdf')
     plt.savefig('paper/Figures/RealFigures/allnetincome.png', dpi = 500)
-    plt.savefig('paper/Figures/Screenshots/allnetincome.png', dpi = 100)
+    plt.savefig('paper/Figures/Screenshots/ss_allnetincome.png', dpi = 100)
+    plt.close('all')
 
 def find_net_income_year_el_solar(path):
     '''
@@ -676,7 +677,7 @@ def plot_cost_any(path, ax): #change back to (path, ax)
     #print(costdf)
     costdf = costdf.sort_values(by ="methanogen capital cost")
     costdf.index = costdf["methanogen capital cost"].round(1)
-    costdf = costdf/val/8760*1000 #price per MWh
+    costdf = costdf/val/8760*1000/0.769 #price per MWh of gas produced by model
 
 
     # fig, ax = plt.subplots() #comment this out
@@ -725,12 +726,15 @@ def four_cost_plot_pres():
     fig.subplots_adjust(wspace = 0.1)
     axs = ax.flatten()
 
-    
-
     onlygrid = 'results/csvs/costs/17_07_2023_electrolyzer_onlygrid.csv'
-    onlysolar = 'results/csvs/costs/17_07_2023_electrolyzer_onlywind.csv' #onlysolar is no longer dispatch
-    gridsolar = 'results/csvs/costs/17_07_2023_electrolyzer_gridwind.csv'
-    mindf = 'results/csvs/costs/17_07_2023_electrolyzer_mindf_wind.csv'
+    onlysolar = 'results/csvs/costs/18_07_2023_electrolyzer_onlysolar.csv' #onlysolar is no longer dispatch
+    gridsolar = 'results/csvs/costs/17_07_2023_electrolyzer_gridsolar.csv'
+    mindf = 'results/csvs/costs/17_07_2023_electrolyzer_mindf.csv'
+
+    # onlygrid = 'results/csvs/costs/17_07_2023_electrolyzer_onlygrid.csv'
+    # onlysolar = 'results/csvs/costs/17_07_2023_electrolyzer_onlywind.csv' #onlysolar is no longer dispatch
+    # gridsolar = 'results/csvs/costs/17_07_2023_electrolyzer_gridwind.csv'
+    # mindf = 'results/csvs/costs/17_07_2023_electrolyzer_mindf_wind.csv'
     plot_cost_any(onlysolar, axs[0])
     plot_cost_any(onlygrid, axs[1])
     plot_cost_any(gridsolar, axs[2])
@@ -749,22 +753,10 @@ def four_cost_plot_pres():
 
         #ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=5))#for some reason this percent formatter takes the position of the 
 
-    ymin, ymax = axs[0].get_ylim()
-    # axs[1].set_ylim(ymin, ymax)
-    # axs[1].get_yaxis().set_ticks([])
-    ymin, ymax = axs[2].get_ylim()
-    # axs[3].set_ylim(ymin, ymax)
-    # axs[3].get_yaxis().set_ticks([])
-
-
-
-
-
-    # axs[0].set_title(r"$\bf{a)}$", fontsize = 20)
+    axs[0].set_ylim(bottom = 0)
     
-    # axs[0].set_ylabel("Levelized Cost of Methane [$/MWh]", fontsize = 14)
-    fig.supylabel("Levelized Cost of Methane [$/MWh]", fontsize = 18)
-    fig.supxlabel("Methanation unit capacity cost (relative to default)", fontsize = 16)
+    fig.supylabel("Levelized Cost of Methane [USD/MWh]", fontsize = 18)
+    fig.supxlabel("Methanation unit capacity cost (relative to reference case)", fontsize = 16)
     
 
     handles, labels = axs[2].get_legend_handles_labels()
@@ -775,17 +767,18 @@ def four_cost_plot_pres():
 
 
     # plt.show()
-    fig.savefig('paper/Figures/Screenshots/ss_fourplots_wind.png', dpi = 100)
-    fig.savefig('paper/Figures/RealFigures/fourplots_wind.pdf')
-    fig.savefig('paper/Figures/RealFigures/fourplots_wind.png', dpi = 500)
+    # fig.savefig('paper/Figures/Screenshots/supfigs/ss_fourplots_wind.png', dpi = 100)
+    # fig.savefig('paper/Figures/RealFigures/supfigs/fourplots_wind.pdf')
+    # fig.savefig('paper/Figures/RealFigures/supfigs/fourplots_wind.png', dpi = 500)
+
+    fig.savefig('paper/Figures/Screenshots/ss_fourplots.png', dpi = 100)
+    fig.savefig('paper/Figures/RealFigures/fourplots.pdf')
+    fig.savefig('paper/Figures/RealFigures/fourplots.png', dpi = 500)
     plt.close('all')
 
         
     # fig.savefig('paper/Figures/RealFigures/megencosts_income_wind.pdf')
     # fig.savefig('paper/Figures/RealFigures/megencosts_income_wind.png', dpi = 500)
-
-
-
 
 
 def four_cost_plot_Spain():
@@ -834,8 +827,8 @@ def four_cost_plot_Spain():
     # axs[0].set_title(r"$\bf{a)}$", fontsize = 20)
     
     # axs[0].set_ylabel("Levelized Cost of Methane [$/MWh]", fontsize = 14)
-    fig.supylabel("Levelized Cost of Methane [$/MWh]", fontsize = 18)
-    fig.supxlabel("Methanation unit capacity cost (relative to default)", fontsize = 16)
+    fig.supylabel("Levelized Cost of Methane [USD/MWh]", fontsize = 18)
+    fig.supxlabel("Methanation unit capacity cost (relative to reference case)", fontsize = 16)
     
 
     handles, labels = axs[2].get_legend_handles_labels()
@@ -850,6 +843,7 @@ def four_cost_plot_Spain():
     fig.savefig('paper/Figures/RealFigures/supfigs/fourplots_Spain.pdf')
     fig.savefig('paper/Figures/RealFigures/supfigs/fourplots_Spain.png', dpi = 500)
     # plt.show()
+    plt.close('all')
 
 
 def compare_cost_bars():
@@ -876,9 +870,8 @@ def compare_cost_bars():
     It then finds the min and max required gas price according to each of the variation. 
     
     Finally, it plots the min and max on a mirrored vertical bar plot as a percent variation of the middle'''
-    presentation = "March24pres"
-    methanogencost = 120
-    gasload = 10000
+
+    gasload = 10000 * 0.769
 
     elecdf = pd.read_csv('results/csvs/costs/17_07_2023_electrolyzer_gridsolar.csv', index_col= 0)
     battdf = pd.read_csv('results/csvs/costs/18_07_2023_battery_gridsolar.csv', index_col = 0)
@@ -1046,11 +1039,11 @@ def compare_cost_bars():
     ax.set_xlabel ("Percent change in break-even gas price", fontsize = 16)
     # ax.set_title('Sensitivity of methane price to various factors', fontsize = 20, position = (0.13, 0.9))
     plt.tight_layout()
-    plt.savefig('paper/figures/RealFigures/compareChangeBars.pdf')
-    plt.savefig('paper/figures/RealFigures/compareChangeBars.png', dpi = 500)
-    plt.savefig('paper/figures/Screenshots/ss_compareChangeBars.png', dpi = 100)
+    # plt.savefig('paper/figures/RealFigures/compareChangeBars.pdf')
+    # plt.savefig('paper/figures/RealFigures/compareChangeBars.png', dpi = 500)
+    # plt.savefig('paper/figures/Screenshots/ss_compareChangeBars.png', dpi = 100)
     # plt.show()
-    # plt.close('all')
+    plt.close('all')
 
 
     #Finding the default price
@@ -1059,6 +1052,64 @@ def compare_cost_bars():
 ##################################################################
 ###################### CAPACITY FACTORS ##########################
 ##################################################################
+
+########################## FIGURE 7 #############################
+def cf_sensitivity():
+    '''
+    20 April 2023
+    This function uses a csv that takes into account all of the different biomethane time series, sees 
+    what percent each of them is varying, and so forth
+    
+    Twovar can be 'electrolyzer cost' or 'grid connection cost
+    '''
+    df = pd.read_csv('results/csvs/cfdata/allcfs_17_07_2023_electrolyzer_gridsolar.csv', index_col = 0)
+
+    #var = 'constant biogas'
+    #var = 'constant biogas +/-1%'
+    # var = 'constant biogas +/-10%'
+    # var = 'biogas capacity factor'
+    # var = 'grid capacity factor'
+    # var = 'local to grid capacity factor'
+    # var = 'grid to local capacity factor'
+    var = 'electrolyzer capacity factor'
+    # var = 'methanation capacity factor'
+
+
+    twovar = 'electrolyzer cost'
+    presentation = 'Maypres'
+    df['methanation cost'] = df['methanation cost'] / df['methanation cost'].median()
+    df[twovar] = df[twovar]/ df[twovar].median()
+    df = df.round(2)
+    df['biogas capacity factor'] = df['biogas capacity factor'] * 100
+
+
+    df = df.pivot(index = 'methanation cost', columns = twovar, values= var)
+    df.sort_index(level = 0, ascending = False, inplace = True)
+
+    fig, ax = plt.subplots()
+    sns.heatmap(df, cmap = 'viridis', annot = True, ax = ax, cbar_kws={ 'label': 'Capacity factor (%)'})
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    ax.tick_params(axis = 'y', rotation = 0)
+    ax.tick_params(axis='x', rotation=45)
+    a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
+    ax.set_xticklabels(a)
+    a = a[::-1]
+    ax.set_yticklabels(a)
+
+    fig.subplots_adjust(bottom = 0.15)
+    ax.set_title(var)
+
+    # plt.show()
+    # plt.close('all')
+    if var == 'biogas capacity factor':
+        plt.savefig('paper/Figures/RealFigures/'+ var + '.pdf')
+        plt.savefig('paper/Figures/RealFigures/'+ var + '.png', dpi = 500)
+        plt.savefig('paper/Figures/Screenshots/ss_'+ var + '.png', dpi = 100)
+    else:
+        plt.savefig('paper/Figures/RealFigures/supfigs/'+ var + '.pdf')
+        plt.savefig('paper/Figures/RealFigures/supfigs/'+ var + '.png', dpi = 500)
+        plt.savefig('paper/Figures/Screenshots/supfigs/ss_'+ var + '.png', dpi = 100)        
+
 
 
 def cf_compare(csvpath, twovar):
@@ -1143,60 +1194,6 @@ def capacity(sumcsvpath, twovar):
 
 
 
-def cf_sensitivity():
-    '''
-    20 April 2023
-    This function uses a csv that takes into account all of the different biomethane time series, sees 
-    what percent each of them is varying, and so forth
-    
-    Twovar can be 'electrolyzer cost' or 'grid connection cost
-    '''
-    df = pd.read_csv('results/csvs/cfdata/allcfs_17_07_2023_electrolyzer_gridsolar.csv', index_col = 0)
-
-    #var = 'constant biogas'
-    #var = 'constant biogas +/-1%'
-    # var = 'constant biogas +/-10%'
-    var = 'biogas capacity factor'
-    # var = 'grid capacity factor'
-    # var = 'local to grid capacity factor'
-    # var = 'grid to local capacity factor'
-    # var = 'electrolyzer capacity factor'
-    # var = 'methanation capacity factor'
-
-
-    twovar = 'electrolyzer cost'
-    presentation = 'Maypres'
-    df['methanation cost'] = df['methanation cost'] / df['methanation cost'].median()
-    df[twovar] = df[twovar]/ df[twovar].median()
-    df = df.round(2)
-    df['biogas capacity factor'] = df['biogas capacity factor'] * 100
-
-
-    df = df.pivot(index = 'methanation cost', columns = twovar, values= var)
-    df.sort_index(level = 0, ascending = False, inplace = True)
-
-    fig, ax = plt.subplots()
-    sns.heatmap(df, cmap = 'viridis', annot = True, ax = ax, cbar_kws={ 'label': 'Capacity factor (%)'})
-    ax.tick_params(axis='both', which='major', labelsize=14)
-    ax.tick_params(axis = 'y', rotation = 0)
-    ax.tick_params(axis='x', rotation=45)
-    a = ['0x', '0.2x', '0.4x', '0.6x','0.8x', '1.0x', '1.2x', '1.4x','1.6x', '1.8x', '2.0x']
-    ax.set_xticklabels(a)
-    a = a[::-1]
-    ax.set_yticklabels(a)
-
-    fig.subplots_adjust(bottom = 0.15)
-    ax.set_title(var)
-
-    # plt.show()
-    # plt.close('all')
-    #var = 'constant biogas err10'
-
-    plt.savefig('paper/Figures/RealFigures/'+ var + '.pdf')
-    plt.savefig('paper/Figures/RealFigures/'+ var + '.png', dpi = 500)
-    plt.savefig('paper/Figures/Screenshots/ss_'+ var + '.png', dpi = 100)
-
-
 ##################################################################################
 ######################## DURATION CURVES AND TIME SERIES #########################
 #################################################################################
@@ -1213,10 +1210,10 @@ def plot_bp_gas():
 
     # sns.set_theme()
     plt.rcdefaults()
-    countries = {'GER': [5.83, 7.87, 7.99, 11.6, 8.53, 8.03, 10.49, 10.93, 10.73, 9.11, 6.72, 4.93, 5.62, 6.64, 5.03, 4.06, 8.94, 24.17],
-     'UK': [7.38, 7.88, 6.01, 10.79, 4.85, 6.56, 9.04, 9.46, 10.64, 8.25, 6.53, 4.69, 5.80, 8.06, 4.47, 3.42, 15.80, 25.10],
-     'NED': [6.07, 7.46, 5.93, 10.66, 4.96, 6.77, 9.26, 9.45, 9.75, 8.14, 6.44, 4.54, 5.72, 7.90, 4.45, 3.07, 16.02, 37.48],
-     'USA': [8.79, 6.76, 6.95, 8.85, 3.89, 4.39, 4.01, 2.76, 3.71, 4.35, 2.69, 2.46, 2.96, 3.12, 2.51, 1.99, 3.84, 6.45],
+    countries = {'GER import': [5.83, 7.87, 7.99, 11.6, 8.53, 8.03, 10.49, 10.93, 10.73, 9.11, 6.72, 4.93, 5.62, 6.64, 5.03, 4.06, 8.94, 24.17],
+     'UK NBP': [7.38, 7.88, 6.01, 10.79, 4.85, 6.56, 9.04, 9.46, 10.64, 8.25, 6.53, 4.69, 5.80, 8.06, 4.47, 3.42, 15.80, 25.10],
+     'NED TTF': [6.07, 7.46, 5.93, 10.66, 4.96, 6.77, 9.26, 9.45, 9.75, 8.14, 6.44, 4.54, 5.72, 7.90, 4.45, 3.07, 16.02, 37.48],
+     'USA Henry Hub': [8.79, 6.76, 6.95, 8.85, 3.89, 4.39, 4.01, 2.76, 3.71, 4.35, 2.69, 2.46, 2.96, 3.12, 2.51, 1.99, 3.84, 6.45],
      'CAN': [7.25, 5.83, 6.17, 7.99, 3.38, 3.69, 3.47, 2.27, 2.93, 3.87, 2.01, 1.55, 2.58, 1.18, 1.27, 1.58, 2.75, np.nan]}
     
     
@@ -1224,27 +1221,29 @@ def plot_bp_gas():
     years = pd.date_range('2005', '2023', freq = 'Y')
     df.index = years
     fig, ax = plt.subplots()
+    df = df/0.29
     df.plot(ax = ax, linewidth = 2)
     ax.set_xlabel('Year', fontsize = 14)
-    ax.set_ylim(0, 60)
+    ax.set_ylim(0, 180)
     ax.legend(loc = "upper left")
     ax.xaxis.set_tick_params(labelsize=12)
     ax.yaxis.set_tick_params(labelsize=12)
-    ax.set_ylabel('USD per million Btu', fontsize = 14)
+    ax.set_ylabel('USD/MWh', fontsize = 14)
 
 
     '''
     In this section of the code, we are going to plot daily data from 2022
     '''
 
-    axinax = ax.inset_axes([0.4, 0.65, 0.5, 0.3])
+    axinax = ax.inset_axes([0.45, 0.65, 0.5, 0.3])
     df2 = pd.read_csv('data/ICE Dutch TTF Natural Gas Futures Historical Data(1).csv') 
     df2 = df2.sort_index(ascending=False)
     df2 = df2.reset_index(drop=True)
+    # df2['Price'] = df2['Price']/0.29
     df2['Price'].plot(ax = axinax, color = 'C2')
     
     axinax.set_xticklabels(['test', 'Jan', 'May', 'Oct'])
-    ax.text(0.85, 0.6, s = '2022', transform = ax.transAxes)
+    ax.text(0.9, 0.6, s = '2022', transform = ax.transAxes)
     
     plt.savefig('paper/Figures/RealFigures/bp_gasprice.pdf')
     plt.savefig('paper/Figures/RealFigures/bp_gasprice.png', dpi = 500)
@@ -1275,16 +1274,59 @@ def plot_gridprice(path, ax):
     plot_all_gridprice()'''
     ax.tick_params(axis='both', which='major', labelsize=12)
     df = pd.read_csv(path, index_col = 0)
-    df.index = pd.to_datetime(df.index)
-    df.plot(ax = ax, linewidth = 0.25)
-    date_fmt = mdates.DateFormatter('%b %Y')
-    ax.xaxis.set_major_formatter(date_fmt)
-    ax.get_legend().remove()
+    # df.index = pd.to_datetime(df.index)
+    df['Average'].plot(ax = ax, linewidth = 2)
+    ax.fill_between(x = df.index, y1 = df['10th percentile'], y2 = df['90th percentile'], alpha = 0.5, label = '10th to 90th percentile')
+    # ax.fill_between(x = df.index, y1 = df['Min'], y2 = df['Max'], alpha = 0.2)
+
+    ypos = df['Average'].mean()
+
+    ax.axhline(y = ypos, linestyle = '--')
+    ypos = round(ypos, 1)
+    ax.text(5, ypos + 3, f'{ypos}' + ' USD/MWh' )
+    
+    # date_fmt = mdates.DateFormatter('%b %Y')
+    # ax.xaxis.set_major_formatter(date_fmt)
+    # ax.get_legend().remove()
 
 
     # ax.xaxis.set_major_locator(quarter_year_locator)
     # ax.xaxis.set_major_formatter(month_formatter)
 
+
+
+def find_avg_gridprice(path):
+    '''
+    20 July 2023
+    The purpose of this function is to find the average price of electricity for each hour of the year
+    We are also interested in '''
+    
+    df = pd.read_csv(path, index_col = 0)
+    df.index = pd.to_datetime(df.index)
+
+    avdf = pd.DataFrame(index = range(24), columns = ['Average', 'Min', 'Max', '10th percentile', '90th percentile' ])
+
+    for x in range(24):
+        df24 = df[x::24].sort_values(by = 'price', ascending = True)
+        avdf.loc[x, 'Average'] = df24.mean().values[0]
+        avdf.loc[x, 'Min'] = df24.min().values[0]
+        avdf.loc[x, 'Max'] = df24.max().values[0]
+        avdf.loc[x, '10th percentile'] = df24.iloc[35].values[0]
+        avdf.loc[x, '90th percentile'] = df24.iloc[328].values[0]
+    
+    moveidx = list(range(8)) #Since this is in UTC, but we want to show local time, we need to shift the last 16 indices to the front (or move the first 8 indices to the back)
+    a = avdf.iloc[[i for i in avdf.index if i not in moveidx], :]
+    b = avdf.iloc[moveidx, :]
+    avdf = pd.concat([a, b])
+    avdf = avdf.reset_index(drop = True)
+
+    path = path.split('.')
+    path = path[0] + "_avghr." + path[1]
+    avdf.to_csv(path)
+
+
+    # ax.xaxis.set_major_locator(quarter_year_locator)
+    # ax.xaxis.set_major_formatter(month_formatter)
 
 
 def plot_all_gridprice():
@@ -1293,46 +1335,48 @@ def plot_all_gridprice():
     The purpose of this function is to plot the gridprice of california from 2017-2020
     in four rows'''
     # sns.set_theme()
-    fig, axs = plt.subplots(4, 1, sharey = True)
-    plot_gridprice('data/elecprice_csvs/2017UTCCAISOprice.csv', axs[0])
-    plot_gridprice('data/elecprice_csvs/2018UTCCAISOprice.csv', axs[1])
-    plot_gridprice('data/elecprice_csvs/2019UTCCAISOprice.csv', axs[2])
-    plot_gridprice('data/elecprice_csvs/2020UTCCAISOprice.csv', axs[3])
+    fig, axs = plt.subplots(2, 2, sharey = True, sharex = True, gridspec_kw = {'hspace' : 0.1, 'wspace' : 0.1})
+    plot_gridprice('data/elecprice_csvs/2017UTCCAISOprice_avghr.csv', axs[0,0])
+    plot_gridprice('data/elecprice_csvs/2018UTCCAISOprice_avghr.csv', axs[0,1])
+    plot_gridprice('data/elecprice_csvs/2019UTCCAISOprice_avghr.csv', axs[1,0])
+    plot_gridprice('data/elecprice_csvs/2020UTCCAISOprice_avghr.csv', axs[1,1])
     axs = axs.flatten()
     colors = ['C0', 'C1', 'C2', 'C3']
-    for ax in axs[0:4]:
-        ax.xaxis.set_ticklabels([])
+    # for ax in axs[0:4]:
+    #     ax.xaxis.set_ticklabels([])
 
       
     # date_fmt = mdates.DateFormatter('%b %Y')
-    axs[3].xaxis.set_ticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+    # axs[3].xaxis.set_ticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
     handles = []
     labels = []
     for n, ax in enumerate(axs):
-        ax.text(0.01, 0.78, string.ascii_lowercase[n] + ")", transform=ax.transAxes, 
+        ax.text(0.01, 0.88, string.ascii_lowercase[n] + ")", transform=ax.transAxes, 
         size=14, weight='bold')
         ax.get_lines()[0].set_color(colors[n])
-
+        ax.get_lines()[1].set_color(colors[n])
         handle, label = ax.get_legend_handles_labels()
-        if n == 2:
-            for line in handle:
-                line.set_linewidth(0.5)
+        ax.set_ylim(-20, 150)
+        # if n == 2:
+        #     for line in handle:
+        #         line.set_linewidth(0.5)
         handles.append(handle[0])
         labels.append(label[0])
     labels = ['2017', '2018', '2019', '2020']
-    
 
+    handles.append(handle[1])
+    labels.append(label[1])
     # handles, labels = fig.
-    leg = fig.legend(handles = handles, labels = labels,ncol = 4, loc= 'upper center')
+    leg = fig.legend(handles = handles, labels = labels,ncol = 3, loc= 'upper center')
 
     for n, line in enumerate(leg.get_lines()):
-        line.set_linewidth(1)
-        if n == 2:
-            line.set_linewidth(2)
-    ax.set_xlabel('Hours in a year')
-    ax.set_ylabel('Dollars per kWh electricity')
+        line.set_linewidth(2)
+        # if n == 2:
+        #     line.set_linewidth(2)
+    fig.supxlabel('Hours in a year')
+    fig.supylabel('USD/MWh electricity')
     fig.savefig('paper/Figures/RealFigures/supfigs/elecprices.pdf')
-    fig.savefig('paper/Figures/Screenshots/supfigs/elecprices.png', dpi = 100)
+    fig.savefig('paper/Figures/Screenshots/supfigs/ss_elecprices.png', dpi = 100)
     # plt.show()
     # plt.close('all')
 
@@ -1403,12 +1447,11 @@ def compare_dcurves():
     '''
     Modified 5 July 2023
     
-    This function was originally created in late 2022. Now, we will use the corpse of
-    this function to make a new one, so that we can make a supplementary Figure about the
+    This function makes a supplementary Figure about the
     methanation link time series'''
-    onlysolar = pd.read_csv("results/csvs/alldata/26_05_2023_megen_onlysolar.csv")
-    onlygrid = pd.read_csv("results/csvs/alldata/26_05_2023_megen_onlygrid.csv")
-    gridsolar = pd.read_csv("results/csvs/alldata/25_05_2023_megen_gridsolar.csv")
+    onlysolar = pd.read_csv("results/csvs/alldata/18_07_2023_electrolyzer_onlysolar.csv")
+    onlygrid = pd.read_csv("results/csvs/alldata/17_07_2023_electrolyzer_onlygrid.csv")
+    gridsolar = pd.read_csv("results/csvs/alldata/17_07_2023_electrolyzer_gridsolar.csv")
 
 
 
@@ -1445,10 +1488,111 @@ def compare_dcurves():
     ax.set_ylabel("MW", fontsize = 14)
     
     ax.legend(fontsize = 12)
-    plt.savefig('paper/Figures/RealFigures/supfigs/methlink_dc.pdf')
-    plt.savefig('paper/Figures/RealFigures/supfigs/methlink_dc.png', dpi = 500)
-    plt.savefig('paper/Figures/Screenshots/supfigs/ss_methlink_dc.png', dpi = 100)
+    # plt.savefig('paper/Figures/RealFigures/supfigs/methlink_dc.pdf')
+    # plt.savefig('paper/Figures/RealFigures/supfigs/methlink_dc.png', dpi = 500)
+    # plt.savefig('paper/Figures/Screenshots/supfigs/ss_methlink_dc.png', dpi = 100)
     # plt.show()
+
+def compare_dcurves_elec():
+    '''
+    Modified 26 July 2023
+    
+    This function makes a supplementary Figure about the
+    electrolyzer link'''
+    onlysolar = pd.read_csv("results/csvs/alldata/18_07_2023_electrolyzer_onlysolar.csv")
+    onlygrid = pd.read_csv("results/csvs/alldata/17_07_2023_electrolyzer_onlygrid.csv")
+    gridsolar = pd.read_csv("results/csvs/alldata/17_07_2023_electrolyzer_gridsolar.csv")
+
+
+
+    onlysolar = onlysolar.query('`megen cost` == `megen cost`.median() ')
+    onlygrid = onlygrid.query(' `megen cost` == `megen cost`.median() ')
+    gridsolar = gridsolar.query(' `megen cost` == `megen cost`.median() & `electrolyzer cost` == `electrolyzer cost`.median()')
+
+
+    onlysolar= onlysolar.sort_values(by = ["electrolyzer ts"], ascending = False)
+    onlysolar.index = range(8760)
+
+
+    onlygrid = onlygrid.sort_values(by = ["electrolyzer ts"], ascending = False)
+    onlygrid.index = range(8760)
+
+    gridsolar= gridsolar.sort_values(by = ["electrolyzer ts"], ascending = False)
+    gridsolar.index = range(8760)
+
+    onlysolar['electrolyzer ts'] = onlysolar['electrolyzer ts'] /1000
+    onlygrid['electrolyzer ts'] = onlygrid['electrolyzer ts']/1000
+    gridsolar['electrolyzer ts'] = gridsolar['electrolyzer ts']/1000
+
+    fig, ax = plt.subplots()
+
+    ax.plot(gridsolar['electrolyzer ts'], label = "Full System", color = "C2")
+    ax.plot(onlysolar['electrolyzer ts'], label = "Only solar", color = "C1")
+    ax.plot(onlygrid['electrolyzer ts'], label = "Only grid", color = "C0")
+
+
+    # ax.set_title("Dcurve of megen link 3 scenarios, 10MW load and 10x sabatier cost")
+    ax.set_xlabel("hours", fontsize = 14)
+    ax.xaxis.set_tick_params(labelsize=12)
+    ax.yaxis.set_tick_params(labelsize=12)
+    ax.set_ylabel("MW", fontsize = 14)
+    
+    ax.legend(fontsize = 12)
+    plt.savefig('paper/Figures/RealFigures/supfigs/electrolyzer_dc.pdf')
+    plt.savefig('paper/Figures/RealFigures/supfigs/electrolyzer_dc.png', dpi = 500)
+    plt.savefig('paper/Figures/Screenshots/supfigs/ss_electrolyzer_dc.png', dpi = 100)
+    # plt.show()
+
+def methanation_dc_onlysolar():
+    '''
+    26 July 2023
+    
+    This function compares the duration curves of a methanation unit with the only solar model'''
+    onlysolar = pd.read_csv("results/csvs/alldata/18_07_2023_electrolyzer_onlysolar.csv")
+
+
+
+
+    onlysolar= onlysolar.sort_values(by = ["methanogen link ts"], ascending = False)
+
+
+
+
+
+    onlysolar['methanogen link ts'] = onlysolar['methanogen link ts'] /1000
+    # onlysolar['methanogen link ts'] = onlysolar['methanogen link ts']/onlysolar['methanogen link ts'].max()
+
+
+    fig, ax = plt.subplots()
+
+    
+    norm = mpl.colors.Normalize(vmin=0, vmax=130.787074)
+    cmap = plt.get_cmap('viridis')
+
+    for value in onlysolar['megen cost'].unique():
+        tempdf = onlysolar[onlysolar['megen cost'] == value]
+        # print(tempdf)
+        tempdf = tempdf.sort_values(by = ["methanogen link ts"], ascending = False)
+        tempdf.index = range(8760)
+        ax.plot(tempdf['methanogen link ts'], color = cmap(norm(value)))
+    # ax.plot(onlysolar['methanogen link ts'], label = "Only solar", color = "C1")
+
+    cbar = fig.colorbar(plt.cm.ScalarMappable(norm = norm, cmap = cmap), label = "Methanation annualized cost (USD/kW/yr)")
+
+
+    # ax.set_title("Dcurve of megen link 3 scenarios, 10MW load and 10x sabatier cost")
+    ax.set_xlabel("hours", fontsize = 14)
+    ax.xaxis.set_tick_params(labelsize=12)
+    ax.yaxis.set_tick_params(labelsize=12)
+    ax.set_ylabel("MW", fontsize = 14)
+    
+    ax.legend(fontsize = 12)
+    plt.savefig('paper/Figures/RealFigures/supfigs/methlinks_onlysolar_dc.pdf')
+    plt.savefig('paper/Figures/RealFigures/supfigs/methlinks_onlysolar_dc.png', dpi = 500)
+    plt.savefig('paper/Figures/Screenshots/supfigs/ss_methlinks_onlysolar_dc.png', dpi = 100)
+    # plt.show()
+    plt.close('all')
+
 
 def compare_dcurves_secondary():
     '''
@@ -1723,5 +1867,9 @@ for path in pathiter:
     newname =  path.replace('nogrid', 'onlysolar')
     if newname != path:
         os.rename(path,newname)
-# %%
-#
+
+if __name__ == '__main__':
+    find_avg_gridprice('data/elecprice_csvs/2018UTCCAISOprice.csv')
+    find_avg_gridprice('data/elecprice_csvs/2019UTCCAISOprice.csv')
+    find_avg_gridprice('data/elecprice_csvs/2017UTCCAISOprice.csv')
+    find_avg_gridprice('data/elecprice_csvs/2020UTCCAISOprice.csv')
